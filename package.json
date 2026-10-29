@@ -1,0 +1,61 @@
+{
+	"name": "@waniwani/relay",
+	"version": "0.1.0",
+	"description": "Records AI agent visits to your website from your middleware and posts them to WaniWani. Open source, so your security team can read every line.",
+	"type": "module",
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"default": "./dist/index.js"
+		},
+		"./package.json": "./package.json"
+	},
+	"files": [
+		"dist/index.js",
+		"dist/index.js.map",
+		"dist/index.d.ts",
+		"NOTICE"
+	],
+	"sideEffects": false,
+	"engines": {
+		"node": ">=24"
+	},
+	"scripts": {
+		"build": "rm -rf dist && bun run typecheck && bun run lint && tsup",
+		"typecheck": "tsc --noEmit",
+		"lint": "biome check .",
+		"lint:fix": "biome check . --write",
+		"test": "vitest run",
+		"rules": "bun scripts/build-rules.ts",
+		"prepublishOnly": "bun run build",
+		"release:patch": "npm version patch && git push --follow-tags",
+		"release:minor": "npm version minor && git push --follow-tags"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.6.3",
+		"@types/node": "^24",
+		"tsup": "^9.0.0",
+		"typescript": "^5",
+		"vitest": "^5.0.5"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/WaniWani-AI/relay"
+	},
+	"keywords": [
+		"ai-agents",
+		"bots",
+		"crawlers",
+		"vercel",
+		"middleware",
+		"nextjs",
+		"proxy",
+		"analytics",
+		"waniwani"
+	],
+	"author": "Waniwani",
+	"license": "Apache-2.0"
+}
