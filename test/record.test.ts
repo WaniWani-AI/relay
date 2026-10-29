@@ -1,5 +1,6 @@
 import { createHmac } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import packageJson from "../package.json";
 import type { RelayOptions } from "../src/index";
 import {
 	API_URL,
@@ -90,7 +91,7 @@ describe("recordAgentVisit: the event", () => {
 		expect(record.sourceEventId).toMatch(
 			/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
 		);
-		expect(record.relayVersion).toBe("0.1.0");
+		expect(record.relayVersion).toBe(packageJson.version);
 		expect(record.headers).toEqual({
 			"user-agent": "Claude-User/1.0 (+https://anthropic.com)",
 			referer: "https://claude.ai/",
