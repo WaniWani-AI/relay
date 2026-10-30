@@ -98,10 +98,10 @@ The package has no runtime dependencies. The IP range check uses `BlockList` fro
 bun install
 bun run build   # typecheck, lint and dist/index.js
 bun run test    # unit tests (run the build first, one test imports dist)
-bun run rules   # writes src/logic/agents.json and ip-ranges.generated.json from the app's rules file
+bun run rules   # writes the two src/logic/*.generated.json files from the app rules file
 ```
 
-`bun run rules` reads `https://app.waniwani.ai/api/v2/agent-traffic/rules`, or the URL in `RULES_URL`. The two files it writes are the fallback list that ships in the package. Run it before each release.
+`bun run rules` reads `https://app.waniwani.ai/api/v2/agent-traffic/rules`, or the URL in `RULES_URL`, and writes `src/logic/agents.generated.json` and `src/logic/ip-ranges.generated.json`, the fallback list that ships in the package. Never edit them by hand. `npm version` runs it before every release and commits the two files with the new version. When the rules route does not answer, the release stops before the version changes.
 
 ## License
 

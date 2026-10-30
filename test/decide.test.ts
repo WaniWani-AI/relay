@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { decide } from "../src/logic";
-import agents from "../src/logic/agents.json";
+import agents from "../src/logic/agents.generated.json";
 import { isAgentIp } from "../src/logic/decide";
 import ranges from "../src/logic/ip-ranges.generated.json";
 

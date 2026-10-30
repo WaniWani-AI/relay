@@ -1,5 +1,5 @@
 import { BlockList } from "node:net";
-import agents from "./agents.json";
+import agents from "./agents.generated.json";
 import ranges from "./ip-ranges.generated.json";
 
 export type DecideInput = {

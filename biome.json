@@ -7,7 +7,7 @@
 			"scripts/**",
 			"*.ts",
 			"*.json",
-			"!src/logic/ip-ranges.generated.json"
+			"!src/logic/*.generated.json"
 		]
 	},
 	"linter": {

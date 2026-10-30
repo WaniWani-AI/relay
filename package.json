@@ -30,6 +30,8 @@
 		"lint:fix": "biome check . --write",
 		"test": "vitest run",
 		"rules": "bun scripts/build-rules.ts",
+		"preversion": "bun run rules",
+		"version": "git add src/logic/agents.generated.json src/logic/ip-ranges.generated.json",
 		"prepublishOnly": "bun run build",
 		"release:patch": "npm version patch && git push --follow-tags",
 		"release:minor": "npm version minor && git push --follow-tags"
