@@ -107,11 +107,6 @@ async function load(handler: Handler) {
 	return { relay, calls, fetchMock, background, options, check };
 }
 
-async function swappedBy(handler: Handler) {
-	const { check } = await load(handler);
-	return check(canaryRequest());
-}
-
 beforeEach(() => {
 	vi.spyOn(console, "warn").mockImplementation(() => {});
 });
@@ -517,7 +512,6 @@ describe("rules refresh: failures keep the current rules", () => {
 		["missing tokens", json({ ...rulesFile(), tokens: undefined })],
 		["tokens as a string", json(rulesFile({ tokens: CANARY }))],
 		["tokens as an object", json(rulesFile({ tokens: { 0: CANARY } }))],
-		["an empty tokens array", json(rulesFile({ tokens: [] }))],
 		["a number among tokens", json(rulesFile({ tokens: [CANARY, 12345] }))],
 		["a null among tokens", json(rulesFile({ tokens: [CANARY, null] }))],
 		["missing ipRanges", json({ ...rulesFile(), ipRanges: undefined })],
@@ -539,111 +533,7 @@ describe("rules refresh: failures keep the current rules", () => {
 	});
 });
 
-describe("rules refresh: token checks", () => {
-	it("accepts a 4-character token and matches it", async () => {
-		const { check } = await load(json(rulesFile({ tokens: [CANARY, "zqxv"] })));
-		expect(check(canaryRequest())).toBe(true);
-		expect(check(ua("zqxv/1.0"))).toBe(true);
-	});
-
-	it("refuses the whole file for a 3-character token", async () => {
-		expect(await swappedBy(json(rulesFile({ tokens: [CANARY, "zqx"] })))).toBe(
-			false,
-		);
-	});
-
-	it("refuses the whole file for an empty-string token", async () => {
-		expect(await swappedBy(json(rulesFile({ tokens: [CANARY, ""] })))).toBe(
-			false,
-		);
-	});
-
-	it("accepts a 128-character token", async () => {
-		const long = `zq${"a".repeat(126)}`;
-		expect(long).toHaveLength(128);
-		const { check } = await load(json(rulesFile({ tokens: [CANARY, long] })));
-		expect(check(canaryRequest())).toBe(true);
-		expect(check(ua(`${long}/1.0`))).toBe(true);
-	});
-
-	it("refuses a 129-character token", async () => {
-		const long = `zq${"a".repeat(127)}`;
-		expect(long).toHaveLength(129);
-		expect(await swappedBy(json(rulesFile({ tokens: [CANARY, long] })))).toBe(
-			false,
-		);
-	});
-
-	it.each(["ZQCANARYBOT", "ZqBot", "zqBot"])(
-		"refuses a token with uppercase letters (%s)",
-		async (token) => {
-			expect(
-				await swappedBy(json(rulesFile({ tokens: [CANARY, token] }))),
-			).toBe(false);
-		},
-	);
-
-	it("accepts exactly 5000 tokens", async () => {
-		const tokens = Array.from({ length: 4999 }, (_, i) => `zqtok${i}x`);
-		tokens.push(CANARY);
-		expect(tokens).toHaveLength(5000);
-		const { check } = await load(json(rulesFile({ tokens })));
-		expect(check(canaryRequest())).toBe(true);
-		expect(check(ua("zqtok4998x"))).toBe(true);
-	});
-
-	it("refuses 5001 tokens", async () => {
-		const tokens = Array.from({ length: 5000 }, (_, i) => `zqtok${i}x`);
-		tokens.push(CANARY);
-		expect(tokens).toHaveLength(5001);
-		expect(await swappedBy(json(rulesFile({ tokens })))).toBe(false);
-	});
-});
-
-describe("rules refresh: token shape", () => {
-	it.each(["abc1", "1abc", "9zqbot", "zq-bot.v2/x y_z", "zqbot x", "zqbot "])(
-		"accepts %j and matches it",
-		async (token) => {
-			const { check } = await load(
-				json(rulesFile({ tokens: [CANARY, token] })),
-			);
-			expect(check(canaryRequest())).toBe(true);
-			expect(check(ua(`prefix ${token}suffix`))).toBe(true);
-		},
-	);
-
-	it.each([
-		"x11;",
-		"x11 ",
-		"a1b2",
-		"ab1cd",
-		"12345",
-		"1.2.3/4",
-		"(compatible",
-		"-zqbot",
-		" zqbot",
-		".zqbot",
-		"_zqbot",
-		"/zqbot",
-		"zqbot;",
-		"zqbot)",
-		"zq(bot",
-		"zqbot+",
-		"zqbot:1",
-		"zqbot,x",
-		"zqbot\t",
-		"zqbot\n",
-		"zqb\u00f3t",
-		"zqbot*",
-		'zqbot"',
-	])("refuses the whole file for %j", async (token) => {
-		expect(await swappedBy(json(rulesFile({ tokens: [CANARY, token] })))).toBe(
-			false,
-		);
-	});
-});
-
-describe("rules refresh: browser-like tokens", () => {
+describe("rules refresh: tokens", () => {
 	async function accepted(token: string) {
 		const { check } = await load(json(rulesFile({ tokens: [CANARY, token] })));
 		return {
@@ -653,52 +543,77 @@ describe("rules refresh: browser-like tokens", () => {
 	}
 
 	it.each([
+		"zqxv",
+		"zqx",
+		`zq${"a".repeat(126)}`,
+		`zq${"a".repeat(127)}`,
+		`zq${"a".repeat(400)}`,
+		"abc1",
+		"1abc",
+		"12345",
+		"a1b2",
+		"zq-bot.v2/x y_z",
+		"x11;",
+		"(compatible",
+		" zqbot",
+		"zqbot;",
+		"zqbot:1",
+		"zqb\u00f3t",
 		"chrome/14",
-		"chrome/1234",
-		"x11 linux",
-		"linux x86_64",
-		"samsungbrowser/2",
-		"opr/115",
-		"cros x",
-		"ipad",
-		"ozil",
-		"safari/0 edg",
-		"gecko/2010",
 		"mobile safari",
 		"mozilla/5.0",
-		"chrome/",
-		"edg/",
-		"cpu iphone os 18",
-	])(
-		"accepts %j, which looks like browser text, and matches it",
-		async (token) => {
-			expect(await accepted(token)).toEqual({ swapped: true, matches: true });
-		},
-	);
-
-	it.each([
 		"claude-user",
-		"chatgpt-user",
 		"gptbot",
-		"edge",
-		"4everbot",
 		"datenbank crawler",
-		"kernel searchbot",
-		"allenai.org",
 		"cursor/1.0.0",
 		"meta-externalagent",
-	])("accepts the bot token %j and matches it", async (token) => {
+	])("accepts %j and matches it", async (token) => {
 		expect(await accepted(token)).toEqual({ swapped: true, matches: true });
 	});
 
-	it.each(["x11;", "x11; linux", "(compatible", "Mozilla"])(
-		"still refuses %j, which fails the shape or lowercase rule",
+	it("accepts a file holding a 2-character token, which matches nothing", async () => {
+		const { check } = await load(json(rulesFile({ tokens: [CANARY, "zq"] })));
+		expect(check(canaryRequest())).toBe(true);
+		expect(check(ua("zq"))).toBe(false);
+		expect(check(ua("Agent zq end"))).toBe(false);
+		expect(check(ua("zq/1.0"))).toBe(false);
+	});
+
+	it("accepts a file holding an empty-string token", async () => {
+		const { check } = await load(json(rulesFile({ tokens: [CANARY, ""] })));
+		expect(check(canaryRequest())).toBe(true);
+		expect(check(ua(GPTBOT_UA))).toBe(false);
+	});
+
+	it.each(["ZQUPPERBOT", "ZqUpperBot", "zqUpperBot"])(
+		"lowercases the uppercase token %j and matches it in any case",
 		async (token) => {
-			expect(
-				await swappedBy(json(rulesFile({ tokens: [CANARY, token] }))),
-			).toBe(false);
+			const { check } = await load(
+				json(rulesFile({ tokens: [CANARY, token] })),
+			);
+			expect(check(canaryRequest())).toBe(true);
+			expect(check(ua("zqupperbot/1.0"))).toBe(true);
+			expect(check(ua("ZQUPPERBOT/1.0"))).toBe(true);
+			expect(check(ua("Mozilla/5.0 (compatible; ZqUpperBot/2)"))).toBe(true);
 		},
 	);
+
+	it("accepts an empty tokens array: no token matches, the file's IP ranges do", async () => {
+		const { check } = await load(json(rulesFile({ tokens: [] })));
+		expect(check(ua(GPTBOT_UA))).toBe(false);
+		expect(check(canaryRequest())).toBe(false);
+		expect(check(fromIp("192.0.2.5"))).toBe(true);
+		expect(check(fromIp(BUNDLED_IP))).toBe(false);
+	});
+
+	it("accepts 5001 tokens", async () => {
+		const tokens = Array.from({ length: 5000 }, (_, i) => `zqtok${i}x`);
+		tokens.push(CANARY);
+		expect(tokens).toHaveLength(5001);
+		const { check } = await load(json(rulesFile({ tokens })));
+		expect(check(canaryRequest())).toBe(true);
+		expect(check(ua("zqtok4999x"))).toBe(true);
+	});
 
 	it("a browser request stays a person after a valid swap", async () => {
 		const { check } = await load(json(rulesFile()));
@@ -721,6 +636,12 @@ describe("rules refresh: CIDR checks", () => {
 		["IPv6 /33", { ipv6: ["2a0f:1::/33"] }, "2a0f:1:10::1"],
 		["IPv6 /127", { ipv6: ["2001:db8::76/127"] }, "2001:db8::77"],
 		["IPv6 /128", { ipv6: ["2001:db8::77/128"] }, "2001:db8::77"],
+		["IPv4 /15", { ipv4: ["198.18.0.0/15"] }, "198.19.1.1"],
+		["IPv4 /8", { ipv4: ["10.0.0.0/8"] }, "10.200.1.1"],
+		["IPv4 /0", { ipv4: ["0.0.0.0/0"] }, PERSON_IP],
+		["IPv6 /31", { ipv6: ["2a0e::/31"] }, "2a0e:1:ffff::1"],
+		["IPv6 /16", { ipv6: ["2a0f::/16"] }, "2a0f:ffff::1"],
+		["IPv6 /0", { ipv6: ["::/0"] }, "2a00:1450::1"],
 	])("accepts %s and matches inside it", async (_name, range, ip) => {
 		const { check } = await load(
 			json(
@@ -734,23 +655,15 @@ describe("rules refresh: CIDR checks", () => {
 	});
 
 	it.each<[string, RangeEntry]>([
-		["IPv4 /15", { ipv4: ["198.18.0.0/15"] }],
-		["IPv4 /8", { ipv4: ["10.0.0.0/8"] }],
-		["IPv4 /7", { ipv4: ["10.0.0.0/7"] }],
-		["IPv4 /0", { ipv4: ["0.0.0.0/0"] }],
 		["IPv4 /33", { ipv4: ["192.0.2.0/33"] }],
-		["IPv6 /31", { ipv6: ["2a0e::/31"] }],
-		["IPv6 /16", { ipv6: ["2a0f::/16"] }],
-		["IPv6 /15", { ipv6: ["2a0e::/15"] }],
-		["IPv6 /0", { ipv6: ["::/0"] }],
 		["IPv6 /129", { ipv6: ["2001:db8::/129"] }],
 		[
-			"one /15 among valid IPv4 ranges",
-			{ ipv4: ["192.0.2.0/24", "198.18.0.0/15"] },
+			"one /33 among valid IPv4 ranges",
+			{ ipv4: ["192.0.2.0/24", "198.18.0.0/33"] },
 		],
 		[
-			"one /31 among valid IPv6 ranges",
-			{ ipv6: ["2001:db8::/32", "2a0e::/31"] },
+			"one bad address among valid IPv6 ranges",
+			{ ipv6: ["2001:db8::/32", "2001:zz8::/32"] },
 		],
 		["an IPv4 without prefix", { ipv4: ["192.0.2.0"] }],
 		["an IPv4 with an empty prefix", { ipv4: ["192.0.2.0/"] }],
@@ -763,13 +676,18 @@ describe("rules refresh: CIDR checks", () => {
 		["an IPv4 in the ipv6 list", { ipv6: ["192.0.2.0/24"] }],
 		["an IPv6 without prefix", { ipv6: ["2001:db8::"] }],
 		["a hostname", { ipv4: ["example.com/24"] }],
-	])("refuses the whole file for %s", async (_name, range) => {
-		const { check } = await load(json(withRange(range)));
-		expect(check(canaryRequest())).toBe(false);
-		expect(check(fromIp(BUNDLED_IP))).toBe(true);
-	});
+	])(
+		"keeps the current rules for a malformed range: %s",
+		async (_name, range) => {
+			const { check } = await load(json(withRange(range)));
+			expect(check(canaryRequest())).toBe(false);
+			expect(check(ua(GPTBOT_UA))).toBe(true);
+			expect(check(fromIp(BUNDLED_IP))).toBe(true);
+			expect(check(fromIp(PERSON_IP))).toBe(false);
+		},
+	);
 
-	it("accepts exactly 50,000 prefixes split across entries", async () => {
+	it("accepts 50,000 prefixes split across entries", async () => {
 		const file = rulesFile({
 			ipRanges: [
 				{
@@ -792,7 +710,7 @@ describe("rules refresh: CIDR checks", () => {
 		expect(check(fromIp("2a0f:1::9"))).toBe(true);
 	});
 
-	it("refuses 50,001 prefixes split across entries", async () => {
+	it("accepts 50,001 prefixes split across entries", async () => {
 		const file = rulesFile({
 			ipRanges: [
 				{
@@ -810,8 +728,8 @@ describe("rules refresh: CIDR checks", () => {
 			],
 		});
 		const { check } = await load(json(file));
-		expect(check(canaryRequest())).toBe(false);
-		expect(check(fromIp(BUNDLED_IP))).toBe(true);
+		expect(check(canaryRequest())).toBe(true);
+		expect(check(fromIp("198.18.1.1"))).toBe(true);
 	});
 });
 
@@ -850,7 +768,8 @@ describe("rules refresh: windows", () => {
 
 	const valid = json(rulesFile());
 	const failing = json(rulesFile(), 500);
-	const invalid = json(rulesFile({ tokens: [CANARY, "zqx"] }));
+	const invalid = json(rulesFile({ version: 2 }));
+	const malformedCidr = json(withRange({ ipv4: ["300.0.2.0/24"] }));
 
 	it("after a swap: no new fetch at 12 h minus 1 ms", async () => {
 		expect((await attemptsAt(valid, 12 * HOUR - 1)).attempts).toBe(1);
@@ -875,6 +794,7 @@ describe("rules refresh: windows", () => {
 	it.each<[string, Handler]>([
 		["a failed fetch", failing],
 		["an invalid file", invalid],
+		["a malformed CIDR", malformedCidr],
 		["a network error", () => Promise.reject(new TypeError("fetch failed"))],
 	])("after %s: no retry at 5 min minus 1 ms", async (_name, first) => {
 		expect((await attemptsAt(first, 5 * MINUTE - 1)).attempts).toBe(1);
@@ -883,6 +803,7 @@ describe("rules refresh: windows", () => {
 	it.each<[string, Handler]>([
 		["a failed fetch", failing],
 		["an invalid file", invalid],
+		["a malformed CIDR", malformedCidr],
 		["a network error", () => Promise.reject(new TypeError("fetch failed"))],
 	])("after %s: one retry at exactly 5 min", async (_name, first) => {
 		expect((await attemptsAt(first, 5 * MINUTE)).attempts).toBe(2);
@@ -891,6 +812,7 @@ describe("rules refresh: windows", () => {
 	it.each<[string, Handler]>([
 		["a failed fetch", failing],
 		["an invalid file", invalid],
+		["a malformed CIDR", malformedCidr],
 	])("after %s: one retry at 5 min plus 1 ms", async (_name, first) => {
 		expect((await attemptsAt(first, 5 * MINUTE + 1)).attempts).toBe(2);
 	});
@@ -920,7 +842,11 @@ describe("rules refresh: windows", () => {
 
 	const afterSwapFailures: Array<[string, Handler]> = [
 		["a non-2xx", json(rulesFile(), 500)],
-		["an invalid file", json(rulesFile({ tokens: [CANARY, "zqx"] }))],
+		["an invalid file", json(rulesFile({ version: 2 }))],
+		[
+			"a malformed CIDR",
+			json(withRange({ ipv4: ["192.0.2.0/24", "2001:db8::/32"] })),
+		],
 		["a network error", () => Promise.reject(new TypeError("fetch failed"))],
 	];
 

@@ -36,7 +36,10 @@ function compile(rules: MatchRules): CompiledRules {
 	const agentRanges = new BlockList();
 	const addRanges = (cidrs: string[], type: "ipv4" | "ipv6") => {
 		for (const cidr of cidrs) {
-			const [address = "", prefix] = cidr.split("/");
+			const [address = "", prefix, extra] = cidr.split("/");
+			if (!prefix || extra !== undefined) {
+				throw new Error(`malformed range ${cidr}`);
+			}
 			agentRanges.addSubnet(address, Number(prefix), type);
 		}
 	};

@@ -1,11 +1,5 @@
-import { isIPv4, isIPv6 } from "node:net";
 import { applyRules, type MatchRules } from "./logic/decide";
 import { settings } from "./settings";
-
-const MAX_TOKENS = 5000;
-const MAX_PREFIXES = 50_000;
-const MIN_TOKEN_LENGTH = 4;
-const MAX_TOKEN_LENGTH = 128;
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
 	typeof value === "object" && value !== null;
@@ -13,64 +7,30 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
 const isStringArray = (value: unknown): value is string[] =>
 	Array.isArray(value) && value.every((item) => typeof item === "string");
 
-const isCidr = (cidr: string, family: "ipv4" | "ipv6"): boolean => {
-	const [address = "", prefix, extra] = cidr.split("/");
-	if (
-		extra !== undefined ||
-		prefix === undefined ||
-		!/^\d{1,3}$/.test(prefix)
-	) {
-		return false;
-	}
-	const bits = Number(prefix);
-	return family === "ipv4"
-		? isIPv4(address) && bits >= 16 && bits <= 32
-		: isIPv6(address) && bits >= 32 && bits <= 128;
-};
-
-const isToken = (token: string): boolean =>
-	/^[a-z0-9][a-z0-9._/ -]*$/.test(token) &&
-	/[a-z]{3}/.test(token) &&
-	token.length >= MIN_TOKEN_LENGTH &&
-	token.length <= MAX_TOKEN_LENGTH &&
-	token === token.toLowerCase();
-
-/** The match rules in a rules file from the app (the `data` of its answer), or null when any part of it fails a check. */
+/** The match rules in a rules file from the app (the `data` of its answer), or null when it does not have the expected form. A malformed range makes `applyRules` throw instead. */
 export function parseRemoteRules(body: unknown): MatchRules | null {
 	if (!isObject(body) || body.version !== 1) {
 		return null;
 	}
 	const { tokens, ipRanges } = body;
-	if (
-		!isStringArray(tokens) ||
-		tokens.length === 0 ||
-		tokens.length > MAX_TOKENS ||
-		!tokens.every(isToken) ||
-		!Array.isArray(ipRanges)
-	) {
+	if (!isStringArray(tokens) || !Array.isArray(ipRanges)) {
 		return null;
 	}
-
 	const ranges: MatchRules["ipRanges"] = [];
-	let prefixes = 0;
 	for (const range of ipRanges) {
 		if (
 			!isObject(range) ||
 			!isStringArray(range.ipv4) ||
-			!isStringArray(range.ipv6) ||
-			!range.ipv4.every((cidr) => isCidr(cidr, "ipv4")) ||
-			!range.ipv6.every((cidr) => isCidr(cidr, "ipv6"))
+			!isStringArray(range.ipv6)
 		) {
 			return null;
 		}
-		prefixes += range.ipv4.length + range.ipv6.length;
 		ranges.push({ ipv4: range.ipv4, ipv6: range.ipv6 });
 	}
-	if (prefixes > MAX_PREFIXES) {
-		return null;
-	}
-
-	return { tokens, ipRanges: ranges };
+	return {
+		tokens: tokens.map((token) => token.toLowerCase()),
+		ipRanges: ranges,
+	};
 }
 
 let lastAttemptOk = false;
