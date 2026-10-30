@@ -1,6 +1,6 @@
 {
 	"name": "@waniwani/relay",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"description": "Records AI agent visits to your website from your middleware and posts them to WaniWani. Open source, so your security team can read every line.",
 	"type": "module",
 	"main": "./dist/index.js",
