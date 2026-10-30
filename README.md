@@ -17,14 +17,17 @@ The [setup screen](https://app.waniwani.ai/agent-traffic/setup) in Waniwani give
 ### `isAgent(request)`
 
 ```ts
-function isAgent(request: Request | CloudFrontRequest): boolean;
+function isAgent(
+  request: Request | CloudFrontRequest,
+  options?: Pick<RelayOptions, "region" | "apiUrl" | "waitUntil" | "rules">,
+): boolean;
 ```
 
-Tells whether the request comes from an AI agent. It reads the headers and the client IP only. It makes no network call, keeps no state between requests and never throws. It returns `true` when any of these hold:
+Tells whether the request comes from an AI agent. It reads the headers and the client IP only, never waits on the network and never throws. It returns `true` when any of these hold:
 
-- The `User-Agent` header contains a token from the AI bot list, for example `ChatGPT-User`, `Claude-User`, `GPTBot` or `PerplexityBot`. The list comes from the AI bots in the Waniwani bot catalog: crawlers that collect training data, AI search bots and fetchers that act for a user. Classic search indexers such as `Googlebot` and `Bingbot`, browsers, `curl` and uptime monitors are not on it.
+- The `User-Agent` header contains a token from the AI bot list, for example `ChatGPT-User`, `Claude-User`, `GPTBot` or `PerplexityBot`. The list holds the AI bots in the Waniwani bot catalog and the AI bots on [bots.fyi](https://bots.fyi): crawlers that collect training data, AI search bots, fetchers that act for a user and browsing agents. Classic search indexers such as `Googlebot` and `Bingbot`, browsers, `curl` and uptime monitors are not on it.
 - The request has a `Signature-Agent` header ([Web Bot Auth](https://datatracker.ietf.org/wg/webbotauth/about/)).
-- The client IP sits inside an IP range that an AI vendor publishes for its bots. Today the ranges come from OpenAI, Perplexity, Mistral, Common Crawl and DuckDuckGo (DuckAssistBot).
+- The client IP sits inside an IP range that an AI vendor publishes for its bots, for example the lists of OpenAI, Anthropic, Perplexity, Mistral, Apple, Common Crawl and DuckDuckGo (DuckAssistBot).
 - The request has a `DPoP` header, or its `Authorization` header uses the `DPoP` scheme.
 
 ### `recordAgentVisit(request, options?)`
@@ -46,6 +49,7 @@ Posts one event for the request to Waniwani after the response ([`AgentVisitReco
 | `apiUrl` | The host of `region` | Another Waniwani host, for local development |
 | `key` | `process.env.WANIWANI_AGENT_TRAFFIC_KEY` | The key from the setup screen, `wwt_<token>.<org key>` |
 | `waitUntil` | Found by itself on Vercel, none on other platforms | Keeps the post alive after the response |
+| `rules` | `"remote"` | `"remote"` loads the newest bot list from Waniwani every 12 hours, `"bundled"` uses only the list that ships in the package |
 | `omit` | `[]` | Header names, and the fields `matchKey`, `userAgent` and `referer`, to leave out of every event. An event without `matchKey` still counts, but Waniwani then joins it with the chat embed's events on site, user agent and path only, which is less exact. |
 
 #### `AgentVisitRecord`
@@ -94,10 +98,10 @@ The package has no runtime dependencies. The IP range check uses `BlockList` fro
 bun install
 bun run build   # typecheck, lint and dist/index.js
 bun run test    # unit tests (run the build first, one test imports dist)
-bun run rules   # refreshes src/logic/ip-ranges.generated.json from the vendors' published lists
+bun run rules   # writes the two src/logic/*.generated.json files from the app rules file
 ```
 
-`src/logic/agents.json` is copied by hand from the Waniwani bot catalog (`src/lib/agent-traffic/bot-catalog.ts` in the Waniwani app): every entry of kind `training`, `search` or `fetcher`, using its `token` when it has one and its lowercased name otherwise.
+`bun run rules` reads `https://app.waniwani.ai/api/v2/agent-traffic/rules`, or the URL in `RULES_URL`, and writes `src/logic/agents.generated.json` and `src/logic/ip-ranges.generated.json`, the fallback list that ships in the package. Never edit them by hand. `npm version` runs it before every release and commits the two files with the new version. When the rules route does not answer, the release stops before the version changes.
 
 ## License
 

@@ -4,6 +4,7 @@ import { readKey } from "./key";
 import { decide } from "./logic";
 import { deriveMatchKey } from "./match-key";
 import type { Platform } from "./platform";
+import { refreshRules } from "./refresh";
 import { type CloudFrontRequest, toRelayRequest } from "./request";
 import { settings } from "./settings";
 import { RELAY_VERSION } from "./version";
@@ -24,7 +25,14 @@ export type RelayOptions = {
 	waitUntil?: (promise: Promise<unknown>) => void;
 	/** Header names, and the fields `matchKey`, `userAgent` or `referer`, to leave out of every event. */
 	omit?: Array<string>;
+	/** `"remote"` loads the newest AI bot list from WaniWani every 12 hours. `"bundled"` keeps the list shipped in this version. Defaults to `"remote"`. */
+	rules?: "remote" | "bundled";
 };
+
+export type IsAgentOptions = Pick<
+	RelayOptions,
+	"region" | "apiUrl" | "waitUntil" | "rules"
+>;
 
 export type AgentVisitRecord = {
 	occurredAt: string;
@@ -40,14 +48,38 @@ export type AgentVisitRecord = {
 	platform?: Platform;
 };
 
-/** Tells whether a request, or the `cf.request` of a Lambda@Edge event, comes from an AI agent. Reads headers only, makes no network call. */
-export function isAgent(request: Request | CloudFrontRequest): boolean {
+/**
+ * Tells whether a request, or the `cf.request` of a Lambda@Edge event, comes from an AI agent. Reads headers only and never waits on the network.
+ * Every 12 hours it starts one background fetch of the newest AI bot list, unless `rules` is `"bundled"`.
+ */
+export function isAgent(
+	request: Request | CloudFrontRequest,
+	options: IsAgentOptions = {},
+): boolean {
+	startRulesRefresh(options);
 	try {
 		const { headers, ip } = toRelayRequest(request);
-		return decide({ headers: readCappedHeaders(headers), ip });
+		return decide({
+			headers: readCappedHeaders(headers),
+			ip,
+			useBundled: options.rules === "bundled",
+		});
 	} catch {
 		return false;
 	}
+}
+
+function startRulesRefresh(options: IsAgentOptions): void {
+	try {
+		if (options.rules === "bundled") {
+			return;
+		}
+		const apiUrl = resolveApiUrl(options);
+		const work = apiUrl ? refreshRules(apiUrl) : null;
+		if (work) {
+			schedule(work, options.waitUntil);
+		}
+	} catch {}
 }
 
 /**
@@ -132,7 +164,7 @@ export function recordAgentVisit(
 
 let warnedRegion = false;
 
-function resolveApiUrl(options: RelayOptions): string | null {
+function resolveApiUrl(options: IsAgentOptions): string | null {
 	if (options.apiUrl !== undefined) {
 		return options.apiUrl.replace(/\/+$/, "");
 	}

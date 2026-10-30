@@ -267,7 +267,7 @@ describe("platform: the other fields", () => {
 		});
 		const relay = await freshRelay();
 		const { fetchMock } = stubFetch({});
-		expect(relay.isAgent(agentRequest())).toBe(true);
+		expect(relay.isAgent(agentRequest(), { rules: "bundled" })).toBe(true);
 		expect(fetchMock).not.toHaveBeenCalled();
 	});
 });
