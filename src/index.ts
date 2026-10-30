@@ -3,6 +3,7 @@ import { postEvent } from "./ingest";
 import { readKey } from "./key";
 import { decide } from "./logic";
 import { deriveMatchKey } from "./match-key";
+import { detectPlatform, type Platform } from "./platform";
 import { settings } from "./settings";
 import { RELAY_VERSION } from "./version";
 import { vercelWaitUntil } from "./wait-until";
@@ -33,6 +34,7 @@ export type AgentVisitRecord = {
 	matchKey?: string;
 	sourceEventId: string;
 	relayVersion: string;
+	platform?: Platform;
 };
 
 /** Tells whether a request comes from an AI agent. Reads headers only, makes no network call. */
@@ -87,6 +89,10 @@ export function recordAgentVisit(
 		}
 		if (capped.referer !== undefined && !omitted.has("referer")) {
 			record.referer = capped.referer;
+		}
+		const platform = detectPlatform();
+		if (platform !== undefined) {
+			record.platform = platform;
 		}
 
 		const ingestUrl = `${apiUrl}/api/v2/agent-traffic/ingest/middleware/${key.ingestToken}`;

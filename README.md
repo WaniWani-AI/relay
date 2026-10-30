@@ -91,6 +91,7 @@ For each matched request, `recordAgentVisit` posts one JSON record to `<host>/ap
 | `matchKey` | `HMAC-SHA256(org key, client IP)` as hex. WaniWani uses it to join this event with other events of the same visit. |
 | `sourceEventId` | A random UUID for this request |
 | `relayVersion` | The version of this library |
+| `platform` | `vercel` or `cloudflare`, when the library knows the platform it runs on |
 
 Only these headers can ever go into an event: `user-agent`, `referer`, `accept`, `accept-language`, `from`, `signature-agent`, `signature-input`, `signature`, `dpop`, `sec-ch-ua`, `sec-ch-ua-platform`, `sec-ch-ua-mobile` and `authorization`. For `authorization` the library sends the scheme word alone, in its standard spelling, and only when a credential follows it and the word is one of `Basic`, `Bearer`, `Digest`, `DPoP`, `HOBA`, `Mutual`, `Negotiate`, `NTLM`, `OAuth`, `PrivateToken`, `SCRAM-SHA-1`, `SCRAM-SHA-256`, `vapid` or `AWS4-HMAC-SHA256`. Any other value sends no `authorization` header at all, so a raw API key in that header never leaves your deployment.
 
@@ -121,28 +122,52 @@ Your site does not notice. The post runs after the response, inside the `waitUnt
 
 The package has no runtime dependencies. The IP range check uses `BlockList` from `node:net`. On Vercel it finds `waitUntil` by itself, in the request context that the Vercel runtime sets for each request. On other platforms you pass `waitUntil` in the options. The bot list, the IP ranges and the match code ship inside the package, and the library never downloads code. To get a newer bot list, upgrade the package.
 
-## Cloudflare Workers and other platforms
+## Cloudflare Workers
 
-The library imports `node:net` for its IP range check, so a Cloudflare Worker needs the `nodejs_compat` flag. Workers with a compatibility date of 2026-08-04 or later have it on by default.
+The library imports `node:net` for its IP range check, so a Worker needs the `nodejs_compat` flag. Workers with a compatibility date of 2026-08-04 or later have it on by default.
 
-Outside Vercel, pass the key and `waitUntil` yourself. In a Cloudflare Worker that looks like this:
+A Worker on a route sees each request to the pages of that route before your site does. Create a Worker project with `npm create cloudflare@latest`, add `@waniwani/relay` to its dependencies, and put this code in `src/index.ts`:
 
 ```ts
-import { isAgent, recordAgentVisit, type RelayOptions } from "@waniwani/relay";
+import { isAgent, recordAgentVisit } from "@waniwani/relay";
 
 export default {
-  async fetch(request: Request, env: { WANIWANI_AGENT_TRAFFIC_KEY: string }, ctx: ExecutionContext) {
-    const relay: RelayOptions = {
-      key: env.WANIWANI_AGENT_TRAFFIC_KEY,
-      waitUntil: ctx.waitUntil.bind(ctx),
-    };
+  async fetch(request, env, ctx) {
     if (isAgent(request)) {
-      recordAgentVisit(request, relay);
+      recordAgentVisit(request, {
+        key: env.WANIWANI_AGENT_TRAFFIC_KEY,
+        waitUntil: ctx.waitUntil.bind(ctx),
+      });
     }
     return fetch(request);
   },
-};
+} satisfies ExportedHandler<{ WANIWANI_AGENT_TRAFFIC_KEY: string }>;
 ```
+
+`return fetch(request)` passes the request on to your site as it came. If a Worker already runs on these pages, add the `if` block at the top of its `fetch` handler. A Worker has no `process.env`, so pass the key and `waitUntil` yourself.
+
+The routes in `wrangler.jsonc` pick the pages that go through the Worker:
+
+```jsonc
+{
+  "name": "waniwani-relay",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "routes": ["www.example.com/*"]
+}
+```
+
+Then store the key as a secret and deploy:
+
+```bash
+npx wrangler secret put WANIWANI_AGENT_TRAFFIC_KEY
+npx wrangler deploy
+```
+
+## Other platforms
+
+Pass the key and `waitUntil` in the options. Without a `waitUntil`, the post may stop when your platform ends the request.
 
 ## Options
 

@@ -24,6 +24,7 @@ const ALLOWED_FIELDS = [
 	"matchKey",
 	"sourceEventId",
 	"relayVersion",
+	"platform",
 ];
 
 afterEach(() => {
@@ -74,5 +75,34 @@ describe("app contract", () => {
 		expect(record.sourceEventId.length).toBeLessThanOrEqual(200);
 		expect(record.relayVersion.length).toBeLessThanOrEqual(64);
 		expect("authorization" in record.headers).toBe(false);
+	});
+
+	it("sends platform as a string the app schema accepts on a Cloudflare Worker", async () => {
+		const relay = await freshRelay();
+		const url = "https://app.test/api/v2/agent-traffic/ingest/middleware/tok";
+		const { calls } = stubFetch({
+			[url]: () => new Response(null, { status: 202 }),
+		});
+		vi.stubGlobal("navigator", { userAgent: "Cloudflare-Workers" });
+		const background = collector();
+		relay.recordAgentVisit(
+			new Request("https://www.example.com/", {
+				headers: { "user-agent": "Claude-User/1.0" },
+			}),
+			{
+				key: `wwt_tok.${ORG_KEY}`,
+				apiUrl: "https://app.test",
+				waitUntil: background.waitUntil,
+			},
+		);
+		await background.flush();
+		const record = JSON.parse(
+			String(calls.find((call) => call.url === url)?.init?.body),
+		).requests[0];
+		expect(
+			Object.keys(record).every((key) => ALLOWED_FIELDS.includes(key)),
+		).toBe(true);
+		expect(typeof record.platform).toBe("string");
+		expect(record.platform).toBe("cloudflare");
 	});
 });
