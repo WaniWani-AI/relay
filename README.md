@@ -1,8 +1,6 @@
 # @waniwani/relay
 
-`@waniwani/relay` records the visits of AI agents to your website and sends them to [WaniWani](https://waniwani.ai). It runs in the middleware of your site, the code that sees each request before your pages do. For each request from an AI agent, it posts one small event to WaniWani after the response has gone out. It never changes the request or the response, and a person who visits your site sends nothing.
-
-The code is Apache 2.0 licensed and short, so your security team can read all of it before you deploy.
+`@waniwani/relay` records the visits of AI agents to your website and sends them to [Waniwani](https://waniwani.ai). It runs in the middleware of your site, the code that sees each request before your pages do. For each request from an AI agent, it posts one small event to Waniwani after the response has gone out. It never changes the request or the response, and a person who visits your site sends nothing.
 
 ## Install
 
@@ -10,75 +8,49 @@ The code is Apache 2.0 licensed and short, so your security team can read all of
 npm install @waniwani/relay
 ```
 
-Copy the key from the WaniWani setup screen into the environment variable `WANIWANI_AGENT_TRAFFIC_KEY` of your production deployment. When the variable is not set, the library sends nothing, so preview deployments and local runs stay silent.
+## Setup
 
-## Vercel
+The [setup screen](https://app.waniwani.ai/agent-traffic/setup) in Waniwani gives you the code for your platform: Vercel, Cloudflare Workers or AWS CloudFront (Lambda@Edge). For an organization in the EU region, use [eu.app.waniwani.ai](https://eu.app.waniwani.ai/agent-traffic/setup).
 
-### Next.js
+## API
 
-Next.js 16 calls its middleware file `proxy.ts` (it was `middleware.ts` before). Add the two calls to that file:
-
-```ts
-// proxy.ts
-import { isAgent, recordAgentVisit } from "@waniwani/relay";
-
-export default function proxy(request: Request) {
-  if (isAgent(request)) {
-    recordAgentVisit(request);
-  }
-}
-
-export const config = {
-  matcher: ["/((?!api/|_next/|.*\\.[a-z0-9]{1,5}$).*)", "/robots.txt", "/llms.txt"],
-};
-```
-
-If you already have a proxy, put the `if` block at the top of your proxy function and leave the rest as it is. The matcher keeps `/api/`, `/_next/` and every path with a file extension out of the middleware, so scripts, images, fonts and API calls never run it. It lists `/robots.txt` and `/llms.txt` by name, because AI agents read them.
-
-### Other frameworks
-
-Point Vercel at the middleware file with the `proxy` property in `vercel.json` (the same key works in `vercel.ts`):
-
-```json
-{
-  "proxy": {
-    "entrypoint": "proxy.ts",
-    "matcher": ["/((?!api/|.*\\.[a-z0-9]{1,5}$).*)", "/robots.txt", "/llms.txt"]
-  }
-}
-```
+### `isAgent(request)`
 
 ```ts
-// proxy.ts
-import { isAgent, recordAgentVisit } from "@waniwani/relay";
-
-export default function proxy(request: Request) {
-  if (isAgent(request)) {
-    recordAgentVisit(request);
-  }
-}
+function isAgent(request: Request | CloudFrontRequest): boolean;
 ```
 
-If your organization is in the EU region, pass the region. Its events then go only to the EU host:
+Tells whether the request comes from an AI agent. It reads the headers and the client IP only. It makes no network call, keeps no state between requests and never throws. It returns `true` when any of these hold:
 
-```ts
-recordAgentVisit(request, { region: "eu" });
-```
-
-The setup screen shows the code for your organization.
-
-## How a request is matched
-
-`isAgent(request)` reads a few request headers and the client IP. It makes no network call and keeps no state between requests. It returns `true` when any of these hold:
-
-- The `User-Agent` header contains a token from the AI bot list, for example `ChatGPT-User`, `Claude-User`, `GPTBot` or `PerplexityBot`. The list comes from the AI bots in the WaniWani bot catalog: crawlers that collect training data, AI search bots and fetchers that act for a user. Classic search indexers such as `Googlebot` and `Bingbot`, browsers, `curl` and uptime monitors are not on it.
+- The `User-Agent` header contains a token from the AI bot list, for example `ChatGPT-User`, `Claude-User`, `GPTBot` or `PerplexityBot`. The list comes from the AI bots in the Waniwani bot catalog: crawlers that collect training data, AI search bots and fetchers that act for a user. Classic search indexers such as `Googlebot` and `Bingbot`, browsers, `curl` and uptime monitors are not on it.
 - The request has a `Signature-Agent` header ([Web Bot Auth](https://datatracker.ietf.org/wg/webbotauth/about/)).
 - The client IP sits inside an IP range that an AI vendor publishes for its bots. Today the ranges come from OpenAI, Perplexity, Mistral, Common Crawl and DuckDuckGo (DuckAssistBot).
 - The request has a `DPoP` header, or its `Authorization` header uses the `DPoP` scheme.
 
-## What is sent
+### `recordAgentVisit(request, options?)`
 
-For each matched request, `recordAgentVisit` posts one JSON record to `<host>/api/v2/agent-traffic/ingest/middleware/<token>`:
+```ts
+function recordAgentVisit(
+  request: Request | CloudFrontRequest,
+  options?: RelayOptions,
+): Promise<void>;
+```
+
+Posts one event for the request to Waniwani after the response ([`AgentVisitRecord`](#agentvisitrecord)). Needs a secret key setup, otherwise sends nothing. The function never throws, and the promise never rejects.
+
+#### `RelayOptions`
+
+| Option | Default | Purpose |
+| --- | --- | --- |
+| `region` | `"us"` | The region of your organization: `"us"` sends to `https://app.waniwani.ai`, `"eu"` to `https://eu.app.waniwani.ai` |
+| `apiUrl` | The host of `region` | Another Waniwani host, for local development |
+| `key` | `process.env.WANIWANI_AGENT_TRAFFIC_KEY` | The key from the setup screen, `wwt_<token>.<org key>` |
+| `waitUntil` | Found by itself on Vercel, none on other platforms | Keeps the post alive after the response |
+| `omit` | `[]` | Header names, and the fields `matchKey`, `userAgent` and `referer`, to leave out of every event. An event without `matchKey` still counts, but Waniwani then joins it with the chat embed's events on site, user agent and path only, which is less exact. |
+
+#### `AgentVisitRecord`
+
+For each matched request, `recordAgentVisit` posts one JSON record of type `AgentVisitRecord` to Waniwani platform:
 
 | Field | Value |
 | --- | --- |
@@ -87,72 +59,34 @@ For each matched request, `recordAgentVisit` posts one JSON record to `<host>/ap
 | `host` | The hostname of the request URL, without the port |
 | `path` | The path with its query string |
 | `userAgent`, `referer` | Copies of those two headers |
-| `headers` | The allowed headers that the request has (see below) |
-| `matchKey` | `HMAC-SHA256(org key, client IP)` as hex. WaniWani uses it to join this event with other events of the same visit. |
+| `headers` | The request headers from the next table that the request has |
+| `matchKey` | `HMAC-SHA256(org key, client IP)` as hex. Waniwani uses it to join this event with other events of the same visit. |
 | `sourceEventId` | A random UUID for this request |
 | `relayVersion` | The version of this library |
+| `platform` | `vercel`, `cloudflare` or `cloudfront`, when the library knows the platform it runs on |
 
-Only these headers can ever go into an event: `user-agent`, `referer`, `accept`, `accept-language`, `from`, `signature-agent`, `signature-input`, `signature`, `dpop`, `sec-ch-ua`, `sec-ch-ua-platform`, `sec-ch-ua-mobile` and `authorization`. For `authorization` the library sends the scheme word alone, in its standard spelling, and only when a credential follows it and the word is one of `Basic`, `Bearer`, `Digest`, `DPoP`, `HOBA`, `Mutual`, `Negotiate`, `NTLM`, `OAuth`, `PrivateToken`, `SCRAM-SHA-1`, `SCRAM-SHA-256`, `vapid` or `AWS4-HMAC-SHA256`. Any other value sends no `authorization` header at all, so a raw API key in that header never leaves your deployment.
+The `headers` field can hold only these request headers:
 
-These never leave your deployment:
+| Header | What is sent |
+| --- | --- |
+| `user-agent`, `referer`, `accept`, `accept-language`, `from` | The value as it came |
+| `signature-agent`, `signature-input`, `signature` | The value as it came (Web Bot Auth) |
+| `dpop` | The value as it came |
+| `sec-ch-ua`, `sec-ch-ua-platform`, `sec-ch-ua-mobile` | The value as it came |
+| `authorization` | The secret never leaves. Only the scheme word goes out, for example `Bearer`. It goes out only when a credential follows it and the word is one of `Basic`, `Bearer`, `Digest`, `DPoP`, `HOBA`, `Mutual`, `Negotiate`, `NTLM`, `OAuth`, `PrivateToken`, `SCRAM-SHA-1`, `SCRAM-SHA-256`, `vapid` or `AWS4-HMAC-SHA256`. For any other value, such as a raw API key, the event has no `authorization` header. |
 
-- The `cookie` header. The library never reads it.
-- The credential in the `Authorization` header.
-- The raw client IP. The library turns it into the match key with your org key and never logs it. The org key is the part of `WANIWANI_AGENT_TRAFFIC_KEY` after the dot, so two organizations get unrelated match keys for the same IP.
-- The request body, other headers and your environment variables.
+#### Platform differences
 
-### Sending less
-
-`omit` takes header names, plus the field names `matchKey`, `userAgent` and `referer`. Whatever it names is left out of every event:
-
-```ts
-recordAgentVisit(request, {
-  omit: ["accept-language", "matchKey"],
-});
-```
-
-An event without a match key still counts. WaniWani then joins it with the chat embed's events on site, user agent and path alone, which is less exact.
-
-## When WaniWani is slow or down
-
-Your site does not notice. The post runs after the response, inside the `waitUntil` of your platform, with a 2 second timeout. After a network error, a timeout, a 429 or a 5xx it tries once more after 500 ms. Any other 4xx gets no retry. If the second try fails as well, the library writes one line to your function logs and drops the event. It never throws.
+| Platform | Await the call | Post timeout |
+| --- | --- | --- |
+| Vercel | No | 2 s, one retry after 500 ms |
+| Cloudflare Workers | No | 2 s, one retry after 500 ms |
+| AWS CloudFront (Lambda@Edge) | Yes, before the handler returns. Lambda freezes the function when the handler returns, so a post event request that is not awaited is lost. | 1 s, no retry |
+| Other | No, when you pass `waitUntil` | 2 s, one retry after 500 ms |
 
 ## Dependencies
 
-The package has no runtime dependencies. The IP range check uses `BlockList` from `node:net`. On Vercel it finds `waitUntil` by itself, in the request context that the Vercel runtime sets for each request. On other platforms you pass `waitUntil` in the options. The bot list, the IP ranges and the match code ship inside the package, and the library never downloads code. To get a newer bot list, upgrade the package.
-
-## Cloudflare Workers and other platforms
-
-The library imports `node:net` for its IP range check, so a Cloudflare Worker needs the `nodejs_compat` flag. Workers with a compatibility date of 2026-08-04 or later have it on by default.
-
-Outside Vercel, pass the key and `waitUntil` yourself. In a Cloudflare Worker that looks like this:
-
-```ts
-import { isAgent, recordAgentVisit, type RelayOptions } from "@waniwani/relay";
-
-export default {
-  async fetch(request: Request, env: { WANIWANI_AGENT_TRAFFIC_KEY: string }, ctx: ExecutionContext) {
-    const relay: RelayOptions = {
-      key: env.WANIWANI_AGENT_TRAFFIC_KEY,
-      waitUntil: ctx.waitUntil.bind(ctx),
-    };
-    if (isAgent(request)) {
-      recordAgentVisit(request, relay);
-    }
-    return fetch(request);
-  },
-};
-```
-
-## Options
-
-| Option | Default | Purpose |
-| --- | --- | --- |
-| `region` | `"us"` | The region of your organization: `"us"` sends to `https://app.waniwani.ai`, `"eu"` to `https://eu.app.waniwani.ai` |
-| `apiUrl` | The host of `region` | Another WaniWani host, for local development |
-| `key` | `process.env.WANIWANI_AGENT_TRAFFIC_KEY` | The key from the setup screen, `wwt_<token>.<org key>` |
-| `waitUntil` | Found by itself on Vercel, none on other platforms | Keeps the post alive after the response |
-| `omit` | `[]` | Headers and fields to leave out of every event |
+The package has no runtime dependencies. The IP range check uses `BlockList` from `node:net`.
 
 ## Development
 
@@ -163,7 +97,7 @@ bun run test    # unit tests (run the build first, one test imports dist)
 bun run rules   # refreshes src/logic/ip-ranges.generated.json from the vendors' published lists
 ```
 
-`src/logic/agents.json` is copied by hand from the WaniWani bot catalog (`src/lib/agent-traffic/bot-catalog.ts` in the WaniWani app): every entry of kind `training`, `search` or `fetcher`, using its `token` when it has one and its lowercased name otherwise.
+`src/logic/agents.json` is copied by hand from the Waniwani bot catalog (`src/lib/agent-traffic/bot-catalog.ts` in the Waniwani app): every entry of kind `training`, `search` or `fetcher`, using its `token` when it has one and its lowercased name otherwise.
 
 ## License
 

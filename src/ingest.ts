@@ -10,19 +10,29 @@ const isRetryable = (outcome: Outcome) =>
 const describe = (outcome: Outcome) =>
 	"failure" in outcome ? outcome.failure : `status ${outcome.status}`;
 
-const post = (url: string, body: string) =>
-	fetchWithTimeout(url, {
-		method: "POST",
-		headers: { "content-type": "application/json" },
-		body,
-	});
+export type PostPolicy = { timeoutMs: number; retry: boolean };
 
-/** Posts once, retries once on a timeout, network error, 429 or 5xx, and never rejects. */
-export async function postEvent(url: string, body: string): Promise<boolean> {
-	let outcome = await post(url, body);
-	if (!isSuccess(outcome) && isRetryable(outcome)) {
+const post = (url: string, body: string, timeoutMs: number) =>
+	fetchWithTimeout(
+		url,
+		{
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body,
+		},
+		timeoutMs,
+	);
+
+/** Posts once, retries once on a timeout, network error, 429 or 5xx when the policy allows it, and never rejects. */
+export async function postEvent(
+	url: string,
+	body: string,
+	policy: PostPolicy = { timeoutMs: settings.requestTimeoutMs, retry: true },
+): Promise<boolean> {
+	let outcome = await post(url, body, policy.timeoutMs);
+	if (policy.retry && !isSuccess(outcome) && isRetryable(outcome)) {
 		await delay(settings.retryDelayMs);
-		outcome = await post(url, body);
+		outcome = await post(url, body, policy.timeoutMs);
 	}
 	if (isSuccess(outcome)) {
 		return true;
