@@ -1,5 +1,5 @@
 {
-	"source": "Built by scripts/build-rules.ts from the WaniWani rules file 907cf618da985a26. Each token is matched case-insensitively inside the User-Agent header.",
+	"source": "Built by scripts/build-rules.ts from the WaniWani rules file ed13040d9b4412b1. Each token is matched case-insensitively inside the User-Agent header.",
 	"tokens": [
 		"addsearchbot",
 		"agentdatabot",

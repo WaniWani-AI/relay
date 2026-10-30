@@ -5,6 +5,7 @@ import ranges from "./ip-ranges.generated.json";
 export type DecideInput = {
 	headers: Record<string, string>;
 	ip: string | null;
+	useBundled?: boolean;
 };
 
 export type MatchRules = {
@@ -47,20 +48,25 @@ function compile(rules: MatchRules): CompiledRules {
 	return { tokensByPrefix, agentRanges };
 }
 
-let active = compile({ tokens: agents.tokens, ipRanges: ranges.sources });
+const bundled = compile({ tokens: agents.tokens, ipRanges: ranges.sources });
+let remote: CompiledRules | null = null;
 
-/** Swaps the active match rules. Throws, and keeps the active rules, when a range is malformed. */
+/** Sets the remote match rules. Throws, and keeps the current ones, when a range is malformed. */
 export function applyRules(rules: MatchRules): void {
-	active = compile(rules);
+	remote = compile(rules);
 }
 
-export const isAgentIp = (ip: string): boolean =>
-	active.agentRanges.check(ip, ip.includes(":") ? "ipv6" : "ipv4");
+const pick = (useBundled: boolean): CompiledRules =>
+	useBundled ? bundled : (remote ?? bundled);
 
-export function hasAgentToken(userAgent: string): boolean {
+export const isAgentIp = (ip: string, useBundled = false): boolean =>
+	pick(useBundled).agentRanges.check(ip, ip.includes(":") ? "ipv6" : "ipv4");
+
+export function hasAgentToken(userAgent: string, useBundled = false): boolean {
+	const { tokensByPrefix } = pick(useBundled);
 	const text = userAgent.slice(0, MAX_SCANNED_USER_AGENT).toLowerCase();
 	for (let i = 0; i + PREFIX <= text.length; i++) {
-		const candidates = active.tokensByPrefix.get(text.slice(i, i + PREFIX));
+		const candidates = tokensByPrefix.get(text.slice(i, i + PREFIX));
 		if (candidates) {
 			for (const token of candidates) {
 				if (text.startsWith(token, i)) {
@@ -72,13 +78,17 @@ export function hasAgentToken(userAgent: string): boolean {
 	return false;
 }
 
-export function decide({ headers, ip }: DecideInput): boolean {
+export function decide({
+	headers,
+	ip,
+	useBundled = false,
+}: DecideInput): boolean {
 	const userAgent = headers["user-agent"];
 	return (
-		(userAgent !== undefined && hasAgentToken(userAgent)) ||
+		(userAgent !== undefined && hasAgentToken(userAgent, useBundled)) ||
 		headers["signature-agent"] !== undefined ||
 		headers.dpop !== undefined ||
 		headers.authorization?.toLowerCase() === "dpop" ||
-		(ip !== null && isAgentIp(ip))
+		(ip !== null && isAgentIp(ip, useBundled))
 	);
 }

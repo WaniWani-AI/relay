@@ -59,7 +59,11 @@ export function isAgent(
 	startRulesRefresh(options);
 	try {
 		const { headers, ip } = toRelayRequest(request);
-		return decide({ headers: readCappedHeaders(headers), ip });
+		return decide({
+			headers: readCappedHeaders(headers),
+			ip,
+			useBundled: options.rules === "bundled",
+		});
 	} catch {
 		return false;
 	}

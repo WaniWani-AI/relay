@@ -85,33 +85,40 @@ export function parseRemoteRules(body: unknown): MatchRules | null {
 	return { tokens, ipRanges: ranges };
 }
 
-let appliedRemote = false;
+let lastAttemptOk = false;
 let lastAttemptAt = Number.NEGATIVE_INFINITY;
 
-async function fetchRules(apiUrl: string): Promise<void> {
+async function fetchRules(apiUrl: string): Promise<boolean> {
 	const response = await fetch(`${apiUrl}/api/v2/agent-traffic/rules`, {
 		signal: AbortSignal.timeout(settings.requestTimeoutMs),
 	});
 	if (!response.ok) {
-		return;
+		return false;
 	}
 	const rules = parseRemoteRules(await response.json());
-	if (rules) {
-		applyRules(rules);
-		appliedRemote = true;
+	if (!rules) {
+		return false;
 	}
+	applyRules(rules);
+	return true;
 }
 
 /**
- * Starts one fetch of the rules file when the last attempt is older than the refresh interval,
- * or older than the retry interval while no remote rules have loaded. Returns that work, or null.
+ * Starts one fetch of the rules file when the last attempt succeeded more than the refresh interval ago,
+ * or failed more than the retry interval ago. Returns that work, or null.
  */
 export function refreshRules(apiUrl: string): Promise<void> | null {
 	const now = Date.now();
-	const wait = appliedRemote ? settings.rulesRefreshMs : settings.rulesRetryMs;
+	const wait = lastAttemptOk ? settings.rulesRefreshMs : settings.rulesRetryMs;
 	if (now - lastAttemptAt < wait) {
 		return null;
 	}
 	lastAttemptAt = now;
-	return fetchRules(apiUrl).catch(() => undefined);
+	lastAttemptOk = false;
+	return fetchRules(apiUrl).then(
+		(ok) => {
+			lastAttemptOk = ok;
+		},
+		() => undefined,
+	);
 }

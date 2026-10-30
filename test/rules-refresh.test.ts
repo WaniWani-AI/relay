@@ -318,6 +318,71 @@ describe("rules refresh: bundled mode", () => {
 	});
 });
 
+describe("rules refresh: bundled mode after remote rules loaded", () => {
+	const bundled = { rules: "bundled" } as const;
+
+	it("bundled calls decide by the bundled lists only, default calls keep the remote rules", async () => {
+		const { relay, check } = await load(json(rulesFile()));
+		expect(check(canaryRequest())).toBe(true);
+
+		expect(relay.isAgent(canaryRequest(), bundled)).toBe(false);
+		expect(relay.isAgent(fromIp("192.0.2.5"), bundled)).toBe(false);
+		expect(relay.isAgent(fromIp("2001:db8::5"), bundled)).toBe(false);
+		expect(relay.isAgent(ua(GPTBOT_UA), bundled)).toBe(true);
+		expect(relay.isAgent(fromIp(BUNDLED_IP), bundled)).toBe(true);
+
+		expect(check(canaryRequest())).toBe(true);
+		expect(check(fromIp("192.0.2.5"))).toBe(true);
+		expect(check(ua(GPTBOT_UA))).toBe(false);
+		expect(check(fromIp(BUNDLED_IP))).toBe(false);
+	});
+
+	it("bundled calls with apiUrl and waitUntil still use the bundled lists and start no fetch", async () => {
+		vi.useFakeTimers({ toFake: ["Date"] });
+		vi.setSystemTime(T0);
+		const { relay, calls, background, check } = await load(json(rulesFile()));
+		const options: IsAgentOptions = {
+			apiUrl: API_URL,
+			waitUntil: background.waitUntil,
+			rules: "bundled",
+		};
+		vi.setSystemTime(T0 + 13 * HOUR);
+		expect(relay.isAgent(canaryRequest(), options)).toBe(false);
+		expect(relay.isAgent(ua(GPTBOT_UA), options)).toBe(true);
+		await background.flush();
+		expect(rulesCalls(calls)).toHaveLength(1);
+		expect(check(canaryRequest())).toBe(true);
+	});
+
+	it("a bundled call during the open fetch and after it decides by the bundled lists", async () => {
+		const relay = await freshRelay();
+		let answer: (response: Response) => void = () => {};
+		stubFetch({
+			[RULES_URL]: () =>
+				new Promise<Response>((resolve) => {
+					answer = resolve;
+				}),
+		});
+		const background = collector();
+		const options: IsAgentOptions = {
+			apiUrl: API_URL,
+			waitUntil: background.waitUntil,
+		};
+		relay.isAgent(ua("curl/8.7.1"), options);
+		expect(relay.isAgent(ua(GPTBOT_UA), bundled)).toBe(true);
+		answer(
+			new Response(JSON.stringify(rulesFile()), {
+				status: 200,
+				headers: { "content-type": "application/json" },
+			}),
+		);
+		await background.flush();
+		expect(relay.isAgent(ua(GPTBOT_UA), bundled)).toBe(true);
+		expect(relay.isAgent(canaryRequest(), bundled)).toBe(false);
+		expect(relay.isAgent(canaryRequest(), options)).toBe(true);
+	});
+});
+
 describe("rules refresh: recordAgentVisit is unchanged", () => {
 	it("posts the visit and fetches no rules", async () => {
 		vi.stubEnv("WANIWANI_AGENT_TRAFFIC_KEY", KEY);
@@ -750,16 +815,71 @@ describe("rules refresh: windows", () => {
 		expect(rulesCalls(calls)).toHaveLength(3);
 	});
 
-	it("a failed refresh after a swap keeps the remote rules, and waits 12 h again", async () => {
-		const { attempts, check, relay, calls, options, background } =
-			await attemptsAt(valid, 12 * HOUR, failing);
-		expect(attempts).toBe(2);
-		expect(check(canaryRequest())).toBe(true);
-		expect(check(ua(GPTBOT_UA))).toBe(false);
-		vi.setSystemTime(T0 + 12 * HOUR + 5 * MINUTE);
+	const afterSwapFailures: Array<[string, Handler]> = [
+		["a non-2xx", json(rulesFile(), 500)],
+		["an invalid file", json(rulesFile({ tokens: [CANARY, "zqx"] }))],
+		["a network error", () => Promise.reject(new TypeError("fetch failed"))],
+	];
+
+	it.each(
+		afterSwapFailures.flatMap(([name, handler]) =>
+			[
+				[-1, 2],
+				[0, 3],
+				[1, 3],
+			].map(([offset, expected]): [string, Handler, number, number] => [
+				name,
+				handler,
+				offset ?? 0,
+				expected ?? 0,
+			]),
+		),
+	)(
+		"after a swap then %s at 12 h: keeps the remote rules, and at 5 min %i ms after that attempt has made %i attempts",
+		async (_name, handler, offset, expected) => {
+			const { attempts, check, relay, calls, options, background } =
+				await attemptsAt(valid, 12 * HOUR, handler);
+			expect(attempts).toBe(2);
+			expect(check(canaryRequest())).toBe(true);
+			expect(check(ua(GPTBOT_UA))).toBe(false);
+			expect(check(fromIp("192.0.2.5"))).toBe(true);
+			expect(check(fromIp(BUNDLED_IP))).toBe(false);
+			vi.setSystemTime(T0 + 12 * HOUR + 5 * MINUTE + offset);
+			relay.isAgent(ua("curl/8.7.1"), options);
+			relay.isAgent(ua("curl/8.7.1"), options);
+			await background.flush();
+			expect(rulesCalls(calls)).toHaveLength(expected);
+			expect(check(canaryRequest())).toBe(true);
+		},
+	);
+
+	it("after a swap then a failure, a successful retry at 5 min opens a 12 h window again", async () => {
+		const { relay, calls, options, background } = await attemptsAt(
+			valid,
+			12 * HOUR,
+			failing,
+		);
+		const failedAt = T0 + 12 * HOUR;
+		vi.setSystemTime(failedAt + 5 * MINUTE);
+		const second = json(rulesFile({ tokens: [SECOND] }));
+		const { fetchMock } = stubFetch({ [RULES_URL]: second });
 		relay.isAgent(ua("curl/8.7.1"), options);
 		await background.flush();
 		expect(rulesCalls(calls)).toHaveLength(2);
+		expect(fetchMock).toHaveBeenCalledTimes(1);
+		expect(relay.isAgent(ua(`${SECOND}/1.0`), options)).toBe(true);
+		expect(relay.isAgent(canaryRequest(), options)).toBe(false);
+		vi.setSystemTime(failedAt + 10 * MINUTE);
+		relay.isAgent(ua("curl/8.7.1"), options);
+		await background.flush();
+		vi.setSystemTime(failedAt + 5 * MINUTE + 12 * HOUR - 1);
+		relay.isAgent(ua("curl/8.7.1"), options);
+		await background.flush();
+		expect(fetchMock).toHaveBeenCalledTimes(1);
+		vi.setSystemTime(failedAt + 5 * MINUTE + 12 * HOUR);
+		relay.isAgent(ua("curl/8.7.1"), options);
+		await background.flush();
+		expect(fetchMock).toHaveBeenCalledTimes(2);
 	});
 
 	it("an invalid refresh after a swap keeps the remote rules", async () => {
