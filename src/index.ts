@@ -1,12 +1,15 @@
-import { clientIp, readCappedHeaders } from "./headers";
-import { postEvent } from "./ingest";
+import { readCappedHeaders } from "./headers";
+import { type PostPolicy, postEvent } from "./ingest";
 import { readKey } from "./key";
 import { decide } from "./logic";
 import { deriveMatchKey } from "./match-key";
-import { detectPlatform, type Platform } from "./platform";
+import type { Platform } from "./platform";
+import { type CloudFrontRequest, toRelayRequest } from "./request";
 import { settings } from "./settings";
 import { RELAY_VERSION } from "./version";
 import { vercelWaitUntil } from "./wait-until";
+
+export type { CloudFrontRequest };
 
 export type Region = keyof typeof settings.apiUrls;
 
@@ -37,11 +40,11 @@ export type AgentVisitRecord = {
 	platform?: Platform;
 };
 
-/** Tells whether a request comes from an AI agent. Reads headers only, makes no network call. */
-export function isAgent(request: Request): boolean {
+/** Tells whether a request, or the `cf.request` of a Lambda@Edge event, comes from an AI agent. Reads headers only, makes no network call. */
+export function isAgent(request: Request | CloudFrontRequest): boolean {
 	try {
-		const headers = readCappedHeaders(request.headers);
-		return decide({ headers, ip: clientIp(request.headers) });
+		const { headers, ip } = toRelayRequest(request);
+		return decide({ headers: readCappedHeaders(headers), ip });
 	} catch {
 		return false;
 	}
@@ -49,24 +52,34 @@ export function isAgent(request: Request): boolean {
 
 /**
  * Posts one event for this request to WaniWani after the response.
- * Sends nothing when no key is set. Never throws and never touches the request.
+ * Sends nothing when no key is set. Never throws, never rejects and never touches the request.
+ * The promise settles when the post is done, so Lambda@Edge, which has no `waitUntil`, awaits it.
  */
 export function recordAgentVisit(
-	request: Request,
+	request: Request | CloudFrontRequest,
 	options: RelayOptions = {},
-): void {
+): Promise<void> {
 	try {
 		const key = readKey(options.key);
 		if (!key) {
-			return;
+			return Promise.resolve();
 		}
 		const apiUrl = resolveApiUrl(options);
 		if (!apiUrl) {
-			return;
+			return Promise.resolve();
 		}
 		const omitted = omitSet(options.omit);
-		const ip = clientIp(request.headers);
-		const capped = readCappedHeaders(request.headers);
+		const {
+			url: requestUrl,
+			method,
+			headers: requestHeaders,
+			ip,
+			platform,
+		} = toRelayRequest(request);
+		if (requestUrl === null) {
+			return Promise.resolve();
+		}
+		const capped = readCappedHeaders(requestHeaders);
 
 		const headers: Record<string, string> = {};
 		for (const [name, value] of Object.entries(capped)) {
@@ -74,10 +87,10 @@ export function recordAgentVisit(
 				headers[name] = value;
 			}
 		}
-		const url = new URL(request.url);
+		const url = new URL(requestUrl);
 		const record: AgentVisitRecord = {
 			occurredAt: new Date().toISOString(),
-			method: request.method,
+			method,
 			host: url.hostname,
 			path: url.pathname + url.search,
 			headers,
@@ -90,11 +103,14 @@ export function recordAgentVisit(
 		if (capped.referer !== undefined && !omitted.has("referer")) {
 			record.referer = capped.referer;
 		}
-		const platform = detectPlatform();
 		if (platform !== undefined) {
 			record.platform = platform;
 		}
 
+		const policy: PostPolicy =
+			platform === "cloudfront"
+				? { timeoutMs: settings.cloudFrontTimeoutMs, retry: false }
+				: { timeoutMs: settings.requestTimeoutMs, retry: true };
 		const ingestUrl = `${apiUrl}/api/v2/agent-traffic/ingest/middleware/${key.ingestToken}`;
 		const withMatchKey = async () => {
 			if (ip !== null && !omitted.has("matchkey")) {
@@ -102,10 +118,16 @@ export function recordAgentVisit(
 					() => undefined,
 				);
 			}
-			await postEvent(ingestUrl, JSON.stringify({ requests: [record] }));
+			await postEvent(
+				ingestUrl,
+				JSON.stringify({ requests: [record] }),
+				policy,
+			);
 		};
-		schedule(withMatchKey(), options.waitUntil);
-	} catch {}
+		return schedule(withMatchKey(), options.waitUntil);
+	} catch {
+		return Promise.resolve();
+	}
 }
 
 let warnedRegion = false;
@@ -138,7 +160,7 @@ function omitSet(omit: Array<string> | undefined): Set<string> {
 function schedule(
 	work: Promise<unknown>,
 	waitUntil: RelayOptions["waitUntil"],
-) {
+): Promise<void> {
 	const settled = work.then(
 		() => undefined,
 		() => undefined,
@@ -146,4 +168,5 @@ function schedule(
 	try {
 		(waitUntil ?? vercelWaitUntil())?.(settled);
 	} catch {}
+	return settled;
 }

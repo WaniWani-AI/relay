@@ -91,7 +91,7 @@ For each matched request, `recordAgentVisit` posts one JSON record to `<host>/ap
 | `matchKey` | `HMAC-SHA256(org key, client IP)` as hex. WaniWani uses it to join this event with other events of the same visit. |
 | `sourceEventId` | A random UUID for this request |
 | `relayVersion` | The version of this library |
-| `platform` | `vercel` or `cloudflare`, when the library knows the platform it runs on |
+| `platform` | `vercel`, `cloudflare` or `cloudfront`, when the library knows the platform it runs on |
 
 Only these headers can ever go into an event: `user-agent`, `referer`, `accept`, `accept-language`, `from`, `signature-agent`, `signature-input`, `signature`, `dpop`, `sec-ch-ua`, `sec-ch-ua-platform`, `sec-ch-ua-mobile` and `authorization`. For `authorization` the library sends the scheme word alone, in its standard spelling, and only when a credential follows it and the word is one of `Basic`, `Bearer`, `Digest`, `DPoP`, `HOBA`, `Mutual`, `Negotiate`, `NTLM`, `OAuth`, `PrivateToken`, `SCRAM-SHA-1`, `SCRAM-SHA-256`, `vapid` or `AWS4-HMAC-SHA256`. Any other value sends no `authorization` header at all, so a raw API key in that header never leaves your deployment.
 
@@ -116,7 +116,7 @@ An event without a match key still counts. WaniWani then joins it with the chat 
 
 ## When WaniWani is slow or down
 
-Your site does not notice. The post runs after the response, inside the `waitUntil` of your platform, with a 2 second timeout. After a network error, a timeout, a 429 or a 5xx it tries once more after 500 ms. Any other 4xx gets no retry. If the second try fails as well, the library writes one line to your function logs and drops the event. It never throws.
+Your site does not notice. The post runs after the response, inside the `waitUntil` of your platform, with a 2 second timeout. After a network error, a timeout, a 429 or a 5xx it tries once more after 500 ms. Any other 4xx gets no retry. If the second try fails as well, the library writes one line to your function logs and drops the event. It never throws. On CloudFront the post gets one try with a 1 second timeout, because the caller waits for it (see above).
 
 ## Dependencies
 
@@ -164,6 +164,29 @@ Then store the key as a secret and deploy:
 npx wrangler secret put WANIWANI_AGENT_TRAFFIC_KEY
 npx wrangler deploy
 ```
+
+## AWS CloudFront (Lambda@Edge)
+
+A Lambda@Edge function on the viewer-request event of a CloudFront behavior sees each request to the paths of that behavior. Both functions also take `event.Records[0].cf.request` in place of a `Request`:
+
+```js
+// index.mjs
+import { isAgent, recordAgentVisit } from "@waniwani/relay";
+
+export const handler = async (event) => {
+  const request = event.Records[0].cf.request;
+  if (isAgent(request)) {
+    await recordAgentVisit(request, { key: "wwt_..." });
+  }
+  return request;
+};
+```
+
+Lambda@Edge has no environment variables and no `waitUntil`, and the function stops when the handler returns. So the key goes into the code, and the handler awaits `recordAgentVisit`. For a CloudFront request the post gets one try with a 1 second timeout, so an agent request waits at most about one second. A person never waits, because `isAgent` makes no network call. The client IP comes from `clientIp` of the CloudFront event, never from a header that the client can set.
+
+Create the function in us-east-1 with the `nodejs24.x` runtime and the "Basic Lambda@Edge permissions" role template, publish a version, and add that version to the behavior as a viewer-request trigger. The handler must be `async`, because Node 24 on Lambda has no callback handlers.
+
+The WaniWani setup screen gives you a zip with `index.mjs`, the library as `relay.mjs` and its `NOTICE`, with your key and region already in `index.mjs`, so you upload it with no edits. With CDK (`NodejsFunction`), SAM or Terraform, install `@waniwani/relay` as a normal dependency and let your bundler include it.
 
 ## Other platforms
 
