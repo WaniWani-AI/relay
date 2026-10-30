@@ -643,10 +643,7 @@ describe("rules refresh: token shape", () => {
 	});
 });
 
-describe("rules refresh: the browser text guard", () => {
-	const refused = async (token: string) =>
-		swappedBy(json(rulesFile({ tokens: [CANARY, token] })));
-
+describe("rules refresh: browser-like tokens", () => {
 	async function accepted(token: string) {
 		const { check } = await load(json(rulesFile({ tokens: [CANARY, token] })));
 		return {
@@ -668,9 +665,16 @@ describe("rules refresh: the browser text guard", () => {
 		"safari/0 edg",
 		"gecko/2010",
 		"mobile safari",
-	])("refuses the contract example %j", async (token) => {
-		expect(await refused(token)).toBe(false);
-	});
+		"mozilla/5.0",
+		"chrome/",
+		"edg/",
+		"cpu iphone os 18",
+	])(
+		"accepts %j, which looks like browser text, and matches it",
+		async (token) => {
+			expect(await accepted(token)).toEqual({ swapped: true, matches: true });
+		},
+	);
 
 	it.each([
 		"claude-user",
@@ -683,119 +687,16 @@ describe("rules refresh: the browser text guard", () => {
 		"allenai.org",
 		"cursor/1.0.0",
 		"meta-externalagent",
-	])("accepts the contract example %j and matches it", async (token) => {
+	])("accepts the bot token %j and matches it", async (token) => {
 		expect(await accepted(token)).toEqual({ swapped: true, matches: true });
 	});
 
-	it.each([
-		"mozilla",
-		"applewebkit",
-		"khtml",
-		"gecko",
-		"safari",
-		"chrome",
-		"chrome/",
-		"firefox",
-		"edg/",
-		"iphone",
-		"android",
-		"mobile",
-		"windows",
-		"macintosh",
-		"linux",
-		"version/",
-		"ubuntu",
-		"crios",
-		"samsungbrowser",
-		"cros",
-	])("single word: refuses %j, a whole browser word", async (token) => {
-		expect(await refused(token)).toBe(false);
-	});
-
-	it.each(["hrom", "afar", "msungbrow", "ndroi", "ebki", "acintos"])(
-		"single word: refuses %j, a substring inside a browser word",
+	it.each(["x11;", "x11; linux", "(compatible", "Mozilla"])(
+		"still refuses %j, which fails the shape or lowercase rule",
 		async (token) => {
-			expect(await refused(token)).toBe(false);
-		},
-	);
-
-	it.each(["chromebot", "safaribot", "mozillabot", "geckos", "iphones"])(
-		"single word: accepts %j, longer than any browser word it starts with",
-		async (token) => {
-			expect(await accepted(token)).toEqual({ swapped: true, matches: true });
-		},
-	);
-
-	it.each(["ozilla/5", "rome/1", "afari/604", "ndroid 14", "ubuntu linux"])(
-		"first word: refuses %j, whose first word is a suffix of a browser word",
-		async (token) => {
-			expect(await refused(token)).toBe(false);
-		},
-	);
-
-	it.each(["hrom/1", "ozil/5", "chro/1", "ndroi 14"])(
-		"first word: accepts %j, whose first word sits inside a browser word but is not a suffix",
-		async (token) => {
-			expect(await accepted(token)).toEqual({ swapped: true, matches: true });
-		},
-	);
-
-	it.each(["x11 lin", "khtml like gec", "mobile saf", "safari/604 ed"])(
-		"last word: refuses %j, whose last word is a prefix of a browser word",
-		async (token) => {
-			expect(await refused(token)).toBe(false);
-		},
-	);
-
-	it.each(["x11 inux", "x11 inu", "khtml like ecko", "mobile afari"])(
-		"last word: accepts %j, whose last word is not a prefix of a browser word",
-		async (token) => {
-			expect(await accepted(token)).toEqual({ swapped: true, matches: true });
-		},
-	);
-
-	it.each([
-		"like gecko safari",
-		"khtml like gecko",
-		"mac os x 10",
-		"cpu iphone os 18",
-		"intel mac os",
-	])(
-		"middle words: refuses %j, whose middle words equal browser words",
-		async (token) => {
-			expect(await refused(token)).toBe(false);
-		},
-	);
-
-	it.each([
-		"khtml lik gecko",
-		"khtml ike gecko",
-		"khtml likes gecko",
-		"chrome zqbot safari",
-		"mozilla/5.0 zqbot",
-		"zqbot chrome/120",
-	])(
-		"middle words: accepts %j, where some word is not a browser word in its place",
-		async (token) => {
-			expect(await accepted(token)).toEqual({ swapped: true, matches: true });
-		},
-	);
-
-	it.each([
-		"chrome/0",
-		"chrome/537",
-		"mozilla/5.0",
-		"edgios 15e148",
-		"safari/604 1",
-		"firefox/133 0",
-	])("versions: refuses %j, whose numbers are versions", async (token) => {
-		expect(await refused(token)).toBe(false);
-	});
-
-	it.each(["chrome/1x", "chrome/15e", "chrome/1e2e3", "chrome/e15"])(
-		"versions: accepts %j, whose last word is no version and no browser word prefix",
-		async (token) => {
-			expect(await accepted(token)).toEqual({ swapped: true, matches: true });
+			expect(
+				await swappedBy(json(rulesFile({ tokens: [CANARY, token] }))),
+			).toBe(false);
 		},
 	);
 

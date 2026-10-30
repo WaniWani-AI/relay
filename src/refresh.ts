@@ -7,74 +7,6 @@ const MAX_PREFIXES = 50_000;
 const MIN_TOKEN_LENGTH = 4;
 const MAX_TOKEN_LENGTH = 128;
 
-/** The words browser user agents are made of, besides version numbers. A token made only of these would turn people into agents, so a file holding one is refused. */
-const BROWSER_WORDS = [
-	"mozilla",
-	"applewebkit",
-	"khtml",
-	"like",
-	"gecko",
-	"chrome",
-	"chromium",
-	"safari",
-	"version",
-	"mobile",
-	"firefox",
-	"fxios",
-	"edg",
-	"edga",
-	"edgios",
-	"opr",
-	"crios",
-	"samsungbrowser",
-	"macintosh",
-	"intel",
-	"mac",
-	"os",
-	"x",
-	"windows",
-	"nt",
-	"win64",
-	"x64",
-	"wow64",
-	"x86",
-	"x11",
-	"linux",
-	"ubuntu",
-	"android",
-	"iphone",
-	"ipad",
-	"ipod",
-	"cpu",
-	"cros",
-	"rv",
-	"wv",
-	"k",
-];
-
-const VERSION = /^\d+([a-z]\d+)?$/;
-
-/** A token made only of browser words and version numbers, where the first and last word may be cut, can sit inside a browser user agent. */
-const isBrowserText = (token: string): boolean => {
-	const words = token.split(/[^a-z0-9]+/).filter((word) => word !== "");
-	return words.every((word, index) => {
-		const first = index === 0;
-		const last = index === words.length - 1;
-		return (
-			VERSION.test(word) ||
-			BROWSER_WORDS.some((browserWord) =>
-				first && last
-					? browserWord.includes(word)
-					: first
-						? browserWord.endsWith(word)
-						: last
-							? browserWord.startsWith(word)
-							: browserWord === word,
-			)
-		);
-	});
-};
-
 const isObject = (value: unknown): value is Record<string, unknown> =>
 	typeof value === "object" && value !== null;
 
@@ -101,8 +33,7 @@ const isToken = (token: string): boolean =>
 	/[a-z]{3}/.test(token) &&
 	token.length >= MIN_TOKEN_LENGTH &&
 	token.length <= MAX_TOKEN_LENGTH &&
-	token === token.toLowerCase() &&
-	!isBrowserText(token);
+	token === token.toLowerCase();
 
 /** The match rules in a rules file from the app (the `data` of its answer), or null when any part of it fails a check. */
 export function parseRemoteRules(body: unknown): MatchRules | null {
