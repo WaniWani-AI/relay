@@ -600,6 +600,49 @@ describe("rules refresh: token checks", () => {
 	});
 });
 
+describe("rules refresh: token shape", () => {
+	it.each(["abc1", "1abc", "9zqbot", "zq-bot.v2/x y_z", "zqbot x", "zqbot "])(
+		"accepts %j and matches it",
+		async (token) => {
+			const { check } = await load(
+				json(rulesFile({ tokens: [CANARY, token] })),
+			);
+			expect(check(canaryRequest())).toBe(true);
+			expect(check(ua(`prefix ${token}suffix`))).toBe(true);
+		},
+	);
+
+	it.each([
+		"x11;",
+		"x11 ",
+		"a1b2",
+		"ab1cd",
+		"12345",
+		"1.2.3/4",
+		"(compatible",
+		"-zqbot",
+		" zqbot",
+		".zqbot",
+		"_zqbot",
+		"/zqbot",
+		"zqbot;",
+		"zqbot)",
+		"zq(bot",
+		"zqbot+",
+		"zqbot:1",
+		"zqbot,x",
+		"zqbot\t",
+		"zqbot\n",
+		"zqb\u00f3t",
+		"zqbot*",
+		'zqbot"',
+	])("refuses the whole file for %j", async (token) => {
+		expect(await swappedBy(json(rulesFile({ tokens: [CANARY, token] })))).toBe(
+			false,
+		);
+	});
+});
+
 describe("rules refresh: the browser user-agent guard", () => {
 	it.each([
 		"mozilla",
@@ -632,6 +675,29 @@ describe("rules refresh: the browser user-agent guard", () => {
 		).toBe(false);
 	});
 
+	it.each([
+		"x11; linux",
+		"linux x86_64",
+		"ubuntu",
+		"opr/1",
+		"opr/114",
+		"crios",
+		"crios/1",
+		"ipad",
+		"cpu os 18",
+		"samsungbrowser",
+		"samsungbrowser/2",
+		"cros x",
+		"cros x86_64",
+	])(
+		"refuses a file holding %j, found in one of the added browser user agents",
+		async (token) => {
+			expect(
+				await swappedBy(json(rulesFile({ tokens: [CANARY, token] }))),
+			).toBe(false);
+		},
+	);
+
 	it("refuses a token found in Chrome 14x user agents (contract: common browser user agents)", async () => {
 		expect(
 			await swappedBy(json(rulesFile({ tokens: [CANARY, "chrome/14"] }))),
@@ -651,9 +717,13 @@ describe("rules refresh: the browser user-agent guard", () => {
 
 describe("rules refresh: CIDR checks", () => {
 	it.each([
-		["IPv4 /8", { ipv4: ["10.0.0.0/8"] }, "10.200.1.1"],
+		["IPv4 /16", { ipv4: ["10.20.0.0/16"] }, "10.20.200.1"],
+		["IPv4 /17", { ipv4: ["10.20.0.0/17"] }, "10.20.100.1"],
+		["IPv4 /31", { ipv4: ["192.0.2.76/31"] }, "192.0.2.77"],
 		["IPv4 /32", { ipv4: ["192.0.2.77/32"] }, "192.0.2.77"],
-		["IPv6 /16", { ipv6: ["2a0f::/16"] }, "2a0f:1::1"],
+		["IPv6 /32", { ipv6: ["2a0f:1::/32"] }, "2a0f:1:ffff::1"],
+		["IPv6 /33", { ipv6: ["2a0f:1::/33"] }, "2a0f:1:10::1"],
+		["IPv6 /127", { ipv6: ["2001:db8::76/127"] }, "2001:db8::77"],
 		["IPv6 /128", { ipv6: ["2001:db8::77/128"] }, "2001:db8::77"],
 	])("accepts %s and matches inside it", async (_name, range, ip) => {
 		const { check } = await load(
@@ -668,12 +738,24 @@ describe("rules refresh: CIDR checks", () => {
 	});
 
 	it.each<[string, RangeEntry]>([
+		["IPv4 /15", { ipv4: ["198.18.0.0/15"] }],
+		["IPv4 /8", { ipv4: ["10.0.0.0/8"] }],
 		["IPv4 /7", { ipv4: ["10.0.0.0/7"] }],
 		["IPv4 /0", { ipv4: ["0.0.0.0/0"] }],
 		["IPv4 /33", { ipv4: ["192.0.2.0/33"] }],
+		["IPv6 /31", { ipv6: ["2a0e::/31"] }],
+		["IPv6 /16", { ipv6: ["2a0f::/16"] }],
 		["IPv6 /15", { ipv6: ["2a0e::/15"] }],
 		["IPv6 /0", { ipv6: ["::/0"] }],
 		["IPv6 /129", { ipv6: ["2001:db8::/129"] }],
+		[
+			"one /15 among valid IPv4 ranges",
+			{ ipv4: ["192.0.2.0/24", "198.18.0.0/15"] },
+		],
+		[
+			"one /31 among valid IPv6 ranges",
+			{ ipv6: ["2001:db8::/32", "2a0e::/31"] },
+		],
 		["an IPv4 without prefix", { ipv4: ["192.0.2.0"] }],
 		["an IPv4 with an empty prefix", { ipv4: ["192.0.2.0/"] }],
 		["an IPv4 with a negative prefix", { ipv4: ["192.0.2.0/-8"] }],
@@ -703,14 +785,15 @@ describe("rules refresh: CIDR checks", () => {
 				{
 					source: "b",
 					bot: "B",
-					ipv4: Array<string>(19_999).fill("198.18.0.0/15"),
-					ipv6: ["2a0f::/16"],
+					ipv4: Array<string>(19_999).fill("198.18.0.0/16"),
+					ipv6: ["2a0f:1::/32"],
 				},
 			],
 		});
 		const { check } = await load(json(file));
 		expect(check(canaryRequest())).toBe(true);
-		expect(check(fromIp("198.19.1.1"))).toBe(true);
+		expect(check(fromIp("198.18.1.1"))).toBe(true);
+		expect(check(fromIp("2a0f:1::9"))).toBe(true);
 	});
 
 	it("refuses 50,001 prefixes split across entries", async () => {
@@ -725,8 +808,8 @@ describe("rules refresh: CIDR checks", () => {
 				{
 					source: "b",
 					bot: "B",
-					ipv4: Array<string>(20_000).fill("198.18.0.0/15"),
-					ipv6: ["2a0f::/16"],
+					ipv4: Array<string>(20_000).fill("198.18.0.0/16"),
+					ipv6: ["2a0f:1::/32"],
 				},
 			],
 		});
