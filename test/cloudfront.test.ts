@@ -366,7 +366,7 @@ describe("CloudFront: isAgent", () => {
 	it("detects an agent by user-agent", async () => {
 		const relay = await freshRelay();
 		const { fetchMock } = stubFetch({});
-		expect(relay.isAgent(cfRequest())).toBe(true);
+		expect(relay.isAgent(cfRequest(), { rules: "bundled" })).toBe(true);
 		expect(fetchMock).not.toHaveBeenCalled();
 	});
 

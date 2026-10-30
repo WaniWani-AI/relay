@@ -1,162 +1,76 @@
-// Writes src/logic/ip-ranges.generated.json from the IP range files that AI
-// vendors publish for their bots. Lists that also hold classic search crawlers
-// (Google, Bing, Applebot) stay out, because those visits are not agent traffic.
-// Run with `bun run rules`, review the diff, commit the JSON.
+// Writes src/logic/agents.json and src/logic/ip-ranges.generated.json from the
+// rules file the WaniWani app serves, so the bundled fallback matches what the
+// relay loads at run time. Run with `bun run rules`, review the diff, commit.
+// RULES_URL overrides the source, for example a local app.
 
-import { readFile, writeFile } from "node:fs/promises";
+import { writeFile } from "node:fs/promises";
+import { parseRemoteRules } from "../src/refresh";
 
-const SOURCES = [
-	{ vendor: "openai", bot: "GPTBot", url: "https://openai.com/gptbot.json" },
-	{
-		vendor: "openai",
-		bot: "OAI-SearchBot",
-		url: "https://openai.com/searchbot.json",
-	},
-	{
-		vendor: "openai",
-		bot: "ChatGPT-User",
-		url: "https://openai.com/chatgpt-user.json",
-	},
-	{
-		vendor: "perplexity",
-		bot: "PerplexityBot",
-		url: "https://www.perplexity.com/perplexitybot.json",
-	},
-	{
-		vendor: "perplexity",
-		bot: "Perplexity-User",
-		url: "https://www.perplexity.com/perplexity-user.json",
-	},
-	{
-		vendor: "mistral",
-		bot: "MistralAI-User",
-		url: "https://mistral.ai/mistralai-user-ips.json",
-	},
-	{
-		vendor: "commoncrawl",
-		bot: "CCBot",
-		url: "https://index.commoncrawl.org/ccbot.json",
-	},
-	{
-		vendor: "duckduckgo",
-		bot: "DuckAssistBot",
-		url: "https://duckduckgo.com/duckassistbot.json",
-	},
-];
+const RULES_URL =
+	process.env.RULES_URL ?? "https://app.waniwani.ai/api/v2/agent-traffic/rules";
 
-const OUTPUT = new URL(
-	"../src/logic/ip-ranges.generated.json",
-	import.meta.url,
-);
-
-type Prefix = { ipv4Prefix?: unknown; ipv6Prefix?: unknown };
-type SourceRanges = {
+type RemoteRange = {
+	source: string;
 	bot: string;
-	url: string;
 	ipv4: string[];
 	ipv6: string[];
 };
 
-const isPrefixList = (value: unknown): value is { prefixes: Prefix[] } =>
+const isRemoteRange = (value: unknown): value is RemoteRange =>
 	typeof value === "object" &&
 	value !== null &&
-	"prefixes" in value &&
-	Array.isArray(value.prefixes);
+	"source" in value &&
+	typeof value.source === "string" &&
+	"bot" in value &&
+	typeof value.bot === "string";
 
-const isSourceRanges = (value: unknown): value is SourceRanges =>
-	typeof value === "object" &&
-	value !== null &&
-	"url" in value &&
-	"ipv4" in value &&
-	"ipv6" in value &&
-	Array.isArray(value.ipv4) &&
-	Array.isArray(value.ipv6);
-
-const IPV4_CIDR = /^\d{1,3}(\.\d{1,3}){3}\/\d{1,2}$/;
-const IPV6_CIDR = /^[0-9a-f:]+\/\d{1,3}$/i;
-
-const sortCidrs = (values: Iterable<string>) =>
-	[...new Set(values)].sort((a, b) =>
-		a.localeCompare(b, "en", { numeric: true }),
+const response = await fetch(RULES_URL, {
+	signal: AbortSignal.timeout(15_000),
+});
+if (!response.ok) {
+	throw new Error(`${RULES_URL} answered ${response.status}`);
+}
+const body: unknown = await response.json();
+const rules = parseRemoteRules(body);
+if (!rules) {
+	throw new Error(
+		`${RULES_URL} sent a rules file that fails the relay's checks`,
 	);
-
-async function readPrevious(): Promise<Map<string, SourceRanges>> {
-	try {
-		const previous: unknown = JSON.parse(await readFile(OUTPUT, "utf8"));
-		const sources =
-			typeof previous === "object" && previous !== null && "sources" in previous
-				? previous.sources
-				: [];
-		return new Map(
-			(Array.isArray(sources) ? sources : [])
-				.filter(isSourceRanges)
-				.map((source) => [source.url, source]),
-		);
-	} catch {
-		return new Map();
-	}
 }
-
-async function fetchRanges(bot: string, url: string): Promise<SourceRanges> {
-	const response = await fetch(url, { signal: AbortSignal.timeout(15_000) });
-	if (!response.ok) {
-		throw new Error(`status ${response.status}`);
-	}
-	const body: unknown = await response.json();
-	if (!isPrefixList(body)) {
-		throw new Error("no prefixes array");
-	}
-	const ipv4: string[] = [];
-	const ipv6: string[] = [];
-	for (const prefix of body.prefixes) {
-		if (
-			typeof prefix.ipv4Prefix === "string" &&
-			IPV4_CIDR.test(prefix.ipv4Prefix)
-		) {
-			ipv4.push(prefix.ipv4Prefix);
-		}
-		if (
-			typeof prefix.ipv6Prefix === "string" &&
-			IPV6_CIDR.test(prefix.ipv6Prefix)
-		) {
-			ipv6.push(prefix.ipv6Prefix.toLowerCase());
-		}
-	}
-	if (ipv4.length + ipv6.length === 0) {
-		throw new Error("empty prefix list");
-	}
-	return { bot, url, ipv4: sortCidrs(ipv4), ipv6: sortCidrs(ipv6) };
-}
-
-const previous = await readPrevious();
-const results: SourceRanges[] = [];
-let failures = 0;
-
-for (const source of SOURCES) {
-	try {
-		const ranges = await fetchRanges(source.bot, source.url);
-		results.push(ranges);
-		console.log(
-			`ok     ${source.bot.padEnd(16)} ${ranges.ipv4.length + ranges.ipv6.length} prefixes`,
-		);
-	} catch (error) {
-		failures++;
-		const reason = error instanceof Error ? error.message : String(error);
-		const kept = previous.get(source.url);
-		if (kept) {
-			results.push(kept);
-		}
-		console.log(
-			`FAILED ${source.bot.padEnd(16)} ${source.url}: ${reason} (${kept ? "kept the previous ranges" : "no previous ranges"})`,
-		);
-	}
-}
+const fields = typeof body === "object" && body !== null ? body : {};
+const ranges =
+	"ipRanges" in fields && Array.isArray(fields.ipRanges)
+		? fields.ipRanges.filter(isRemoteRange)
+		: [];
+const hash = "hash" in fields ? String(fields.hash) : "unknown";
 
 await writeFile(
-	OUTPUT,
-	`${JSON.stringify({ sources: results }, null, "\t")}\n`,
+	new URL("../src/logic/agents.json", import.meta.url),
+	`${JSON.stringify(
+		{
+			source: `Built by scripts/build-rules.ts from the WaniWani rules file ${hash}. Each token is matched case-insensitively inside the User-Agent header.`,
+			tokens: rules.tokens,
+		},
+		null,
+		"\t",
+	)}\n`,
+);
+await writeFile(
+	new URL("../src/logic/ip-ranges.generated.json", import.meta.url),
+	`${JSON.stringify(
+		{
+			sources: ranges.map((range) => ({
+				bot: range.bot,
+				url: range.source,
+				ipv4: range.ipv4,
+				ipv6: range.ipv6,
+			})),
+		},
+		null,
+		"\t",
+	)}\n`,
 );
 
-if (failures > 0) {
-	process.exitCode = 1;
-}
+console.log(
+	`rules ${hash}: ${rules.tokens.length} tokens, ${ranges.length} IP range sources`,
+);

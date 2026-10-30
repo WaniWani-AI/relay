@@ -15,6 +15,7 @@ import {
 } from "./helpers";
 
 const ok = () => new Response(null, { status: 202 });
+const BUNDLED = { rules: "bundled" } as const;
 
 let warn: ReturnType<typeof vi.spyOn>;
 
@@ -526,15 +527,16 @@ describe("recordAgentVisit: waitUntil", () => {
 });
 
 describe("isAgent", () => {
-	it("decides from headers only and never calls fetch", async () => {
+	it("decides from headers only and never calls fetch with bundled rules", async () => {
 		const relay = await freshRelay();
 		const { calls } = stubFetch({});
-		expect(relay.isAgent(agentRequest())).toBe(true);
+		expect(relay.isAgent(agentRequest(), BUNDLED)).toBe(true);
 		expect(
 			relay.isAgent(
 				new Request("https://example.com/", {
 					headers: { "user-agent": "curl/8.7.1" },
 				}),
+				BUNDLED,
 			),
 		).toBe(false);
 		expect(
@@ -542,6 +544,7 @@ describe("isAgent", () => {
 				new Request("https://example.com/", {
 					headers: { "user-agent": "Mozilla/5.0", "signature-agent": '"x"' },
 				}),
+				BUNDLED,
 			),
 		).toBe(true);
 		expect(
@@ -549,6 +552,7 @@ describe("isAgent", () => {
 				new Request("https://example.com/", {
 					headers: { authorization: "DPoP abc.def.ghi" },
 				}),
+				BUNDLED,
 			),
 		).toBe(true);
 		expect(
@@ -556,6 +560,7 @@ describe("isAgent", () => {
 				new Request("https://example.com/", {
 					headers: { "x-forwarded-for": "20.171.206.9" },
 				}),
+				BUNDLED,
 			),
 		).toBe(true);
 		expect(
@@ -566,6 +571,7 @@ describe("isAgent", () => {
 						"x-forwarded-for": "20.171.206.9, 198.51.100.23",
 					},
 				}),
+				BUNDLED,
 			),
 		).toBe(false);
 		expect(calls).toHaveLength(0);
