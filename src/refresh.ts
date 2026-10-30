@@ -7,7 +7,7 @@ const MAX_PREFIXES = 50_000;
 const MIN_TOKEN_LENGTH = 4;
 const MAX_TOKEN_LENGTH = 128;
 
-const withoutVersions = (text: string): string => text.replace(/\d/g, "0");
+const withoutVersions = (text: string): string => text.replace(/\d+/g, "0");
 
 /** A token found inside one of these, at any version number, would turn people into agents, so a file holding one is refused. */
 const BROWSER_USER_AGENTS = [
