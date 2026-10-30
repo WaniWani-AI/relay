@@ -47,7 +47,7 @@ const isToken = (token: string): boolean =>
 		userAgent.includes(withoutVersions(token)),
 	);
 
-/** The match rules in a rules file from the app, or null when any part of it fails a check. */
+/** The match rules in a rules file from the app (the `data` of its answer), or null when any part of it fails a check. */
 export function parseRemoteRules(body: unknown): MatchRules | null {
 	if (!isObject(body) || body.version !== 1) {
 		return null;
@@ -95,7 +95,8 @@ async function fetchRules(apiUrl: string): Promise<boolean> {
 	if (!response.ok) {
 		return false;
 	}
-	const rules = parseRemoteRules(await response.json());
+	const body: unknown = await response.json();
+	const rules = parseRemoteRules(isObject(body) ? body.data : null);
 	if (!rules) {
 		return false;
 	}

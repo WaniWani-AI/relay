@@ -30,7 +30,11 @@ const response = await fetch(RULES_URL, {
 if (!response.ok) {
 	throw new Error(`${RULES_URL} answered ${response.status}`);
 }
-const body: unknown = await response.json();
+const answer: unknown = await response.json();
+const body =
+	typeof answer === "object" && answer !== null && "data" in answer
+		? answer.data
+		: null;
 const rules = parseRemoteRules(body);
 if (!rules) {
 	throw new Error(

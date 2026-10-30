@@ -68,13 +68,22 @@ const withRange = (range: RangeEntry) =>
 		],
 	});
 
-const json =
+const bareJson =
 	(body: unknown, status = 200): Handler =>
 	() =>
 		new Response(JSON.stringify(body), {
 			status,
 			headers: { "content-type": "application/json" },
 		});
+
+const envelope = (data: unknown) => ({
+	success: true,
+	message: "success",
+	data,
+});
+
+const json = (data: unknown, status = 200): Handler =>
+	bareJson(envelope(data), status);
 
 const raw =
 	(body: string | null, status = 200): Handler =>
@@ -188,7 +197,7 @@ describe("rules refresh: the fetch", () => {
 		expect(rulesCalls(calls)).toHaveLength(1);
 
 		answer(
-			new Response(JSON.stringify(rulesFile()), {
+			new Response(JSON.stringify(envelope(rulesFile())), {
 				status: 200,
 				headers: { "content-type": "application/json" },
 			}),
@@ -371,7 +380,7 @@ describe("rules refresh: bundled mode after remote rules loaded", () => {
 		relay.isAgent(ua("curl/8.7.1"), options);
 		expect(relay.isAgent(ua(GPTBOT_UA), bundled)).toBe(true);
 		answer(
-			new Response(JSON.stringify(rulesFile()), {
+			new Response(JSON.stringify(envelope(rulesFile())), {
 				status: 200,
 				headers: { "content-type": "application/json" },
 			}),
@@ -482,10 +491,25 @@ describe("rules refresh: failures keep the current rules", () => {
 		["a body that is not JSON", raw("<html>oops</html>")],
 		["an empty 200 body", raw("")],
 		["a 204 with no body", raw(null, 204)],
-		["JSON null", json(null)],
-		["a JSON string", json("tokens")],
-		["a JSON number", json(1)],
-		["a JSON array", json([rulesFile()])],
+		["data null", json(null)],
+		["data as a string", json("tokens")],
+		["data as a JSON string of the file", json(JSON.stringify(rulesFile()))],
+		["data as a number", json(1)],
+		["data as an array", json([rulesFile()])],
+		["data as true", json(true)],
+		[
+			"an envelope without data",
+			bareJson({ success: true, message: "success" }),
+		],
+		["the bare rules file", bareJson(rulesFile())],
+		[
+			"the bare rules file with success fields",
+			bareJson({ ...rulesFile(), success: true, message: "success" }),
+		],
+		["a JSON null body", bareJson(null)],
+		["a JSON string body", bareJson("tokens")],
+		["a JSON array body", bareJson([envelope(rulesFile())])],
+		["data nested one level too deep", json(envelope(rulesFile()))],
 		["a missing version", json({ ...rulesFile(), version: undefined })],
 		["version 2", json(rulesFile({ version: 2 }))],
 		["version 0", json(rulesFile({ version: 0 }))],
