@@ -30,12 +30,6 @@ Tells whether the request comes from an AI agent. It reads the headers and the c
 - The client IP sits inside an IP range that an AI vendor publishes for its bots, for example the lists of OpenAI, Anthropic, Perplexity, Mistral, Apple, Common Crawl and DuckDuckGo (DuckAssistBot).
 - The request has a `DPoP` header, or its `Authorization` header uses the `DPoP` scheme.
 
-#### The bot list updates by itself
-
-Waniwani rebuilds the bot list and the IP ranges twice a day and serves them at `GET /api/v2/agent-traffic/rules` on the host of your region. The first `isAgent` call on an instance starts one background fetch of that file, and so does the first call after 12 hours. The call that starts it does not wait for it: that request and every request until the fetch is done use the list that ships in the package. When the fetch fails, or the file fails a check, the relay keeps the list it has and tries again after 5 minutes. The fetch sends no data about your visitors.
-
-On Vercel the fetch runs in the request's `waitUntil`. On other platforms, pass `waitUntil` to `isAgent` so the fetch can finish after the response. Pass `rules: "bundled"` to use only the list in the package and make no fetch.
-
 ### `recordAgentVisit(request, options?)`
 
 ```ts
@@ -55,7 +49,7 @@ Posts one event for the request to Waniwani after the response ([`AgentVisitReco
 | `apiUrl` | The host of `region` | Another Waniwani host, for local development |
 | `key` | `process.env.WANIWANI_AGENT_TRAFFIC_KEY` | The key from the setup screen, `wwt_<token>.<org key>` |
 | `waitUntil` | Found by itself on Vercel, none on other platforms | Keeps the post alive after the response |
-| `rules` | `"remote"` | `"bundled"` uses only the bot list that ships in the package, see [The bot list updates by itself](#the-bot-list-updates-by-itself) |
+| `rules` | `"remote"` | `"remote"` loads the newest bot list from Waniwani every 12 hours, `"bundled"` uses only the list that ships in the package |
 | `omit` | `[]` | Header names, and the fields `matchKey`, `userAgent` and `referer`, to leave out of every event. An event without `matchKey` still counts, but Waniwani then joins it with the chat embed's events on site, user agent and path only, which is less exact. |
 
 #### `AgentVisitRecord`
