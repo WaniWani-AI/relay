@@ -7,23 +7,73 @@ const MAX_PREFIXES = 50_000;
 const MIN_TOKEN_LENGTH = 4;
 const MAX_TOKEN_LENGTH = 128;
 
-const withoutVersions = (text: string): string => text.replace(/\d+/g, "0");
+/** The words browser user agents are made of, besides version numbers. A token made only of these would turn people into agents, so a file holding one is refused. */
+const BROWSER_WORDS = [
+	"mozilla",
+	"applewebkit",
+	"khtml",
+	"like",
+	"gecko",
+	"chrome",
+	"chromium",
+	"safari",
+	"version",
+	"mobile",
+	"firefox",
+	"fxios",
+	"edg",
+	"edga",
+	"edgios",
+	"opr",
+	"crios",
+	"samsungbrowser",
+	"macintosh",
+	"intel",
+	"mac",
+	"os",
+	"x",
+	"windows",
+	"nt",
+	"win64",
+	"x64",
+	"wow64",
+	"x86",
+	"x11",
+	"linux",
+	"ubuntu",
+	"android",
+	"iphone",
+	"ipad",
+	"ipod",
+	"cpu",
+	"cros",
+	"rv",
+	"wv",
+	"k",
+];
 
-/** A token found inside one of these, at any version number, would turn people into agents, so a file holding one is refused. */
-const BROWSER_USER_AGENTS = [
-	"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
-	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0",
-	"Mozilla/5.0 (Macintosh; Intel Mac OS X 14.6; rv:131.0) Gecko/20100101 Firefox/131.0",
-	"Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
-	"Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36",
-	"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
-	"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:131.0) Gecko/20100101 Firefox/131.0",
-	"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:131.0) Gecko/20100101 Firefox/131.0",
-	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 OPR/115.0.0.0",
-	"Mozilla/5.0 (iPad; CPU OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/130.0.6723.90 Mobile/15E148 Safari/604.1",
-	"Mozilla/5.0 (Linux; Android 14; SAMSUNG SM-S921B) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/26.0 Chrome/122.0.0.0 Mobile Safari/537.36",
-	"Mozilla/5.0 (X11; CrOS x86_64 14541.0.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
-].map((userAgent) => withoutVersions(userAgent.toLowerCase()));
+const VERSION = /^\d+([a-z]\d+)?$/;
+
+/** A token made only of browser words and version numbers, where the first and last word may be cut, can sit inside a browser user agent. */
+const isBrowserText = (token: string): boolean => {
+	const words = token.split(/[^a-z0-9]+/).filter((word) => word !== "");
+	return words.every((word, index) => {
+		const first = index === 0;
+		const last = index === words.length - 1;
+		return (
+			VERSION.test(word) ||
+			BROWSER_WORDS.some((browserWord) =>
+				first && last
+					? browserWord.includes(word)
+					: first
+						? browserWord.endsWith(word)
+						: last
+							? browserWord.startsWith(word)
+							: browserWord === word,
+			)
+		);
+	});
+};
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
 	typeof value === "object" && value !== null;
@@ -52,9 +102,7 @@ const isToken = (token: string): boolean =>
 	token.length >= MIN_TOKEN_LENGTH &&
 	token.length <= MAX_TOKEN_LENGTH &&
 	token === token.toLowerCase() &&
-	!BROWSER_USER_AGENTS.some((userAgent) =>
-		userAgent.includes(withoutVersions(token)),
-	);
+	!isBrowserText(token);
 
 /** The match rules in a rules file from the app (the `data` of its answer), or null when any part of it fails a check. */
 export function parseRemoteRules(body: unknown): MatchRules | null {
