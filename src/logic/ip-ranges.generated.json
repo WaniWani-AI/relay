@@ -921,7 +921,7 @@
 		},
 		{
 			"bot": "Claude API",
-			"url": "https://docs.anthropic.com/en/api/ip-addresses",
+			"url": "https://platform.claude.com/docs/en/api/ip-addresses.md",
 			"ipv4": [
 				"160.79.104.0/21"
 			],
