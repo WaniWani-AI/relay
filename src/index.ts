@@ -1,3 +1,9 @@
+import {
+	fetchAgentPage,
+	loadSiteRules,
+	matchesPath,
+	normalizePath,
+} from "./agent-page";
 import { readCappedHeaders } from "./headers";
 import { type PostPolicy, postEvent } from "./ingest";
 import { readKey } from "./key";
@@ -5,7 +11,11 @@ import { decide } from "./logic";
 import { deriveMatchKey } from "./match-key";
 import type { Platform } from "./platform";
 import { refreshRules } from "./refresh";
-import { type CloudFrontRequest, toRelayRequest } from "./request";
+import {
+	type CloudFrontRequest,
+	isCloudFrontRequest,
+	toRelayRequest,
+} from "./request";
 import { settings } from "./settings";
 import { RELAY_VERSION } from "./version";
 import { vercelWaitUntil } from "./wait-until";
@@ -32,6 +42,11 @@ export type RelayOptions = {
 export type IsAgentOptions = Pick<
 	RelayOptions,
 	"region" | "apiUrl" | "waitUntil" | "rules"
+>;
+
+export type ServeAgentPageOptions = Pick<
+	RelayOptions,
+	"region" | "apiUrl" | "key"
 >;
 
 export type AgentVisitRecord = {
@@ -159,6 +174,67 @@ export function recordAgentVisit(
 		return schedule(withMatchKey(), options.waitUntil);
 	} catch {
 		return Promise.resolve();
+	}
+}
+
+/**
+ * The stored agent page for this request, when its site lists the path and the user agent acts for a user. Otherwise null, and the caller serves the origin.
+ * Never throws and never rejects.
+ */
+export async function serveAgentPage(
+	request: Request,
+	options: ServeAgentPageOptions = {},
+): Promise<Response | null> {
+	try {
+		const key = readKey(options.key);
+		if (!key) {
+			return null;
+		}
+		const apiUrl = resolveApiUrl(options);
+		if (!apiUrl || isCloudFrontRequest(request)) {
+			return null;
+		}
+		const method = request.method.toUpperCase();
+		if (method !== "GET" && method !== "HEAD") {
+			return null;
+		}
+		if (request.headers.has("x-waniwani-render")) {
+			return null;
+		}
+		const rules = await loadSiteRules(apiUrl, key.ingestToken, (work) =>
+			schedule(work, undefined),
+		);
+		if (!rules) {
+			return null;
+		}
+		const url = new URL(request.url);
+		const site = rules.sites.find((entry) => entry.hostname === url.hostname);
+		if (!site?.agentPages.enabled) {
+			return null;
+		}
+		const path = normalizePath(url.pathname);
+		if (!matchesPath(path, site.agentPages.paths)) {
+			return null;
+		}
+		const userAgent = (request.headers.get("user-agent") ?? "").toLowerCase();
+		if (!rules.userAgentTokens.some((token) => userAgent.includes(token))) {
+			return null;
+		}
+		const page = await fetchAgentPage(rules, url.hostname, path);
+		if (!page) {
+			return null;
+		}
+		return new Response(method === "HEAD" ? null : page.body, {
+			status: 200,
+			headers: {
+				"content-type": page.contentType,
+				"x-waniwani-agent-page": "hit",
+				"cache-control": "private, no-store",
+				vary: "user-agent, accept",
+			},
+		});
+	} catch {
+		return null;
 	}
 }
 

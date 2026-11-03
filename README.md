@@ -88,6 +88,46 @@ The `headers` field can hold only these request headers:
 | AWS CloudFront (Lambda@Edge) | Yes, before the handler returns. Lambda freezes the function when the handler returns, so a post event request that is not awaited is lost. | 1 s, no retry |
 | Other | No, when you pass `waitUntil` | 2 s, one retry after 500 ms |
 
+### `serveAgentPage(request, options?)`
+
+```ts
+function serveAgentPage(
+  request: Request,
+  options?: Pick<RelayOptions, "region" | "apiUrl" | "key">,
+): Promise<Response | null>;
+```
+
+Serves the agent page of a request: a text-first copy of the page that Waniwani renders and stores. It returns that page when all of these hold, and `null` otherwise, so your middleware passes the request on to your site:
+
+- A key is set.
+- The method is `GET` or `HEAD`.
+- Agent pages are on in Waniwani for the hostname of the request, and its path is in the list of agent page paths. An entry is an exact path such as `/pricing`, or a folder such as `/products/*`, which covers `/products` and every path under it. `*` covers every path.
+- The `User-Agent` belongs to an AI agent that acts for a user, for example `ChatGPT-User` or `Claude-User`. Crawlers that collect training data get your site as usual.
+- Waniwani sends the stored page in time. The rules and the deadlines come from your Waniwani settings.
+
+The response carries the stored content type, `x-waniwani-agent-page: hit`, `cache-control: private, no-store` and `vary: user-agent, accept`. A `HEAD` request gets the same headers with no body. The settings load on the first call, with a 300 ms limit, and stay in memory for 60 seconds. After that the relay keeps serving the cached settings while it loads new ones in the background. The function never throws, and the promise never rejects. It takes a `Request` only, so it works on Vercel and Cloudflare Workers.
+
+On Vercel, in `middleware.ts`:
+
+```ts
+import { isAgent, recordAgentVisit, serveAgentPage } from "@waniwani/relay";
+import { NextResponse, type NextRequest } from "next/server";
+
+export async function middleware(request: NextRequest) {
+  if (isAgent(request)) {
+    recordAgentVisit(request);
+    return (await serveAgentPage(request)) ?? NextResponse.next();
+  }
+  return NextResponse.next();
+}
+```
+
+In a Cloudflare Worker, pass the key and fall back to your origin:
+
+```ts
+return (await serveAgentPage(request, { key: env.WANIWANI_AGENT_TRAFFIC_KEY })) ?? fetch(request);
+```
+
 ## Dependencies
 
 The package has no runtime dependencies. The IP range check uses `BlockList` from `node:net`.
