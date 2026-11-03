@@ -8,4 +8,7 @@ export const settings = {
 	retryDelayMs: 500,
 	rulesRefreshMs: 12 * 60 * 60 * 1000,
 	rulesRetryMs: 5 * 60 * 1000,
+	siteRulesTimeoutMs: 300,
+	siteRulesRefreshMs: 60_000,
+	siteRulesRetryMs: 5_000,
 };
