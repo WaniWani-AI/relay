@@ -101,7 +101,7 @@ function serveAgentPage(
 ): Promise<CloudFrontResultResponse | null>;
 ```
 
-`ServeAgentPageOptions` takes `region`, `apiUrl` and `key` from `RelayOptions`, plus `hostname` for CloudFront.
+`ServeAgentPageOptions` takes `region`, `apiUrl` and `key` from `RelayOptions`.
 
 Serves the agent page of a request: a text-first copy of the page that Waniwani renders and stores. It returns that page when all of these hold, and `null` otherwise, so your middleware passes the request on to your site:
 
@@ -112,7 +112,7 @@ Serves the agent page of a request: a text-first copy of the page that Waniwani 
 - The `User-Agent` belongs to an AI agent that acts for a user, for example `ChatGPT-User` or `Claude-User`. Crawlers that collect training data get your site as usual.
 - Waniwani sends the stored page in time. The rules and the deadlines come from your Waniwani settings.
 
-You can block AI agents per site in Waniwani. When the `User-Agent` of a request contains a blocked token, the function answers `403` with the text body `Forbidden`. That check runs before the agent page checks, so it works with agent pages off. The response carries `x-waniwani-blocked: 1`, `cache-control: private, no-store` and `vary: user-agent`.
+You can block AI agents per site in Waniwani. When the `User-Agent` of a `GET` or `HEAD` request contains a blocked token, the function answers `403` with the text body `Forbidden`. That check runs before the agent page checks and before the `x-waniwani-render` check, so it works with agent pages off. The response carries `x-waniwani-blocked: 1`, `cache-control: private, no-store` and `vary: user-agent`.
 
 The page response carries the stored content type, `x-waniwani-agent-page: hit`, `cache-control: private, no-store` and `vary: user-agent, accept`. A `HEAD` request gets the same headers with no body. The settings load on the first call, with a 300 ms limit, and stay in memory for 60 seconds. After that the relay keeps serving the cached settings while it loads new ones in the background. The function never throws, and the promise never rejects.
 
@@ -146,15 +146,32 @@ function markAgentRequest(
 ): boolean;
 ```
 
-On AWS CloudFront the agent page comes from an origin-request Lambda@Edge. A response made there can be 1 MB. At viewer-request the limit is 40 KB. The origin-request event has no viewer `User-Agent` or `Host`, so the viewer-request handler passes the user agent on.
+On AWS CloudFront the agent page comes from an origin-request Lambda@Edge. A response made there can be 1 MB. At viewer-request the limit is 40 KB. The origin-request event has no viewer `User-Agent` or `Host`, so the viewer-request handler passes them on in the URI.
 
-When `isAgent` holds, `markAgentRequest` rewrites `request.uri` to `/__waniwani-agent/<encoded user agent><original path>` and returns `true`. That URI gives each agent user agent its own cache key, apart from the page people get, with no change to your cache policy, and it carries the user agent to the origin-request handler. A `/__waniwani-agent/` prefix the client sent is stripped first. The function never throws. Call `recordAgentVisit` before it, so the event holds the original path.
+When `isAgent` holds, `markAgentRequest` rewrites `request.uri` to `/__waniwani-agent/<bot token>/<host><original path>` and returns `true`. The bot token is the first token of the AI bot list found in the `User-Agent`. It is `-` when `isAgent` matched on the IP, `Signature-Agent` or `DPoP` alone. That URI gives each bot and each site its own cache key, apart from the page people get, with no change to your cache policy. One distribution can serve several sites.
+
+A `/__waniwani-agent/` prefix the client sent is stripped first. The request stays as it was when it has no valid `Host` header, or when the new URI would be longer than the 8,192 bytes CloudFront allows. The function never throws. Call `recordAgentVisit` before it, so the event holds the original path.
+
+### `blockAgentRequest(request, options?)`
+
+```ts
+function blockAgentRequest(
+  request: CloudFrontRequest,
+  options?: ServeAgentPageOptions,
+): Promise<CloudFrontResultResponse | null>;
+```
+
+For the viewer-request handler on CloudFront. It returns the same `403` as `serveAgentPage` when the site of the `Host` header blocks the `User-Agent`, and `null` otherwise. The origin-request handler runs only when CloudFront has no cached copy, so a block made there waits for the cached page to expire. CloudFront never caches a response made at viewer-request, so this block takes effect at once. The function never throws, and the promise never rejects.
 
 Viewer-request handler:
 
 ```ts
 const request = event.Records[0].cf.request;
-if (isAgent(request)) await recordAgentVisit(request, { key });
+if (isAgent(request)) {
+  await recordAgentVisit(request, { key });
+  const blocked = await blockAgentRequest(request, { key });
+  if (blocked) return blocked;
+}
 markAgentRequest(request);
 return request;
 ```
@@ -163,10 +180,10 @@ Origin-request handler:
 
 ```ts
 const request = event.Records[0].cf.request;
-return (await serveAgentPage(request, { key, hostname })) ?? request;
+return (await serveAgentPage(request, { key })) ?? request;
 ```
 
-Lambda@Edge has no environment variables, so pass `key`. `hostname` is the hostname of your site, and the setup screen puts it in the code for you. Without it the relay reads the `host` header, which at origin-request names your origin. For a `CloudFrontRequest` the user agent comes from the URI that `markAgentRequest` rewrote. The function restores `request.uri` to the original path before anything else, so `?? request` reaches your origin with the real path, and it returns `null` when the URI has no `/__waniwani-agent/` prefix. The page body goes out as UTF-8 text.
+Lambda@Edge has no environment variables, so pass `key`. For a `CloudFrontRequest`, `serveAgentPage` reads the bot token and the host from the URI that `markAgentRequest` rewrote, and it matches the bot token against the agent and block lists. It restores `request.uri` to the original path before anything else, so `?? request` reaches your origin with the real path. It returns `null` when the URI has no `/__waniwani-agent/` prefix, and when the page is too large for the 1 MB limit of Lambda@Edge. The page body goes out as UTF-8 text.
 
 ## Dependencies
 

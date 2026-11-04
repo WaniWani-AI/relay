@@ -5,6 +5,8 @@ export const settings = {
 	},
 	requestTimeoutMs: 2000,
 	cloudFrontTimeoutMs: 1000,
+	cloudFrontMaxUriBytes: 8192,
+	cloudFrontMaxBodyBytes: 1_000_000 - 16_384,
 	retryDelayMs: 500,
 	rulesRefreshMs: 12 * 60 * 60 * 1000,
 	rulesRetryMs: 5 * 60 * 1000,

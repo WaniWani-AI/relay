@@ -1,1 +1,1 @@
-export { type DecideInput, decide } from "./decide";
+export { type DecideInput, decide, matchedAgentToken } from "./decide";

@@ -65,7 +65,11 @@ const pick = (useBundled: boolean): CompiledRules =>
 export const isAgentIp = (ip: string, useBundled = false): boolean =>
 	pick(useBundled).agentRanges.check(ip, ip.includes(":") ? "ipv6" : "ipv4");
 
-export function hasAgentToken(userAgent: string, useBundled = false): boolean {
+/** The first token of the active AI bot list found in the user agent, or null. */
+export function matchedAgentToken(
+	userAgent: string,
+	useBundled = false,
+): string | null {
 	const { tokensByPrefix } = pick(useBundled);
 	const text = userAgent.slice(0, MAX_SCANNED_USER_AGENT).toLowerCase();
 	for (let i = 0; i + PREFIX <= text.length; i++) {
@@ -73,13 +77,16 @@ export function hasAgentToken(userAgent: string, useBundled = false): boolean {
 		if (candidates) {
 			for (const token of candidates) {
 				if (text.startsWith(token, i)) {
-					return true;
+					return token;
 				}
 			}
 		}
 	}
-	return false;
+	return null;
 }
+
+export const hasAgentToken = (userAgent: string, useBundled = false): boolean =>
+	matchedAgentToken(userAgent, useBundled) !== null;
 
 export function decide({
 	headers,
