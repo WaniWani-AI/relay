@@ -146,13 +146,23 @@ describe("serveAgentPage blocking: the 403", () => {
 		},
 	);
 
-	it("lets the renderer through even with a blocked user agent", async () => {
-		const { serve, fetchMock } = await setup();
+	it("blocks a blocked user agent that sends the render header", async () => {
+		const { serve, pageFetched } = await setup();
 		const response = await serve(
 			request(GPTBOT_UA, { headers: { "x-waniwani-render": "1" } }),
 		);
+		expect(response?.status).toBe(403);
+		expect(response?.headers.get("x-waniwani-blocked")).toBe("1");
+		expect(pageFetched()).toBe(false);
+	});
+
+	it("gives the renderer the origin when its user agent is not blocked", async () => {
+		const { serve, pageFetched } = await setup();
+		const response = await serve(
+			request(CHATGPT_USER_UA, { headers: { "x-waniwani-render": "1" } }),
+		);
 		expect(response).toBeNull();
-		expect(fetchMock).not.toHaveBeenCalled();
+		expect(pageFetched()).toBe(false);
 	});
 
 	it("blocks on a site with agent pages off", async () => {

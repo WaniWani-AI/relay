@@ -208,14 +208,14 @@ describe("serveAgentPage: falls through before any fetch", () => {
 		},
 	);
 
-	it("returns null for the renderer's own request", async () => {
-		const { serve, fetchMock } = await setup();
+	it("returns null for the renderer's own request without fetching the page", async () => {
+		const { serve, urls } = await setup();
 		expect(
 			await serve(
 				agentPageRequest("/pricing", { headers: { "x-waniwani-render": "1" } }),
 			),
 		).toBeNull();
-		expect(fetchMock).not.toHaveBeenCalled();
+		expect(urls()).toEqual([RULES_URL]);
 	});
 });
 
