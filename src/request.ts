@@ -46,6 +46,20 @@ function originOf(host: string | undefined): string | null {
 	}
 }
 
+/** The hostname in a `host` header or a bare hostname, lowercased and without the port, or null when the value holds more. */
+export function hostnameOf(host: string | undefined): string | null {
+	const origin = originOf(host);
+	return origin === null ? null : new URL(origin).hostname;
+}
+
+export function cloudFrontHeader(
+	input: CloudFrontRequest,
+	name: string,
+): string | null {
+	const value = input.headers?.[name]?.[0]?.value;
+	return typeof value === "string" ? value : null;
+}
+
 /** Copies only the headers the relay reads, so a cookie or a value `Headers` refuses never makes the request fail. */
 function cloudFrontHeaders(input: CloudFrontRequest["headers"]): Headers {
 	const headers = new Headers();

@@ -9,6 +9,7 @@ export type SiteRules = {
 	maxBodyBytes: number;
 	sites: Array<{
 		hostname: string;
+		blockedUserAgentTokens: string[];
 		agentPages: { enabled: boolean; paths: string[] };
 	}>;
 };
@@ -41,9 +42,13 @@ export function parseSiteRules(body: unknown): SiteRules | null {
 	}
 	const parsedSites: SiteRules["sites"] = [];
 	for (const site of sites) {
+		if (!isObject(site)) {
+			return null;
+		}
+		const blocked = site.blockedUserAgentTokens ?? [];
 		if (
-			!isObject(site) ||
 			typeof site.hostname !== "string" ||
+			!isStringArray(blocked) ||
 			!isObject(site.agentPages) ||
 			typeof site.agentPages.enabled !== "boolean" ||
 			!isStringArray(site.agentPages.paths)
@@ -52,6 +57,7 @@ export function parseSiteRules(body: unknown): SiteRules | null {
 		}
 		parsedSites.push({
 			hostname: site.hostname.toLowerCase(),
+			blockedUserAgentTokens: blocked.filter((token) => token !== ""),
 			agentPages: {
 				enabled: site.agentPages.enabled,
 				paths: site.agentPages.paths,

@@ -93,19 +93,28 @@ The `headers` field can hold only these request headers:
 ```ts
 function serveAgentPage(
   request: Request,
-  options?: Pick<RelayOptions, "region" | "apiUrl" | "key">,
+  options?: ServeAgentPageOptions,
 ): Promise<Response | null>;
+function serveAgentPage(
+  request: CloudFrontRequest,
+  options?: ServeAgentPageOptions,
+): Promise<CloudFrontResultResponse | null>;
 ```
+
+`ServeAgentPageOptions` takes `region`, `apiUrl` and `key` from `RelayOptions`, plus `hostname` for CloudFront.
 
 Serves the agent page of a request: a text-first copy of the page that Waniwani renders and stores. It returns that page when all of these hold, and `null` otherwise, so your middleware passes the request on to your site:
 
 - A key is set.
 - The method is `GET` or `HEAD`.
+- The request has no `x-waniwani-render` header. Waniwani sends that header when it renders your page.
 - Agent pages are on in Waniwani for the hostname of the request, and its path is in the list of agent page paths. An entry is an exact path such as `/pricing`, or a folder such as `/products/*`, which covers `/products` and every path under it. `*` covers every path.
 - The `User-Agent` belongs to an AI agent that acts for a user, for example `ChatGPT-User` or `Claude-User`. Crawlers that collect training data get your site as usual.
 - Waniwani sends the stored page in time. The rules and the deadlines come from your Waniwani settings.
 
-The response carries the stored content type, `x-waniwani-agent-page: hit`, `cache-control: private, no-store` and `vary: user-agent, accept`. A `HEAD` request gets the same headers with no body. The settings load on the first call, with a 300 ms limit, and stay in memory for 60 seconds. After that the relay keeps serving the cached settings while it loads new ones in the background. The function never throws, and the promise never rejects. It takes a `Request` only, so it works on Vercel and Cloudflare Workers.
+You can block AI agents per site in Waniwani. When the `User-Agent` of a request contains a blocked token, the function answers `403` with the text body `Forbidden`. That check runs before the agent page checks, so it works with agent pages off. The response carries `x-waniwani-blocked: 1`, `cache-control: private, no-store` and `vary: user-agent`.
+
+The page response carries the stored content type, `x-waniwani-agent-page: hit`, `cache-control: private, no-store` and `vary: user-agent, accept`. A `HEAD` request gets the same headers with no body. The settings load on the first call, with a 300 ms limit, and stay in memory for 60 seconds. After that the relay keeps serving the cached settings while it loads new ones in the background. The function never throws, and the promise never rejects.
 
 On Vercel, in `middleware.ts`:
 
@@ -127,6 +136,36 @@ In a Cloudflare Worker, pass the key and fall back to your origin:
 ```ts
 return (await serveAgentPage(request, { key: env.WANIWANI_AGENT_TRAFFIC_KEY })) ?? fetch(request);
 ```
+
+### `markAgentRequest(request, options?)`
+
+```ts
+function markAgentRequest(
+  request: CloudFrontRequest,
+  options?: Pick<RelayOptions, "region" | "apiUrl" | "waitUntil" | "rules">,
+): boolean;
+```
+
+On AWS CloudFront the agent page comes from an origin-request Lambda@Edge. A response made there can be 1 MB. At viewer-request the limit is 40 KB. The origin-request event has no viewer `User-Agent` or `Host`, so the viewer-request handler passes the user agent on.
+
+`markAgentRequest` removes any `x-waniwani-agent` header the client sent. When `isAgent` holds, it sets `x-waniwani-agent` to the user agent and returns `true`. It never throws. Add `x-waniwani-agent` to the cache key of the behavior. Agent requests then skip the cached page for people, and the header reaches the origin-request handler.
+
+Viewer-request handler:
+
+```ts
+const request = event.Records[0].cf.request;
+if (markAgentRequest(request)) await recordAgentVisit(request, { key });
+return request;
+```
+
+Origin-request handler:
+
+```ts
+const request = event.Records[0].cf.request;
+return (await serveAgentPage(request, { key, hostname })) ?? request;
+```
+
+Lambda@Edge has no environment variables, so pass `key`. `hostname` is the hostname of your site, and the setup screen puts it in the code for you. Without it the relay reads the `host` header, which at origin-request names your origin. For a `CloudFrontRequest` the user agent comes from `x-waniwani-agent`, and the function returns `null` when that header is missing. The page body goes out as UTF-8 text.
 
 ## Dependencies
 

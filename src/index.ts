@@ -13,6 +13,8 @@ import type { Platform } from "./platform";
 import { refreshRules } from "./refresh";
 import {
 	type CloudFrontRequest,
+	cloudFrontHeader,
+	hostnameOf,
 	isCloudFrontRequest,
 	toRelayRequest,
 } from "./request";
@@ -21,6 +23,14 @@ import { RELAY_VERSION } from "./version";
 import { vercelWaitUntil } from "./wait-until";
 
 export type { CloudFrontRequest };
+
+/** The response a Lambda@Edge handler returns in place of the request. */
+export type CloudFrontResultResponse = {
+	status: string;
+	statusDescription?: string;
+	headers: Record<string, Array<{ key: string; value: string }>>;
+	body?: string;
+};
 
 export type Region = keyof typeof settings.apiUrls;
 
@@ -47,7 +57,10 @@ export type IsAgentOptions = Pick<
 export type ServeAgentPageOptions = Pick<
 	RelayOptions,
 	"region" | "apiUrl" | "key"
->;
+> & {
+	/** The hostname of the site for a `CloudFrontRequest`. Defaults to its `host` header. */
+	hostname?: string;
+};
 
 export type AgentVisitRecord = {
 	occurredAt: string;
@@ -177,64 +190,211 @@ export function recordAgentVisit(
 	}
 }
 
+type PageRequest = {
+	method: string;
+	hostname: string;
+	pathname: string;
+	userAgent: string;
+};
+
+type PageAnswer = {
+	status: 200 | 403;
+	headers: Record<string, string>;
+	body: Uint8Array<ArrayBuffer> | string | null;
+};
+
+const BLOCKED: Omit<PageAnswer, "body"> = {
+	status: 403,
+	headers: {
+		"content-type": "text/plain; charset=utf-8",
+		"x-waniwani-blocked": "1",
+		"cache-control": "private, no-store",
+		vary: "user-agent",
+	},
+};
+
 /**
- * The stored agent page for this request, when its site lists the path and the user agent acts for a user. Otherwise null, and the caller serves the origin.
+ * The stored agent page for this request, when its site lists the path and the user agent acts for a user. A 403 when the site blocks the user agent. Otherwise null, and the caller serves the origin.
+ * A `CloudFrontRequest` comes from the origin-request handler: its user agent is the `x-waniwani-agent` header that `markAgentRequest` set at viewer-request.
  * Never throws and never rejects.
  */
-export async function serveAgentPage(
+export function serveAgentPage(
 	request: Request,
+	options?: ServeAgentPageOptions,
+): Promise<Response | null>;
+export function serveAgentPage(
+	request: CloudFrontRequest,
+	options?: ServeAgentPageOptions,
+): Promise<CloudFrontResultResponse | null>;
+export async function serveAgentPage(
+	request: Request | CloudFrontRequest,
 	options: ServeAgentPageOptions = {},
-): Promise<Response | null> {
+): Promise<Response | CloudFrontResultResponse | null> {
 	try {
-		const key = readKey(options.key);
-		if (!key) {
-			return null;
-		}
-		const apiUrl = resolveApiUrl(options);
-		if (!apiUrl || isCloudFrontRequest(request)) {
-			return null;
-		}
-		const method = request.method.toUpperCase();
-		if (method !== "GET" && method !== "HEAD") {
-			return null;
-		}
-		if (request.headers.has("x-waniwani-render")) {
-			return null;
-		}
-		const rules = await loadSiteRules(apiUrl, key.ingestToken, (work) =>
-			schedule(work, undefined),
-		);
-		if (!rules) {
-			return null;
-		}
-		const url = new URL(request.url);
-		const site = rules.sites.find((entry) => entry.hostname === url.hostname);
-		if (!site?.agentPages.enabled) {
-			return null;
-		}
-		const path = normalizePath(url.pathname);
-		if (!matchesPath(path, site.agentPages.paths)) {
-			return null;
-		}
-		const userAgent = (request.headers.get("user-agent") ?? "").toLowerCase();
-		if (!rules.userAgentTokens.some((token) => userAgent.includes(token))) {
-			return null;
-		}
-		const page = await fetchAgentPage(rules, url.hostname, path);
-		if (!page) {
-			return null;
-		}
-		return new Response(method === "HEAD" ? null : page.body, {
-			status: 200,
-			headers: {
-				"content-type": page.contentType,
-				"x-waniwani-agent-page": "hit",
-				"cache-control": "private, no-store",
-				vary: "user-agent, accept",
-			},
-		});
+		return isCloudFrontRequest(request)
+			? await serveCloudFront(request, options)
+			: await serveFetch(request, options);
 	} catch {
 		return null;
+	}
+}
+
+async function serveFetch(
+	request: Request,
+	options: ServeAgentPageOptions,
+): Promise<Response | null> {
+	if (request.headers.has("x-waniwani-render")) {
+		return null;
+	}
+	const url = new URL(request.url);
+	const answer = await answerAgentPage(
+		{
+			method: request.method.toUpperCase(),
+			hostname: url.hostname,
+			pathname: url.pathname,
+			userAgent: request.headers.get("user-agent") ?? "",
+		},
+		options,
+	);
+	if (!answer) {
+		return null;
+	}
+	return new Response(answer.body, {
+		status: answer.status,
+		headers: answer.headers,
+	});
+}
+
+async function serveCloudFront(
+	request: CloudFrontRequest,
+	options: ServeAgentPageOptions,
+): Promise<CloudFrontResultResponse | null> {
+	if (cloudFrontHeader(request, "x-waniwani-render") !== null) {
+		return null;
+	}
+	const userAgent = cloudFrontHeader(request, "x-waniwani-agent");
+	const hostname = hostnameOf(
+		options.hostname ?? cloudFrontHeader(request, "host") ?? undefined,
+	);
+	if (userAgent === null || hostname === null) {
+		return null;
+	}
+	const answer = await answerAgentPage(
+		{
+			method: request.method.toUpperCase(),
+			hostname,
+			pathname: request.uri,
+			userAgent,
+		},
+		options,
+	);
+	if (!answer) {
+		return null;
+	}
+	const headers: CloudFrontResultResponse["headers"] = {};
+	for (const [name, value] of Object.entries(answer.headers)) {
+		headers[name] = [{ key: headerKey(name), value }];
+	}
+	const result: CloudFrontResultResponse = {
+		status: String(answer.status),
+		statusDescription: answer.status === 200 ? "OK" : "Forbidden",
+		headers,
+	};
+	if (answer.body !== null) {
+		result.body =
+			typeof answer.body === "string"
+				? answer.body
+				: new TextDecoder().decode(answer.body);
+	}
+	return result;
+}
+
+function headerKey(name: string): string {
+	return name
+		.split("-")
+		.map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+		.join("-");
+}
+
+async function answerAgentPage(
+	request: PageRequest,
+	options: ServeAgentPageOptions,
+): Promise<PageAnswer | null> {
+	const { method, hostname } = request;
+	if (method !== "GET" && method !== "HEAD") {
+		return null;
+	}
+	const key = readKey(options.key);
+	if (!key) {
+		return null;
+	}
+	const apiUrl = resolveApiUrl(options);
+	if (!apiUrl) {
+		return null;
+	}
+	const rules = await loadSiteRules(apiUrl, key.ingestToken, (work) =>
+		schedule(work, undefined),
+	);
+	if (!rules) {
+		return null;
+	}
+	const site = rules.sites.find((entry) => entry.hostname === hostname);
+	if (!site) {
+		return null;
+	}
+	const userAgent = request.userAgent.toLowerCase();
+	if (site.blockedUserAgentTokens.some((token) => userAgent.includes(token))) {
+		return { ...BLOCKED, body: method === "HEAD" ? null : "Forbidden" };
+	}
+	if (!site.agentPages.enabled) {
+		return null;
+	}
+	const path = normalizePath(request.pathname);
+	if (!matchesPath(path, site.agentPages.paths)) {
+		return null;
+	}
+	if (!rules.userAgentTokens.some((token) => userAgent.includes(token))) {
+		return null;
+	}
+	const page = await fetchAgentPage(rules, hostname, path);
+	if (!page) {
+		return null;
+	}
+	return {
+		status: 200,
+		headers: {
+			"content-type": page.contentType,
+			"x-waniwani-agent-page": "hit",
+			"cache-control": "private, no-store",
+			vary: "user-agent, accept",
+		},
+		body: method === "HEAD" ? null : page.body,
+	};
+}
+
+/**
+ * For the viewer-request handler on CloudFront. Drops any `x-waniwani-agent` header the client sent, then sets it to the user agent when `isAgent` holds.
+ * Add `x-waniwani-agent` to the cache key of the behavior, so agent requests skip the cached human page and the header reaches the origin-request handler.
+ * Never throws.
+ */
+export function markAgentRequest(
+	request: CloudFrontRequest,
+	options: IsAgentOptions = {},
+): boolean {
+	try {
+		Reflect.deleteProperty(request.headers, "x-waniwani-agent");
+		if (!isAgent(request, options)) {
+			return false;
+		}
+		request.headers["x-waniwani-agent"] = [
+			{
+				key: "X-WaniWani-Agent",
+				value: cloudFrontHeader(request, "user-agent") ?? "",
+			},
+		];
+		return true;
+	} catch {
+		return false;
 	}
 }
 
