@@ -150,9 +150,9 @@ CloudFront needs two Lambda@Edge functions, one on each of two events:
 
 - **Viewer request** runs on every request, before the CloudFront cache. `handleViewerRequest` decides what to do with the request:
   - When the site blocks this `User-Agent`, it answers `403`. CloudFront does not cache a response from this event, so a change to your block list applies to the next request.
-  - When an AI agent that acts for a user asks for a path that has an agent page, it marks the request. To mark it, it adds `/__waniwani-agent/<host>` in front of `request.uri`. CloudFront keeps a marked request in its own cache entry.
+  - When an AI agent that acts for a user asks for a path that has an agent page, it marks the request. To mark it, it adds `/__waniwani-agent/<host>` in front of the path in `request.uri`. On CloudFront, `request.uri` is the path only, with no host and no query string. For `https://example.com/pricing?a=1`, `request.uri` changes from `/pricing` to `/__waniwani-agent/example.com/pricing`, and the query string stays as it is. The URI is part of every CloudFront cache key, so the marked request cannot get the cached page that people see.
   - In all other cases it returns `null`, and the request continues with no change.
-- **Origin request** runs only when the cache has no copy. `serveAgentPage` sends the agent page for a marked request. The page must come from this event because a response here can be 1 MB, but a response at viewer request can be only 40 KB. It removes the mark first. So when it cannot send the page, `?? request` sends the original path to your origin.
+- **Origin request** runs only on a cache miss, which is when CloudFront has no stored response for the request. The agent page has `cache-control: private, no-store`, so CloudFront never stores it, and a marked request is always a cache miss. `serveAgentPage` sends the agent page for a marked request. The page must come from this event because a response here can be 1 MB, but a response at viewer request can be only 40 KB. It removes the mark first. So when it cannot send the page, `?? request` sends the original path to your origin.
 
 A client cannot mark its own request. The viewer handler removes a `/__waniwani-agent/` prefix that arrives from the client. Neither function throws.
 
