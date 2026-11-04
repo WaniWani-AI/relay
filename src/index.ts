@@ -8,7 +8,7 @@ import {
 import { readCappedHeaders } from "./headers";
 import { type PostPolicy, postEvent } from "./ingest";
 import { readKey } from "./key";
-import { decide, matchedAgentToken } from "./logic";
+import { decide } from "./logic";
 import { deriveMatchKey } from "./match-key";
 import type { Platform } from "./platform";
 import { refreshRules } from "./refresh";
@@ -219,7 +219,7 @@ const BLOCKED: Omit<PageAnswer, "body"> = {
 
 /**
  * The stored agent page for this request, when its site lists the path and the user agent acts for a user. A 403 when the site blocks the user agent. Otherwise null, and the caller serves the origin.
- * A `CloudFrontRequest` comes from the origin-request handler. Its bot token and host travel in the URI that `markAgentRequest` rewrote at viewer-request, and the function restores `request.uri` to the original path before it returns.
+ * A `CloudFrontRequest` comes from the origin-request handler. Only a URI that `handleViewerRequest` marked gets the page, read for the host in the mark. The function restores `request.uri` to the original path before anything else, and it never returns a 403 on this path.
  * Never throws and never rejects.
  */
 export function serveAgentPage(
@@ -238,37 +238,6 @@ export async function serveAgentPage(
 		return isCloudFrontRequest(request)
 			? await serveCloudFront(request, options)
 			: await serveFetch(request, options);
-	} catch {
-		return null;
-	}
-}
-
-/**
- * For the viewer-request handler on CloudFront. The 403 response for a user agent that the site of the `host` header blocks, otherwise null.
- * CloudFront never caches a response made at viewer-request, so a block takes effect at once. Never throws and never rejects.
- */
-export async function blockAgentRequest(
-	request: CloudFrontRequest,
-	options: ServeAgentPageOptions = {},
-): Promise<CloudFrontResultResponse | null> {
-	try {
-		const method = request.method.toUpperCase();
-		if (!isPageMethod(method)) {
-			return null;
-		}
-		const hostname = hostnameOf(cloudFrontHeader(request, "host") ?? undefined);
-		if (hostname === null) {
-			return null;
-		}
-		const match = await findSite(hostname, options);
-		if (!match) {
-			return null;
-		}
-		const userAgent = (
-			cloudFrontHeader(request, "user-agent") ?? ""
-		).toLowerCase();
-		const answer = blockedAnswer(match.site, userAgent, method);
-		return answer ? toCloudFrontResponse(answer) : null;
 	} catch {
 		return null;
 	}
@@ -302,19 +271,23 @@ async function serveCloudFront(
 	request: CloudFrontRequest,
 	options: ServeAgentPageOptions,
 ): Promise<CloudFrontResultResponse | null> {
-	const mark = takeMarkFromUri(request);
-	if (mark === null) {
+	const hostname = takeMarkFromUri(request);
+	if (hostname === null) {
 		return null;
 	}
-	const answer = await answerAgentPage(
-		{
-			method: request.method.toUpperCase(),
-			hostname: mark.hostname,
-			pathname: request.uri,
-			userAgent: mark.token,
-			rendering: cloudFrontHeader(request, "x-waniwani-render") !== null,
-		},
-		options,
+	const method = request.method.toUpperCase();
+	if (!isPageMethod(method)) {
+		return null;
+	}
+	const match = await findSite(hostname, options);
+	if (!match) {
+		return null;
+	}
+	const answer = await pageAnswer(
+		match.rules,
+		hostname,
+		normalizePath(request.uri),
+		method,
 	);
 	if (!answer) {
 		return null;
@@ -419,6 +392,15 @@ async function answerAgentPage(
 	if (!rules.userAgentTokens.some((token) => userAgent.includes(token))) {
 		return null;
 	}
+	return pageAnswer(rules, hostname, path, method);
+}
+
+async function pageAnswer(
+	rules: SiteRules,
+	hostname: string,
+	path: string,
+	method: string,
+): Promise<PageAnswer | null> {
 	const page = await fetchAgentPage(rules, hostname, path);
 	if (!page) {
 		return null;
@@ -437,86 +419,89 @@ async function answerAgentPage(
 
 const AGENT_URI_PREFIX = "/__waniwani-agent/";
 
-const NO_TOKEN = "-";
-
-function splitAgentUri(uri: string): {
-	encodedToken: string;
-	encodedHost: string;
-	originalUri: string;
-} | null {
+function splitAgentUri(
+	uri: string,
+): { encodedHost: string; originalUri: string } | null {
 	if (!uri.startsWith(AGENT_URI_PREFIX)) {
 		return null;
 	}
 	const rest = uri.slice(AGENT_URI_PREFIX.length);
-	const first = rest.indexOf("/");
-	if (first === -1) {
-		return { encodedToken: rest, encodedHost: "", originalUri: "/" };
-	}
-	const second = rest.indexOf("/", first + 1);
-	return {
-		encodedToken: rest.slice(0, first),
-		encodedHost:
-			second === -1 ? rest.slice(first + 1) : rest.slice(first + 1, second),
-		originalUri: second === -1 ? "/" : rest.slice(second),
-	};
+	const slash = rest.indexOf("/");
+	return slash === -1
+		? { encodedHost: rest, originalUri: "/" }
+		: { encodedHost: rest.slice(0, slash), originalUri: rest.slice(slash) };
 }
 
-function takeMarkFromUri(
-	request: CloudFrontRequest,
-): { token: string; hostname: string } | null {
+function stripForgedMark(request: CloudFrontRequest): void {
+	let forged = splitAgentUri(request.uri);
+	while (forged) {
+		request.uri = forged.originalUri;
+		forged = splitAgentUri(request.uri);
+	}
+}
+
+function takeMarkFromUri(request: CloudFrontRequest): string | null {
 	const parts = splitAgentUri(request.uri);
 	if (!parts) {
 		return null;
 	}
 	request.uri = parts.originalUri;
 	try {
-		const hostname = hostnameOf(decodeURIComponent(parts.encodedHost));
-		return hostname === null
-			? null
-			: { token: decodeURIComponent(parts.encodedToken), hostname };
+		return hostnameOf(decodeURIComponent(parts.encodedHost));
 	} catch {
 		return null;
 	}
 }
 
 /**
- * For the viewer-request handler on CloudFront. Strips a `/__waniwani-agent/` prefix the client sent. When `isAgent` holds, it rewrites `request.uri` to `/__waniwani-agent/<bot token>/<host><original uri>` and returns true.
- * The bot token is the first token of the AI bot list found in the user agent, or `-` when `isAgent` matched on the IP, `Signature-Agent` or `DPoP` alone. The rewrite gives each bot and site its own cache key and carries both to the origin-request handler, where `serveAgentPage` restores the URI.
- * The request stays unmarked when it has no valid `host` header or when the new URI would pass the CloudFront URI limit.
- * Call `recordAgentVisit` before it, so the event holds the original path. Never throws.
+ * For the viewer-request handler on CloudFront. Strips a `/__waniwani-agent/` prefix the client sent, then, for a GET or HEAD from an AI agent, loads the rules of the site of the `host` header.
+ * Returns the 403 response when the site blocks the user agent. CloudFront never caches a response made at viewer-request, so a block takes effect at once.
+ * When the site serves an agent page for the path and the user agent acts for a user, rewrites `request.uri` to `/__waniwani-agent/<host><original uri>` so the origin-request handler serves the page under its own cache key. The request stays unmarked when the new URI would pass the CloudFront URI limit.
+ * Call `recordAgentVisit` before it, so the event holds the original path. Never throws and never rejects.
  */
-export function markAgentRequest(
+export async function handleViewerRequest(
 	request: CloudFrontRequest,
-	options: IsAgentOptions = {},
-): boolean {
+	options: ServeAgentPageOptions = {},
+): Promise<CloudFrontResultResponse | null> {
 	try {
-		let forged = splitAgentUri(request.uri);
-		while (forged) {
-			request.uri = forged.originalUri;
-			forged = splitAgentUri(request.uri);
-		}
-		if (!isAgent(request, options)) {
-			return false;
+		stripForgedMark(request);
+		const method = request.method.toUpperCase();
+		if (!isPageMethod(method) || !isAgent(request, options)) {
+			return null;
 		}
 		const hostname = hostnameOf(cloudFrontHeader(request, "host") ?? undefined);
 		if (hostname === null) {
-			return false;
+			return null;
 		}
-		const token =
-			matchedAgentToken(
-				cloudFrontHeader(request, "user-agent") ?? "",
-				options.rules === "bundled",
-			) ?? NO_TOKEN;
-		const uri = `${AGENT_URI_PREFIX}${encodeURIComponent(token)}/${encodeURIComponent(hostname)}${request.uri}`;
+		const match = await findSite(hostname, options);
+		if (!match) {
+			return null;
+		}
+		const { rules, site } = match;
+		const userAgent = (
+			cloudFrontHeader(request, "user-agent") ?? ""
+		).toLowerCase();
+		const blocked = blockedAnswer(site, userAgent, method);
+		if (blocked) {
+			return toCloudFrontResponse(blocked);
+		}
 		if (
-			new TextEncoder().encode(uri).byteLength > settings.cloudFrontMaxUriBytes
+			cloudFrontHeader(request, "x-waniwani-render") !== null ||
+			!site.agentPages.enabled ||
+			!matchesPath(normalizePath(request.uri), site.agentPages.paths) ||
+			!rules.userAgentTokens.some((token) => userAgent.includes(token))
 		) {
-			return false;
+			return null;
 		}
-		request.uri = uri;
-		return true;
+		const uri = `${AGENT_URI_PREFIX}${encodeURIComponent(hostname)}${request.uri}`;
+		if (
+			new TextEncoder().encode(uri).byteLength <= settings.cloudFrontMaxUriBytes
+		) {
+			request.uri = uri;
+		}
+		return null;
 	} catch {
-		return false;
+		return null;
 	}
 }
 

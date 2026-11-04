@@ -137,43 +137,23 @@ In a Cloudflare Worker, pass the key and fall back to your origin:
 return (await serveAgentPage(request, { key: env.WANIWANI_AGENT_TRAFFIC_KEY })) ?? fetch(request);
 ```
 
-### `markAgentRequest(request, options?)`
+### `handleViewerRequest(request, options?)` and CloudFront
 
 ```ts
-function markAgentRequest(
-  request: CloudFrontRequest,
-  options?: Pick<RelayOptions, "region" | "apiUrl" | "waitUntil" | "rules">,
-): boolean;
-```
-
-On AWS CloudFront the agent page comes from an origin-request Lambda@Edge. A response made there can be 1 MB. At viewer-request the limit is 40 KB. The origin-request event has no viewer `User-Agent` or `Host`, so the viewer-request handler passes them on in the URI.
-
-When `isAgent` holds, `markAgentRequest` rewrites `request.uri` to `/__waniwani-agent/<bot token>/<host><original path>` and returns `true`. The bot token is the first token of the AI bot list found in the `User-Agent`. It is `-` when `isAgent` matched on the IP, `Signature-Agent` or `DPoP` alone. That URI gives each bot and each site its own cache key, apart from the page people get, with no change to your cache policy. One distribution can serve several sites.
-
-A `/__waniwani-agent/` prefix the client sent is stripped first. The request stays as it was when it has no valid `Host` header, or when the new URI would be longer than the 8,192 bytes CloudFront allows. The function never throws. Call `recordAgentVisit` before it, so the event holds the original path.
-
-### `blockAgentRequest(request, options?)`
-
-```ts
-function blockAgentRequest(
+function handleViewerRequest(
   request: CloudFrontRequest,
   options?: ServeAgentPageOptions,
 ): Promise<CloudFrontResultResponse | null>;
 ```
 
-For the viewer-request handler on CloudFront. It returns the same `403` as `serveAgentPage` when the site of the `Host` header blocks the `User-Agent`, and `null` otherwise. The origin-request handler runs only when CloudFront has no cached copy, so a block made there waits for the cached page to expire. CloudFront never caches a response made at viewer-request, so this block takes effect at once. The function never throws, and the promise never rejects.
+On AWS CloudFront the agent page comes from an origin-request Lambda@Edge, where a response can be 1 MB. The viewer-request handler decides. It returns the `403` when the site of the `Host` header blocks the `User-Agent`, and CloudFront never caches a response made there, so a block takes effect at once. When the site lists the path and the `User-Agent` acts for a user, it marks the request by rewriting `request.uri` to `/__waniwani-agent/<host><original path>`. The origin-request handler serves the stored page for a marked request and restores the original path, so `?? request` reaches your origin with the real path. A `/__waniwani-agent/` prefix the client sent is stripped first. Neither function throws.
 
 Viewer-request handler:
 
 ```ts
 const request = event.Records[0].cf.request;
-if (isAgent(request)) {
-  await recordAgentVisit(request, { key });
-  const blocked = await blockAgentRequest(request, { key });
-  if (blocked) return blocked;
-}
-markAgentRequest(request);
-return request;
+if (isAgent(request)) await recordAgentVisit(request, { key });
+return (await handleViewerRequest(request, { key })) ?? request;
 ```
 
 Origin-request handler:
@@ -183,7 +163,7 @@ const request = event.Records[0].cf.request;
 return (await serveAgentPage(request, { key })) ?? request;
 ```
 
-Lambda@Edge has no environment variables, so pass `key`. For a `CloudFrontRequest`, `serveAgentPage` reads the bot token and the host from the URI that `markAgentRequest` rewrote, and it matches the bot token against the agent and block lists. It restores `request.uri` to the original path before anything else, so `?? request` reaches your origin with the real path. It returns `null` when the URI has no `/__waniwani-agent/` prefix, and when the page is too large for the 1 MB limit of Lambda@Edge. The page body goes out as UTF-8 text.
+Only requests that will get an agent page are marked, so crawlers and people share the normal cache entry, and each listed path gets one extra entry. Lambda@Edge has no environment variables, so pass `key`. People never wait on the site rules: the viewer handler loads them only for an AI agent. A page too large for the 1 MB limit of Lambda@Edge falls through to your origin, and the body goes out as UTF-8 text.
 
 ## Dependencies
 
