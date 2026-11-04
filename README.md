@@ -146,7 +146,15 @@ function handleViewerRequest(
 ): Promise<CloudFrontResultResponse | null>;
 ```
 
-On AWS CloudFront the agent page comes from an origin-request Lambda@Edge, where a response can be 1 MB. The viewer-request handler decides. It returns the `403` when the site of the `Host` header blocks the `User-Agent`, and CloudFront never caches a response made there, so a block takes effect at once. When the site lists the path and the `User-Agent` acts for a user, it marks the request by rewriting `request.uri` to `/__waniwani-agent/<host><original path>`. The origin-request handler serves the stored page for a marked request and restores the original path, so `?? request` reaches your origin with the real path. A `/__waniwani-agent/` prefix the client sent is stripped first. Neither function throws.
+CloudFront needs two Lambda@Edge functions, one on each of two events:
+
+- **Viewer request** runs on every request, before the CloudFront cache. `handleViewerRequest` decides what to do with the request:
+  - When the site blocks this `User-Agent`, it answers `403`. CloudFront does not cache a response from this event, so a change to your block list applies to the next request.
+  - When an AI agent that acts for a user asks for a path that has an agent page, it marks the request. To mark it, it adds `/__waniwani-agent/<host>` in front of `request.uri`. CloudFront keeps a marked request in its own cache entry.
+  - In all other cases it returns `null`, and the request continues with no change.
+- **Origin request** runs only when the cache has no copy. `serveAgentPage` sends the agent page for a marked request. The page must come from this event because a response here can be 1 MB, but a response at viewer request can be only 40 KB. It removes the mark first. So when it cannot send the page, `?? request` sends the original path to your origin.
+
+A client cannot mark its own request. The viewer handler removes a `/__waniwani-agent/` prefix that arrives from the client. Neither function throws.
 
 Viewer-request handler:
 
