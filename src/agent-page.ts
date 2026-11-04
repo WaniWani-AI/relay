@@ -9,6 +9,7 @@ export type SiteRules = {
 	maxBodyBytes: number;
 	sites: Array<{
 		hostname: string;
+		blockedUserAgentTokens: string[];
 		agentPages: { enabled: boolean; paths: string[] };
 	}>;
 };
@@ -21,6 +22,12 @@ const isStringArray = (value: unknown): value is string[] =>
 
 const isPositive = (value: unknown): value is number =>
 	typeof value === "number" && Number.isFinite(value) && value > 0;
+
+/** Lowercase like the user agent they are matched against, with blank tokens dropped since they would match every request. */
+const cleanTokens = (tokens: string[]): string[] =>
+	tokens
+		.map((token) => token.trim().toLowerCase())
+		.filter((token) => token !== "");
 
 /** The site rules in a serve rules file from the app (the `data` of its answer), or null when it does not have the expected form. */
 export function parseSiteRules(body: unknown): SiteRules | null {
@@ -41,9 +48,13 @@ export function parseSiteRules(body: unknown): SiteRules | null {
 	}
 	const parsedSites: SiteRules["sites"] = [];
 	for (const site of sites) {
+		if (!isObject(site)) {
+			return null;
+		}
+		const blocked = site.blockedUserAgentTokens ?? [];
 		if (
-			!isObject(site) ||
 			typeof site.hostname !== "string" ||
+			!isStringArray(blocked) ||
 			!isObject(site.agentPages) ||
 			typeof site.agentPages.enabled !== "boolean" ||
 			!isStringArray(site.agentPages.paths)
@@ -52,6 +63,7 @@ export function parseSiteRules(body: unknown): SiteRules | null {
 		}
 		parsedSites.push({
 			hostname: site.hostname.toLowerCase(),
+			blockedUserAgentTokens: cleanTokens(blocked),
 			agentPages: {
 				enabled: site.agentPages.enabled,
 				paths: site.agentPages.paths,
@@ -61,7 +73,7 @@ export function parseSiteRules(body: unknown): SiteRules | null {
 	return {
 		version: 1,
 		pagesUrl: pagesUrl.replace(/\/+$/, ""),
-		userAgentTokens: userAgentTokens.filter((token) => token !== ""),
+		userAgentTokens: cleanTokens(userAgentTokens),
 		deadlines: { headersMs: deadlines.headersMs, bodyMs: deadlines.bodyMs },
 		maxBodyBytes,
 		sites: parsedSites,

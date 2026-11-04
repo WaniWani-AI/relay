@@ -253,9 +253,10 @@ describe("platform: the other fields", () => {
 		expect("platform" in bodies[0].requests[0]).toBe(false);
 	});
 
-	it("keeps the public API to isAgent, recordAgentVisit and serveAgentPage", async () => {
+	it("keeps the public API to handleViewerRequest, isAgent, recordAgentVisit and serveAgentPage", async () => {
 		const relay = await import("../src/index");
 		expect(Object.keys(relay).sort()).toEqual([
+			"handleViewerRequest",
 			"isAgent",
 			"recordAgentVisit",
 			"serveAgentPage",

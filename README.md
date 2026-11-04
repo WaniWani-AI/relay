@@ -93,19 +93,28 @@ The `headers` field can hold only these request headers:
 ```ts
 function serveAgentPage(
   request: Request,
-  options?: Pick<RelayOptions, "region" | "apiUrl" | "key">,
+  options?: ServeAgentPageOptions,
 ): Promise<Response | null>;
+function serveAgentPage(
+  request: CloudFrontRequest,
+  options?: ServeAgentPageOptions,
+): Promise<CloudFrontResultResponse | null>;
 ```
+
+`ServeAgentPageOptions` takes `region`, `apiUrl` and `key` from `RelayOptions`.
 
 Serves the agent page of a request: a text-first copy of the page that Waniwani renders and stores. It returns that page when all of these hold, and `null` otherwise, so your middleware passes the request on to your site:
 
 - A key is set.
 - The method is `GET` or `HEAD`.
+- The request has no `x-waniwani-render` header. Waniwani sends that header when it renders your page.
 - Agent pages are on in Waniwani for the hostname of the request, and its path is in the list of agent page paths. An entry is an exact path such as `/pricing`, or a folder such as `/products/*`, which covers `/products` and every path under it. `*` covers every path.
 - The `User-Agent` belongs to an AI agent that acts for a user, for example `ChatGPT-User` or `Claude-User`. Crawlers that collect training data get your site as usual.
 - Waniwani sends the stored page in time. The rules and the deadlines come from your Waniwani settings.
 
-The response carries the stored content type, `x-waniwani-agent-page: hit`, `cache-control: private, no-store` and `vary: user-agent, accept`. A `HEAD` request gets the same headers with no body. The settings load on the first call, with a 300 ms limit, and stay in memory for 60 seconds. After that the relay keeps serving the cached settings while it loads new ones in the background. The function never throws, and the promise never rejects. It takes a `Request` only, so it works on Vercel and Cloudflare Workers.
+You can block AI agents per site in Waniwani. When the `User-Agent` of a `GET` or `HEAD` request contains a blocked token, the function answers `403` with the text body `Forbidden`. That check runs before the agent page checks and before the `x-waniwani-render` check, so it works with agent pages off. The response carries `x-waniwani-blocked: 1`, `cache-control: private, no-store` and `vary: user-agent`.
+
+The page response carries the stored content type, `x-waniwani-agent-page: hit`, `cache-control: private, no-store` and `vary: user-agent, accept`. A `HEAD` request gets the same headers with no body. The settings load on the first call, with a 300 ms limit, and stay in memory for 60 seconds. After that the relay keeps serving the cached settings while it loads new ones in the background. The function never throws, and the promise never rejects.
 
 On Vercel, in `middleware.ts`:
 
@@ -127,6 +136,53 @@ In a Cloudflare Worker, pass the key and fall back to your origin:
 ```ts
 return (await serveAgentPage(request, { key: env.WANIWANI_AGENT_TRAFFIC_KEY })) ?? fetch(request);
 ```
+
+### `handleViewerRequest(request, options?)` and CloudFront
+
+```ts
+function handleViewerRequest(
+  request: CloudFrontRequest,
+  options?: ServeAgentPageOptions,
+): Promise<CloudFrontResultResponse | null>;
+```
+
+CloudFront needs two Lambda@Edge functions, one on each of two events. On Vercel and Cloudflare one function sends the agent page. On CloudFront that is not possible, because of a Lambda@Edge limit on the body of a response that the function makes itself:
+
+| Event | Body limit |
+| --- | --- |
+| Viewer request | 40 KB |
+| Origin request | 1 MB |
+
+Most agent pages are larger than 40 KB, so the page must come from origin request. But origin request runs only on a cache miss. When people already opened `/pricing`, CloudFront has that page in its cache, and an agent request for `/pricing` gets the cached copy without a call to origin request. The viewer-request function therefore changes the path of an agent request, so that the request has a different cache key and is always a cache miss.
+
+The mark goes in the path because the path is the only part of the request that is in the cache key with every cache policy. A header or the query string is in the cache key only when the cache policy of your behavior includes it, and the managed `CachingOptimized` policy includes neither. The mark also carries the hostname of the site, because at origin request CloudFront usually replaces the `Host` header with the domain of your origin.
+
+The two events do these jobs:
+
+- **Viewer request** runs on every request, before the CloudFront cache. `handleViewerRequest` decides what to do with the request:
+  - When the site blocks this `User-Agent`, it answers `403`. CloudFront does not cache a response from this event, so a change to your block list applies to the next request.
+  - When an AI agent that acts for a user asks for a path that has an agent page, it marks the request. To mark it, it adds `/__waniwani-agent/<host>` in front of the path in `request.uri`. On CloudFront, `request.uri` is the path only, with no host and no query string. For `https://example.com/pricing?a=1`, `request.uri` changes from `/pricing` to `/__waniwani-agent/example.com/pricing`, and the query string stays as it is.
+  - In all other cases it returns `null`, and the request continues with no change.
+- **Origin request** runs only on a cache miss, which is when CloudFront has no stored response for the request. The agent page has `cache-control: private, no-store`, so CloudFront never stores it, and a marked request is always a cache miss. `serveAgentPage` sends the agent page for a marked request. It removes the mark first. So when it cannot send the page, `?? request` sends the original path to your origin.
+
+A client cannot mark its own request. The viewer handler removes a `/__waniwani-agent/` prefix that arrives from the client. Neither function throws.
+
+Viewer-request handler:
+
+```ts
+const request = event.Records[0].cf.request;
+if (isAgent(request)) await recordAgentVisit(request, { key });
+return (await handleViewerRequest(request, { key })) ?? request;
+```
+
+Origin-request handler:
+
+```ts
+const request = event.Records[0].cf.request;
+return (await serveAgentPage(request, { key })) ?? request;
+```
+
+Only requests that will get an agent page are marked, so crawlers and people share the normal cache entry, and each listed path gets one extra entry. Lambda@Edge has no environment variables, so pass `key`. People never wait on the site rules: the viewer handler loads them only for an AI agent. A page too large for the 1 MB limit of Lambda@Edge falls through to your origin, and the body goes out as UTF-8 text.
 
 ## Dependencies
 

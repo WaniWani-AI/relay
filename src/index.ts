@@ -3,6 +3,7 @@ import {
 	loadSiteRules,
 	matchesPath,
 	normalizePath,
+	type SiteRules,
 } from "./agent-page";
 import { readCappedHeaders } from "./headers";
 import { type PostPolicy, postEvent } from "./ingest";
@@ -13,6 +14,8 @@ import type { Platform } from "./platform";
 import { refreshRules } from "./refresh";
 import {
 	type CloudFrontRequest,
+	cloudFrontHeader,
+	hostnameOf,
 	isCloudFrontRequest,
 	toRelayRequest,
 } from "./request";
@@ -21,6 +24,14 @@ import { RELAY_VERSION } from "./version";
 import { vercelWaitUntil } from "./wait-until";
 
 export type { CloudFrontRequest };
+
+/** The response a Lambda@Edge handler returns in place of the request. */
+export type CloudFrontResultResponse = {
+	status: string;
+	statusDescription?: string;
+	headers: Record<string, Array<{ key: string; value: string }>>;
+	body?: string;
+};
 
 export type Region = keyof typeof settings.apiUrls;
 
@@ -177,62 +188,318 @@ export function recordAgentVisit(
 	}
 }
 
+type PageRequest = {
+	method: string;
+	hostname: string;
+	pathname: string;
+	userAgent: string;
+	rendering: boolean;
+};
+
+type PageAnswer = {
+	status: 200 | 403;
+	headers: Record<string, string>;
+	body: Uint8Array<ArrayBuffer> | string | null;
+};
+
+type SiteMatch = {
+	rules: SiteRules;
+	site: SiteRules["sites"][number];
+};
+
+const BLOCKED: Omit<PageAnswer, "body"> = {
+	status: 403,
+	headers: {
+		"content-type": "text/plain; charset=utf-8",
+		"x-waniwani-blocked": "1",
+		"cache-control": "private, no-store",
+		vary: "user-agent",
+	},
+};
+
 /**
- * The stored agent page for this request, when its site lists the path and the user agent acts for a user. Otherwise null, and the caller serves the origin.
+ * The stored agent page for this request, when its site lists the path and the user agent acts for a user. A 403 when the site blocks the user agent. Otherwise null, and the caller serves the origin.
+ * A `CloudFrontRequest` comes from the origin-request handler. Only a URI that `handleViewerRequest` marked gets the page, read for the host in the mark. The function restores `request.uri` to the original path before anything else, and it never returns a 403 on this path.
  * Never throws and never rejects.
  */
-export async function serveAgentPage(
+export function serveAgentPage(
 	request: Request,
+	options?: ServeAgentPageOptions,
+): Promise<Response | null>;
+export function serveAgentPage(
+	request: CloudFrontRequest,
+	options?: ServeAgentPageOptions,
+): Promise<CloudFrontResultResponse | null>;
+export async function serveAgentPage(
+	request: Request | CloudFrontRequest,
 	options: ServeAgentPageOptions = {},
-): Promise<Response | null> {
+): Promise<Response | CloudFrontResultResponse | null> {
 	try {
-		const key = readKey(options.key);
-		if (!key) {
-			return null;
-		}
-		const apiUrl = resolveApiUrl(options);
-		if (!apiUrl || isCloudFrontRequest(request)) {
-			return null;
-		}
+		return isCloudFrontRequest(request)
+			? await serveCloudFront(request, options)
+			: await serveFetch(request, options);
+	} catch {
+		return null;
+	}
+}
+
+async function serveFetch(
+	request: Request,
+	options: ServeAgentPageOptions,
+): Promise<Response | null> {
+	const url = new URL(request.url);
+	const answer = await answerAgentPage(
+		{
+			method: request.method.toUpperCase(),
+			hostname: url.hostname,
+			pathname: url.pathname,
+			userAgent: request.headers.get("user-agent") ?? "",
+			rendering: request.headers.has("x-waniwani-render"),
+		},
+		options,
+	);
+	if (!answer) {
+		return null;
+	}
+	return new Response(answer.body, {
+		status: answer.status,
+		headers: answer.headers,
+	});
+}
+
+async function serveCloudFront(
+	request: CloudFrontRequest,
+	options: ServeAgentPageOptions,
+): Promise<CloudFrontResultResponse | null> {
+	const hostname = takeMarkFromUri(request);
+	if (hostname === null) {
+		return null;
+	}
+	const method = request.method.toUpperCase();
+	if (!isPageMethod(method)) {
+		return null;
+	}
+	const match = await findSite(hostname, options);
+	if (!match) {
+		return null;
+	}
+	const answer = await pageAnswer(
+		match.rules,
+		hostname,
+		normalizePath(request.uri),
+		method,
+	);
+	if (!answer) {
+		return null;
+	}
+	const result = toCloudFrontResponse(answer);
+	if (
+		result.body !== undefined &&
+		new TextEncoder().encode(result.body).byteLength >
+			settings.cloudFrontMaxBodyBytes
+	) {
+		return null;
+	}
+	return result;
+}
+
+function toCloudFrontResponse(answer: PageAnswer): CloudFrontResultResponse {
+	const headers: CloudFrontResultResponse["headers"] = {};
+	for (const [name, value] of Object.entries(answer.headers)) {
+		headers[name] = [{ key: headerKey(name), value }];
+	}
+	const result: CloudFrontResultResponse = {
+		status: String(answer.status),
+		statusDescription: answer.status === 200 ? "OK" : "Forbidden",
+		headers,
+	};
+	if (answer.body !== null) {
+		result.body =
+			typeof answer.body === "string"
+				? answer.body
+				: new TextDecoder().decode(answer.body);
+	}
+	return result;
+}
+
+function headerKey(name: string): string {
+	return name
+		.split("-")
+		.map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+		.join("-");
+}
+
+const isPageMethod = (method: string): boolean =>
+	method === "GET" || method === "HEAD";
+
+async function findSite(
+	hostname: string,
+	options: ServeAgentPageOptions,
+): Promise<SiteMatch | null> {
+	const key = readKey(options.key);
+	if (!key) {
+		return null;
+	}
+	const apiUrl = resolveApiUrl(options);
+	if (!apiUrl) {
+		return null;
+	}
+	const rules = await loadSiteRules(apiUrl, key.ingestToken, (work) =>
+		schedule(work, undefined),
+	);
+	if (!rules) {
+		return null;
+	}
+	const site = rules.sites.find((entry) => entry.hostname === hostname);
+	return site ? { rules, site } : null;
+}
+
+function blockedAnswer(
+	site: SiteMatch["site"],
+	userAgent: string,
+	method: string,
+): PageAnswer | null {
+	return site.blockedUserAgentTokens.some((token) => userAgent.includes(token))
+		? { ...BLOCKED, body: method === "HEAD" ? null : "Forbidden" }
+		: null;
+}
+
+async function answerAgentPage(
+	request: PageRequest,
+	options: ServeAgentPageOptions,
+): Promise<PageAnswer | null> {
+	const { method, hostname } = request;
+	if (!isPageMethod(method)) {
+		return null;
+	}
+	const match = await findSite(hostname, options);
+	if (!match) {
+		return null;
+	}
+	const { rules, site } = match;
+	const userAgent = request.userAgent.toLowerCase();
+	const blocked = blockedAnswer(site, userAgent, method);
+	if (blocked) {
+		return blocked;
+	}
+	if (request.rendering || !site.agentPages.enabled) {
+		return null;
+	}
+	const path = normalizePath(request.pathname);
+	if (!matchesPath(path, site.agentPages.paths)) {
+		return null;
+	}
+	if (!rules.userAgentTokens.some((token) => userAgent.includes(token))) {
+		return null;
+	}
+	return pageAnswer(rules, hostname, path, method);
+}
+
+async function pageAnswer(
+	rules: SiteRules,
+	hostname: string,
+	path: string,
+	method: string,
+): Promise<PageAnswer | null> {
+	const page = await fetchAgentPage(rules, hostname, path);
+	if (!page) {
+		return null;
+	}
+	return {
+		status: 200,
+		headers: {
+			"content-type": page.contentType,
+			"x-waniwani-agent-page": "hit",
+			"cache-control": "private, no-store",
+			vary: "user-agent, accept",
+		},
+		body: method === "HEAD" ? null : page.body,
+	};
+}
+
+const AGENT_URI_PREFIX = "/__waniwani-agent/";
+
+function splitAgentUri(
+	uri: string,
+): { encodedHost: string; originalUri: string } | null {
+	if (!uri.startsWith(AGENT_URI_PREFIX)) {
+		return null;
+	}
+	const rest = uri.slice(AGENT_URI_PREFIX.length);
+	const slash = rest.indexOf("/");
+	return slash === -1
+		? { encodedHost: rest, originalUri: "/" }
+		: { encodedHost: rest.slice(0, slash), originalUri: rest.slice(slash) };
+}
+
+function stripForgedMark(request: CloudFrontRequest): void {
+	let forged = splitAgentUri(request.uri);
+	while (forged) {
+		request.uri = forged.originalUri;
+		forged = splitAgentUri(request.uri);
+	}
+}
+
+function takeMarkFromUri(request: CloudFrontRequest): string | null {
+	const parts = splitAgentUri(request.uri);
+	if (!parts) {
+		return null;
+	}
+	request.uri = parts.originalUri;
+	try {
+		return hostnameOf(decodeURIComponent(parts.encodedHost));
+	} catch {
+		return null;
+	}
+}
+
+/**
+ * For the viewer-request handler on CloudFront. Strips a `/__waniwani-agent/` prefix the client sent, then, for a GET or HEAD from an AI agent, loads the rules of the site of the `host` header.
+ * Returns the 403 response when the site blocks the user agent. CloudFront never caches a response made at viewer-request, so a block takes effect at once.
+ * When the site serves an agent page for the path and the user agent acts for a user, rewrites `request.uri` to `/__waniwani-agent/<host><original uri>` so the origin-request handler serves the page under its own cache key. The request stays unmarked when the new URI would pass the CloudFront URI limit.
+ * Call `recordAgentVisit` before it, so the event holds the original path. Never throws and never rejects.
+ */
+export async function handleViewerRequest(
+	request: CloudFrontRequest,
+	options: ServeAgentPageOptions = {},
+): Promise<CloudFrontResultResponse | null> {
+	try {
+		stripForgedMark(request);
 		const method = request.method.toUpperCase();
-		if (method !== "GET" && method !== "HEAD") {
+		if (!isPageMethod(method) || !isAgent(request, options)) {
 			return null;
 		}
-		if (request.headers.has("x-waniwani-render")) {
+		const hostname = hostnameOf(cloudFrontHeader(request, "host") ?? undefined);
+		if (hostname === null) {
 			return null;
 		}
-		const rules = await loadSiteRules(apiUrl, key.ingestToken, (work) =>
-			schedule(work, undefined),
-		);
-		if (!rules) {
+		const match = await findSite(hostname, options);
+		if (!match) {
 			return null;
 		}
-		const url = new URL(request.url);
-		const site = rules.sites.find((entry) => entry.hostname === url.hostname);
-		if (!site?.agentPages.enabled) {
+		const { rules, site } = match;
+		const userAgent = (
+			cloudFrontHeader(request, "user-agent") ?? ""
+		).toLowerCase();
+		const blocked = blockedAnswer(site, userAgent, method);
+		if (blocked) {
+			return toCloudFrontResponse(blocked);
+		}
+		if (
+			cloudFrontHeader(request, "x-waniwani-render") !== null ||
+			!site.agentPages.enabled ||
+			!matchesPath(normalizePath(request.uri), site.agentPages.paths) ||
+			!rules.userAgentTokens.some((token) => userAgent.includes(token))
+		) {
 			return null;
 		}
-		const path = normalizePath(url.pathname);
-		if (!matchesPath(path, site.agentPages.paths)) {
-			return null;
+		const uri = `${AGENT_URI_PREFIX}${encodeURIComponent(hostname)}${request.uri}`;
+		if (
+			new TextEncoder().encode(uri).byteLength <= settings.cloudFrontMaxUriBytes
+		) {
+			request.uri = uri;
 		}
-		const userAgent = (request.headers.get("user-agent") ?? "").toLowerCase();
-		if (!rules.userAgentTokens.some((token) => userAgent.includes(token))) {
-			return null;
-		}
-		const page = await fetchAgentPage(rules, url.hostname, path);
-		if (!page) {
-			return null;
-		}
-		return new Response(method === "HEAD" ? null : page.body, {
-			status: 200,
-			headers: {
-				"content-type": page.contentType,
-				"x-waniwani-agent-page": "hit",
-				"cache-control": "private, no-store",
-				vary: "user-agent, accept",
-			},
-		});
+		return null;
 	} catch {
 		return null;
 	}
