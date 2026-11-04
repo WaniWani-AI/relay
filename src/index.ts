@@ -274,7 +274,7 @@ async function serveCloudFront(
 	}
 	const userAgent = cloudFrontHeader(request, "x-waniwani-agent");
 	const hostname = hostnameOf(
-		options.hostname ?? cloudFrontHeader(request, "host") ?? undefined,
+		(options.hostname || cloudFrontHeader(request, "host")) ?? undefined,
 	);
 	if (userAgent === null || hostname === null) {
 		return null;
