@@ -148,13 +148,14 @@ function markAgentRequest(
 
 On AWS CloudFront the agent page comes from an origin-request Lambda@Edge. A response made there can be 1 MB. At viewer-request the limit is 40 KB. The origin-request event has no viewer `User-Agent` or `Host`, so the viewer-request handler passes the user agent on.
 
-`markAgentRequest` removes any `x-waniwani-agent` header the client sent. When `isAgent` holds, it sets `x-waniwani-agent` to the user agent and returns `true`. It never throws. Add `x-waniwani-agent` to the cache key of the behavior. Agent requests then skip the cached page for people, and the header reaches the origin-request handler.
+When `isAgent` holds, `markAgentRequest` rewrites `request.uri` to `/__waniwani-agent/<encoded user agent><original path>` and returns `true`. That URI gives each agent user agent its own cache key, apart from the page people get, with no change to your cache policy, and it carries the user agent to the origin-request handler. A `/__waniwani-agent/` prefix the client sent is stripped first. The function never throws. Call `recordAgentVisit` before it, so the event holds the original path.
 
 Viewer-request handler:
 
 ```ts
 const request = event.Records[0].cf.request;
-if (markAgentRequest(request)) await recordAgentVisit(request, { key });
+if (isAgent(request)) await recordAgentVisit(request, { key });
+markAgentRequest(request);
 return request;
 ```
 
@@ -165,7 +166,7 @@ const request = event.Records[0].cf.request;
 return (await serveAgentPage(request, { key, hostname })) ?? request;
 ```
 
-Lambda@Edge has no environment variables, so pass `key`. `hostname` is the hostname of your site, and the setup screen puts it in the code for you. Without it the relay reads the `host` header, which at origin-request names your origin. For a `CloudFrontRequest` the user agent comes from `x-waniwani-agent`, and the function returns `null` when that header is missing. The page body goes out as UTF-8 text.
+Lambda@Edge has no environment variables, so pass `key`. `hostname` is the hostname of your site, and the setup screen puts it in the code for you. Without it the relay reads the `host` header, which at origin-request names your origin. For a `CloudFrontRequest` the user agent comes from the URI that `markAgentRequest` rewrote. The function restores `request.uri` to the original path before anything else, so `?? request` reaches your origin with the real path, and it returns `null` when the URI has no `/__waniwani-agent/` prefix. The page body goes out as UTF-8 text.
 
 ## Dependencies
 

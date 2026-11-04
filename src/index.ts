@@ -215,7 +215,7 @@ const BLOCKED: Omit<PageAnswer, "body"> = {
 
 /**
  * The stored agent page for this request, when its site lists the path and the user agent acts for a user. A 403 when the site blocks the user agent. Otherwise null, and the caller serves the origin.
- * A `CloudFrontRequest` comes from the origin-request handler: its user agent is the `x-waniwani-agent` header that `markAgentRequest` set at viewer-request.
+ * A `CloudFrontRequest` comes from the origin-request handler. Its user agent travels in the URI that `markAgentRequest` rewrote at viewer-request, and the function restores `request.uri` to the original path before it returns.
  * Never throws and never rejects.
  */
 export function serveAgentPage(
@@ -269,10 +269,10 @@ async function serveCloudFront(
 	request: CloudFrontRequest,
 	options: ServeAgentPageOptions,
 ): Promise<CloudFrontResultResponse | null> {
+	const userAgent = takeAgentFromUri(request);
 	if (cloudFrontHeader(request, "x-waniwani-render") !== null) {
 		return null;
 	}
-	const userAgent = cloudFrontHeader(request, "x-waniwani-agent");
 	const hostname = hostnameOf(
 		(options.hostname || cloudFrontHeader(request, "host")) ?? undefined,
 	);
@@ -372,26 +372,58 @@ async function answerAgentPage(
 	};
 }
 
+const AGENT_URI_PREFIX = "/__waniwani-agent/";
+
+function splitAgentUri(
+	uri: string,
+): { encodedUserAgent: string; originalUri: string } | null {
+	if (!uri.startsWith(AGENT_URI_PREFIX)) {
+		return null;
+	}
+	const rest = uri.slice(AGENT_URI_PREFIX.length);
+	const slash = rest.indexOf("/");
+	return slash === -1
+		? { encodedUserAgent: rest, originalUri: "/" }
+		: {
+				encodedUserAgent: rest.slice(0, slash),
+				originalUri: rest.slice(slash),
+			};
+}
+
+function takeAgentFromUri(request: CloudFrontRequest): string | null {
+	const parts = splitAgentUri(request.uri);
+	if (!parts) {
+		return null;
+	}
+	request.uri = parts.originalUri;
+	try {
+		return decodeURIComponent(parts.encodedUserAgent);
+	} catch {
+		return null;
+	}
+}
+
 /**
- * For the viewer-request handler on CloudFront. Drops any `x-waniwani-agent` header the client sent, then sets it to the user agent when `isAgent` holds.
- * Add `x-waniwani-agent` to the cache key of the behavior, so agent requests skip the cached human page and the header reaches the origin-request handler.
- * Never throws.
+ * For the viewer-request handler on CloudFront. Strips a `/__waniwani-agent/` prefix the client sent. When `isAgent` holds, it rewrites `request.uri` to `/__waniwani-agent/<encoded user agent><original uri>` and returns true.
+ * The rewrite gives agent requests their own cache key, one per user agent, and carries the user agent to the origin-request handler, where `serveAgentPage` restores the URI.
+ * Call `recordAgentVisit` before it, so the event holds the original path. Never throws.
  */
 export function markAgentRequest(
 	request: CloudFrontRequest,
 	options: IsAgentOptions = {},
 ): boolean {
 	try {
+		let forged = splitAgentUri(request.uri);
+		while (forged) {
+			request.uri = forged.originalUri;
+			forged = splitAgentUri(request.uri);
+		}
 		Reflect.deleteProperty(request.headers, "x-waniwani-agent");
 		if (!isAgent(request, options)) {
 			return false;
 		}
-		request.headers["x-waniwani-agent"] = [
-			{
-				key: "X-WaniWani-Agent",
-				value: cloudFrontHeader(request, "user-agent") ?? "",
-			},
-		];
+		const userAgent = cloudFrontHeader(request, "user-agent") ?? "";
+		request.uri = `${AGENT_URI_PREFIX}${encodeURIComponent(userAgent)}${request.uri}`;
 		return true;
 	} catch {
 		return false;

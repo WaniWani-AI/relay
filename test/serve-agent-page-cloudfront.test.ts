@@ -77,6 +77,10 @@ function bytesStream(
 
 const header = (key: string, value: string) => [{ key, value }];
 
+const PREFIX = "/__waniwani-agent/";
+const agentUri = (userAgent: string, path = "/pricing") =>
+	`${PREFIX}${encodeURIComponent(userAgent)}${path}`;
+
 /** An origin-request event: CloudFront has replaced the viewer `Host` and `User-Agent`. */
 function originRequest(
 	init: {
@@ -88,17 +92,15 @@ function originRequest(
 	} = {},
 ): CloudFrontRequest {
 	const agent = init.agent === undefined ? CHATGPT_USER_UA : init.agent;
+	const path = init.uri ?? "/pricing";
 	return {
 		clientIp: PERSON_IP,
 		method: init.method ?? "GET",
-		uri: init.uri ?? "/pricing",
+		uri: agent === null ? path : agentUri(agent, path),
 		querystring: "",
 		headers: {
 			host: header("Host", init.host ?? ORIGIN_HOST),
 			"user-agent": header("User-Agent", "Amazon CloudFront"),
-			...(agent === null
-				? {}
-				: { "x-waniwani-agent": header("X-WaniWani-Agent", agent) }),
 			...init.headers,
 		},
 	};
@@ -108,11 +110,12 @@ function originRequest(
 function viewerRequest(
 	userAgent: string,
 	extra: CloudFrontRequest["headers"] = {},
+	uri = "/pricing",
 ): CloudFrontRequest {
 	return {
 		clientIp: PERSON_IP,
 		method: "GET",
-		uri: "/pricing",
+		uri,
 		querystring: "",
 		headers: {
 			host: header("Host", HOST),
@@ -255,6 +258,19 @@ describe("serveAgentPage on CloudFront: the hostname", () => {
 		expect(fetchMock).not.toHaveBeenCalled();
 	});
 
+	it("serves the page from the uri and the hostname option when the request has no headers at all", async () => {
+		const { relay } = await setup();
+		const request = originRequest();
+		Reflect.deleteProperty(request, "headers");
+		const result = await relay.serveAgentPage(request, {
+			key: KEY,
+			apiUrl: API_URL,
+			hostname: HOST,
+		});
+		expect(result?.status).toBe("200");
+		expect(request.uri).toBe("/pricing");
+	});
+
 	it.each([
 		"www.example.com/pricing",
 		"user@www.example.com",
@@ -266,13 +282,46 @@ describe("serveAgentPage on CloudFront: the hostname", () => {
 });
 
 describe("serveAgentPage on CloudFront: the user agent", () => {
-	it("returns null when x-waniwani-agent is missing, whatever the user-agent header says", async () => {
+	it("returns null when the uri has no agent prefix, whatever the headers say", async () => {
 		const { serve, fetchMock } = await setup();
 		const request = originRequest({
 			agent: null,
-			headers: { "user-agent": header("User-Agent", CHATGPT_USER_UA) },
+			headers: {
+				"user-agent": header("User-Agent", CHATGPT_USER_UA),
+				"x-waniwani-agent": header("X-WaniWani-Agent", CHATGPT_USER_UA),
+			},
 		});
 		expect(await serve(request)).toBeNull();
+		expect(request.uri).toBe("/pricing");
+		expect(fetchMock).not.toHaveBeenCalled();
+	});
+
+	it("reads a user agent with spaces, slashes and unicode from the uri", async () => {
+		const { serve } = await setup();
+		const blocked =
+			"Mözilla/5.0 (日本; x) GPTBot/1.2 +https://openai.com/gptbot";
+		const served = "Claude-User/1.0 (spaß; +https://claude.ai/bot) ✓";
+		expect((await serve(originRequest({ agent: blocked })))?.status).toBe(
+			"403",
+		);
+		expect((await serve(originRequest({ agent: served })))?.status).toBe("200");
+	});
+
+	it("returns null for an empty user agent segment and restores the root for a prefix with no path", async () => {
+		const { serve } = await setup();
+		const request = originRequest({ agent: null, uri: PREFIX });
+		expect(await serve(request)).toBeNull();
+		expect(request.uri).toBe("/");
+	});
+
+	it("returns null and restores the path when the user agent segment is not valid percent-encoding", async () => {
+		const { serve, fetchMock } = await setup();
+		const request = originRequest({
+			agent: null,
+			uri: `${PREFIX}%E0%A4%A/pricing`,
+		});
+		expect(await serve(request)).toBeNull();
+		expect(request.uri).toBe("/pricing");
 		expect(fetchMock).not.toHaveBeenCalled();
 	});
 
@@ -288,6 +337,63 @@ describe("serveAgentPage on CloudFront: the user agent", () => {
 	it("returns null for a browser user agent", async () => {
 		const { serve } = await setup();
 		expect(await serve(originRequest({ agent: CHROME_UA }))).toBeNull();
+	});
+});
+
+describe("serveAgentPage on CloudFront: the restored uri", () => {
+	it("restores the original path on a hit", async () => {
+		const { serve } = await setup();
+		const request = originRequest();
+		expect((await serve(request))?.status).toBe("200");
+		expect(request.uri).toBe("/pricing");
+	});
+
+	it("restores the original path when it returns null, so the origin gets the real path", async () => {
+		const { serve } = await setup();
+		const browser = originRequest({ agent: CHROME_UA, uri: "/about/team" });
+		expect(await serve(browser)).toBeNull();
+		expect(browser.uri).toBe("/about/team");
+		const unlisted = originRequest({ uri: "/blog/post" });
+		expect(await serve(unlisted)).toBeNull();
+		expect(unlisted.uri).toBe("/blog/post");
+	});
+
+	it("restores the original path when the stored page fails", async () => {
+		const { serve } = await setup({
+			[PRICING_URL]: () => new Response("missing", { status: 404 }),
+		});
+		const request = originRequest();
+		expect(await serve(request)).toBeNull();
+		expect(request.uri).toBe("/pricing");
+	});
+
+	it("restores the original path for the renderer and a POST", async () => {
+		const { serve } = await setup();
+		const render = originRequest({
+			headers: { "x-waniwani-render": header("X-WaniWani-Render", "1") },
+		});
+		expect(await serve(render)).toBeNull();
+		expect(render.uri).toBe("/pricing");
+		const post = originRequest({ method: "POST" });
+		expect(await serve(post)).toBeNull();
+		expect(post.uri).toBe("/pricing");
+	});
+
+	it("restores the original path without a key", async () => {
+		const { relay } = await setup();
+		const request = originRequest();
+		expect(
+			await relay.serveAgentPage(request, { apiUrl: API_URL, hostname: HOST }),
+		).toBeNull();
+		expect(request.uri).toBe("/pricing");
+	});
+
+	it("leaves the query string as it is", async () => {
+		const { serve } = await setup();
+		const request = { ...originRequest(), querystring: "a=1&b=%20x" };
+		await serve(request);
+		expect(request.querystring).toBe("a=1&b=%20x");
+		expect(request.uri).toBe("/pricing");
 	});
 });
 
@@ -401,19 +507,6 @@ describe("serveAgentPage on CloudFront: failures return null", () => {
 		expect(await serve()).toBeNull();
 	});
 
-	it("when the request has no headers at all", async () => {
-		const { relay } = await setup();
-		const request = originRequest();
-		Reflect.deleteProperty(request, "headers");
-		await expect(
-			relay.serveAgentPage(request, {
-				key: KEY,
-				apiUrl: API_URL,
-				hostname: HOST,
-			}),
-		).resolves.toBeNull();
-	});
-
 	it("when reading the headers throws", async () => {
 		const { relay } = await setup();
 		const request = originRequest();
@@ -440,58 +533,99 @@ describe("markAgentRequest", () => {
 		return { marked, fetchMock, relay };
 	}
 
-	it("marks an agent with its user agent", async () => {
+	it("puts an agent's encoded user agent in front of the uri", async () => {
 		const request = viewerRequest(CHATGPT_USER_UA);
 		const { marked } = await mark(request);
 		expect(marked).toBe(true);
-		expect(request.headers["x-waniwani-agent"]).toEqual([
-			{ key: expect.any(String), value: CHATGPT_USER_UA },
-		]);
-		expect(request.headers["x-waniwani-agent"]?.[0]?.key?.toLowerCase()).toBe(
-			"x-waniwani-agent",
+		expect(request.uri).toBe(
+			`/__waniwani-agent/${encodeURIComponent(CHATGPT_USER_UA)}/pricing`,
 		);
 	});
 
-	it("leaves a person unmarked", async () => {
-		const request = viewerRequest(CHROME_UA);
+	it("leaves a person's uri as it is", async () => {
+		const request = viewerRequest(CHROME_UA, {}, "/about/team");
 		const { marked } = await mark(request);
 		expect(marked).toBe(false);
-		expect("x-waniwani-agent" in request.headers).toBe(false);
+		expect(request.uri).toBe("/about/team");
 	});
 
-	it("removes a header a person sent to pass as an agent", async () => {
-		const request = viewerRequest(CHROME_UA, {
-			"x-waniwani-agent": header("X-WaniWani-Agent", GPTBOT_UA),
-		});
+	it("gives every agent user agent its own uri, apart from the person's", async () => {
+		const uris = [];
+		for (const userAgent of [CHATGPT_USER_UA, GPTBOT_UA, CHROME_UA]) {
+			const request = viewerRequest(userAgent);
+			await mark(request);
+			uris.push(request.uri);
+		}
+		expect(new Set(uris).size).toBe(3);
+		expect(uris[2]).toBe("/pricing");
+	});
+
+	it("strips a prefix a person sent to reach the agent cache key", async () => {
+		const request = viewerRequest(CHROME_UA, {}, agentUri(CHATGPT_USER_UA));
 		const { marked } = await mark(request);
 		expect(marked).toBe(false);
-		expect("x-waniwani-agent" in request.headers).toBe(false);
+		expect(request.uri).toBe("/pricing");
 	});
 
-	it("replaces a header an agent sent with its real user agent", async () => {
-		const request = viewerRequest(GPTBOT_UA, {
-			"x-waniwani-agent": [
-				{ key: "X-WaniWani-Agent", value: CHATGPT_USER_UA },
-				{ key: "X-WaniWani-Agent", value: "Claude-User/1.0" },
-			],
-		});
+	it("strips a prefix sent twice", async () => {
+		const request = viewerRequest(
+			CHROME_UA,
+			{},
+			`${PREFIX}x${agentUri(CHATGPT_USER_UA)}`,
+		);
+		await mark(request);
+		expect(request.uri).toBe("/pricing");
+	});
+
+	it("strips a prefix with no path after it down to the root", async () => {
+		const request = viewerRequest(CHROME_UA, {}, `${PREFIX}anything`);
+		await mark(request);
+		expect(request.uri).toBe("/");
+	});
+
+	it("replaces a prefix an agent sent with its real user agent", async () => {
+		const request = viewerRequest(GPTBOT_UA, {}, agentUri(CHATGPT_USER_UA));
 		const { marked } = await mark(request);
 		expect(marked).toBe(true);
-		expect(request.headers["x-waniwani-agent"]).toEqual([
-			{ key: expect.any(String), value: GPTBOT_UA },
-		]);
+		expect(request.uri).toBe(agentUri(GPTBOT_UA));
 	});
 
-	it("keeps the other headers of the request", async () => {
+	it("leaves a path that only looks like the prefix alone", async () => {
+		const request = viewerRequest(CHROME_UA, {}, "/__waniwani-agentx/pricing");
+		await mark(request);
+		expect(request.uri).toBe("/__waniwani-agentx/pricing");
+	});
+
+	it("removes an x-waniwani-agent header a client sent", async () => {
+		for (const userAgent of [CHROME_UA, GPTBOT_UA]) {
+			const request = viewerRequest(userAgent, {
+				"x-waniwani-agent": header("X-WaniWani-Agent", CHATGPT_USER_UA),
+			});
+			await mark(request);
+			expect("x-waniwani-agent" in request.headers).toBe(false);
+		}
+	});
+
+	it("leaves the query string as it is", async () => {
+		const request = {
+			...viewerRequest(CHATGPT_USER_UA),
+			querystring: "a=1&b=%20x",
+		};
+		await mark(request);
+		expect(request.querystring).toBe("a=1&b=%20x");
+		expect(request.uri.includes("?")).toBe(false);
+	});
+
+	it("keeps the headers of the request", async () => {
 		const request = viewerRequest(CHATGPT_USER_UA, {
 			cookie: header("Cookie", "a=1"),
 		});
 		await mark(request);
-		expect(request.headers.host).toEqual(header("Host", HOST));
-		expect(request.headers["user-agent"]).toEqual(
-			header("User-Agent", CHATGPT_USER_UA),
-		);
-		expect(request.headers.cookie).toEqual(header("Cookie", "a=1"));
+		expect(request.headers).toEqual({
+			host: header("Host", HOST),
+			"user-agent": header("User-Agent", CHATGPT_USER_UA),
+			cookie: header("Cookie", "a=1"),
+		});
 	});
 
 	it("returns false without throwing on a request with no headers", async () => {
@@ -499,6 +633,7 @@ describe("markAgentRequest", () => {
 		Reflect.deleteProperty(request, "headers");
 		const { marked } = await mark(request);
 		expect(marked).toBe(false);
+		expect(request.uri).toBe("/pricing");
 	});
 
 	it("returns false without throwing when the headers cannot be read", async () => {
@@ -540,12 +675,13 @@ describe("markAgentRequest then serveAgentPage", () => {
 			[PRICING_URL]: page(),
 		});
 		relay.markAgentRequest(viewer, { rules: "bundled" });
-		const result = await relay.serveAgentPage(toOrigin(viewer), {
+		const origin = toOrigin(viewer);
+		const result = await relay.serveAgentPage(origin, {
 			key: KEY,
 			apiUrl: API_URL,
 			hostname: HOST,
 		});
-		return { result, calls };
+		return { result, calls, origin };
 	}
 
 	it("serves the page to an agent that acts for a user", async () => {
@@ -559,6 +695,23 @@ describe("markAgentRequest then serveAgentPage", () => {
 		expect(result?.status).toBe("403");
 	});
 
+	it("carries a user agent with spaces, slashes and Latin-1 characters across", async () => {
+		const { result } = await roundTrip(
+			viewerRequest("Claude-User/1.0 (spaß; café +https://claude.ai/bot)"),
+		);
+		expect(result?.status).toBe("200");
+	});
+
+	it("hands the origin the real path and query when the agent gets no page", async () => {
+		const { result, origin } = await roundTrip({
+			...viewerRequest(CHATGPT_USER_UA, {}, "/blog/post"),
+			querystring: "page=2",
+		});
+		expect(result).toBeNull();
+		expect(origin.uri).toBe("/blog/post");
+		expect(origin.querystring).toBe("page=2");
+	});
+
 	it("gives a person who spoofs the header the origin", async () => {
 		const { result, calls } = await roundTrip(
 			viewerRequest(CHROME_UA, {
@@ -569,12 +722,14 @@ describe("markAgentRequest then serveAgentPage", () => {
 		expect(calls).toHaveLength(0);
 	});
 
-	it("gives a person who spoofs a blocked agent the origin", async () => {
-		const { result } = await roundTrip(
-			viewerRequest(CHROME_UA, {
-				"x-waniwani-agent": header("X-WaniWani-Agent", GPTBOT_UA),
-			}),
-		);
-		expect(result).toBeNull();
+	it("gives a person who forges the prefix the origin at the real path", async () => {
+		for (const forged of [CHATGPT_USER_UA, GPTBOT_UA]) {
+			const { result, calls, origin } = await roundTrip(
+				viewerRequest(CHROME_UA, {}, agentUri(forged)),
+			);
+			expect(result).toBeNull();
+			expect(calls).toHaveLength(0);
+			expect(origin.uri).toBe("/pricing");
+		}
 	});
 });
