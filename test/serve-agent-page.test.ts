@@ -189,13 +189,12 @@ describe("serveAgentPage: falls through before any fetch", () => {
 	it("returns null for an unknown region", async () => {
 		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
 		const { relay, fetchMock } = await setup();
-		expect(
-			await relay.serveAgentPage(agentPageRequest(), {
-				key: KEY,
-				// @ts-expect-error an unknown region from untyped config
-				region: "mars",
-			}),
-		).toBeNull();
+		const options: ServeAgentPageOptions = {
+			key: KEY,
+			// @ts-expect-error an unknown region from untyped config
+			region: "mars",
+		};
+		expect(await relay.serveAgentPage(agentPageRequest(), options)).toBeNull();
 		expect(fetchMock).not.toHaveBeenCalled();
 		warn.mockRestore();
 	});
