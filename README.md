@@ -146,13 +146,24 @@ function handleViewerRequest(
 ): Promise<CloudFrontResultResponse | null>;
 ```
 
-CloudFront needs two Lambda@Edge functions, one on each of two events:
+CloudFront needs two Lambda@Edge functions, one on each of two events. On Vercel and Cloudflare one function sends the agent page. On CloudFront that is not possible, because of a Lambda@Edge limit on the body of a response that the function makes itself:
+
+| Event | Body limit |
+| --- | --- |
+| Viewer request | 40 KB |
+| Origin request | 1 MB |
+
+Most agent pages are larger than 40 KB, so the page must come from origin request. But origin request runs only on a cache miss. When people already opened `/pricing`, CloudFront has that page in its cache, and an agent request for `/pricing` gets the cached copy without a call to origin request. The viewer-request function therefore changes the path of an agent request, so that the request has a different cache key and is always a cache miss.
+
+The mark goes in the path because the path is the only part of the request that is in the cache key with every cache policy. A header or the query string is in the cache key only when the cache policy of your behavior includes it, and the managed `CachingOptimized` policy includes neither. The mark also carries the hostname of the site, because at origin request CloudFront usually replaces the `Host` header with the domain of your origin.
+
+The two events do these jobs:
 
 - **Viewer request** runs on every request, before the CloudFront cache. `handleViewerRequest` decides what to do with the request:
   - When the site blocks this `User-Agent`, it answers `403`. CloudFront does not cache a response from this event, so a change to your block list applies to the next request.
-  - When an AI agent that acts for a user asks for a path that has an agent page, it marks the request. To mark it, it adds `/__waniwani-agent/<host>` in front of the path in `request.uri`. On CloudFront, `request.uri` is the path only, with no host and no query string. For `https://example.com/pricing?a=1`, `request.uri` changes from `/pricing` to `/__waniwani-agent/example.com/pricing`, and the query string stays as it is. The URI is part of every CloudFront cache key, so the marked request cannot get the cached page that people see.
+  - When an AI agent that acts for a user asks for a path that has an agent page, it marks the request. To mark it, it adds `/__waniwani-agent/<host>` in front of the path in `request.uri`. On CloudFront, `request.uri` is the path only, with no host and no query string. For `https://example.com/pricing?a=1`, `request.uri` changes from `/pricing` to `/__waniwani-agent/example.com/pricing`, and the query string stays as it is.
   - In all other cases it returns `null`, and the request continues with no change.
-- **Origin request** runs only on a cache miss, which is when CloudFront has no stored response for the request. The agent page has `cache-control: private, no-store`, so CloudFront never stores it, and a marked request is always a cache miss. `serveAgentPage` sends the agent page for a marked request. The page must come from this event because a response here can be 1 MB, but a response at viewer request can be only 40 KB. It removes the mark first. So when it cannot send the page, `?? request` sends the original path to your origin.
+- **Origin request** runs only on a cache miss, which is when CloudFront has no stored response for the request. The agent page has `cache-control: private, no-store`, so CloudFront never stores it, and a marked request is always a cache miss. `serveAgentPage` sends the agent page for a marked request. It removes the mark first. So when it cannot send the page, `?? request` sends the original path to your origin.
 
 A client cannot mark its own request. The viewer handler removes a `/__waniwani-agent/` prefix that arrives from the client. Neither function throws.
 
