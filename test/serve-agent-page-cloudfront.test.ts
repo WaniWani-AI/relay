@@ -74,8 +74,8 @@ const page =
 
 const header = (key: string, value: string) => [{ key, value }];
 
-const marked = (path = "/pricing", host = HOST) =>
-	`${PREFIX}${encodeURIComponent(host)}${path}`;
+const marked = (path = "/pricing", host = HOST, format = "html") =>
+	`${PREFIX}${format}/${encodeURIComponent(host)}${path}`;
 
 const byteLength = (text: string) => new TextEncoder().encode(text).byteLength;
 
@@ -168,7 +168,7 @@ describe("handleViewerRequest: marking", () => {
 		const { view, urls } = await setup();
 		const request = viewerRequest();
 		expect(await view(request)).toBeNull();
-		expect(request.uri).toBe(`${PREFIX}${HOST}/pricing`);
+		expect(request.uri).toBe(`${PREFIX}html/${HOST}/pricing`);
 		expect(urls()).toEqual([RULES_URL]);
 	});
 
@@ -440,7 +440,7 @@ describe("handleViewerRequest: a forged prefix", () => {
 		const { view } = await setup();
 		const request = viewerRequest({
 			userAgent: CHROME_UA,
-			uri: `${PREFIX}x${marked("/pricing", "evil.example")}`,
+			uri: `${PREFIX}x/${marked("/pricing", "evil.example")}`,
 		});
 		await view(request);
 		expect(request.uri).toBe("/pricing");
@@ -450,7 +450,7 @@ describe("handleViewerRequest: a forged prefix", () => {
 		const { view } = await setup();
 		const request = viewerRequest({
 			userAgent: CHROME_UA,
-			uri: `${PREFIX}anything`,
+			uri: `${PREFIX}html/anything`,
 		});
 		await view(request);
 		expect(request.uri).toBe("/");
@@ -660,15 +660,15 @@ describe("serveAgentPage on CloudFront: a marked request", () => {
 
 	it("restores the root for a prefix with no host and no path", async () => {
 		const { serve } = await setup();
-		const request = originRequest({ uri: PREFIX });
+		const request = originRequest({ uri: `${PREFIX}html/` });
 		expect(await serve(request)).toBeNull();
 		expect(request.uri).toBe("/");
 	});
 
 	it.each([
-		`${PREFIX}%E0%A4%A/pricing`,
-		`${PREFIX}${encodeURIComponent("www.example.com/x")}/pricing`,
-		`${PREFIX}${encodeURIComponent("user@www.example.com")}/pricing`,
+		`${PREFIX}html/%E0%A4%A/pricing`,
+		`${PREFIX}html/${encodeURIComponent("www.example.com/x")}/pricing`,
+		`${PREFIX}html/${encodeURIComponent("user@www.example.com")}/pricing`,
 	])(
 		"restores the path and fetches nothing for the malformed host in %s",
 		async (uri) => {
@@ -902,10 +902,10 @@ describe("serveAgentPage on CloudFront: the page URL it fetches", () => {
 	const pageUrls = (urls: string[]) => urls.filter((url) => url !== RULES_URL);
 
 	it.each([
-		["/__waniwani-agent/www.example.com/", "/"],
-		["/__waniwani-agent/www.example.com", "/"],
-		["/__waniwani-agent/www.example.com//", "//"],
-		["/__waniwani-agent/WWW.Example.COM%3A8443/", "/"],
+		["/__waniwani-agent/html/www.example.com/", "/"],
+		["/__waniwani-agent/html/www.example.com", "/"],
+		["/__waniwani-agent/html/www.example.com//", "//"],
+		["/__waniwani-agent/html/WWW.Example.COM%3A8443/", "/"],
 	])(
 		"fetches the home page without a trailing slash for %s",
 		async (uri, restored) => {
@@ -920,8 +920,8 @@ describe("serveAgentPage on CloudFront: the page URL it fetches", () => {
 	);
 
 	it.each([
-		"/__waniwani-agent/www.example.com/pricing",
-		"/__waniwani-agent/www.example.com/pricing/",
+		"/__waniwani-agent/html/www.example.com/pricing",
+		"/__waniwani-agent/html/www.example.com/pricing/",
 	])("fetches the slashless pricing page for %s", async (uri) => {
 		const { serve, urls } = await setupWithHome();
 		const result = await serve(originRequest({ uri }));
@@ -933,7 +933,7 @@ describe("serveAgentPage on CloudFront: the page URL it fetches", () => {
 		const { view, serve, urls } = await setupWithHome();
 		const viewer = viewerRequest({ uri: "/", querystring: "q=1&next=%2F" });
 		expect(await view(viewer)).toBeNull();
-		expect(viewer.uri).toBe("/__waniwani-agent/www.example.com/");
+		expect(viewer.uri).toBe("/__waniwani-agent/html/www.example.com/");
 		const origin = toOrigin(viewer);
 		const result = await serve(origin);
 		expect(result?.body).toBe("# Home");

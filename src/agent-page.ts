@@ -237,18 +237,37 @@ async function readCapped(
 	return out;
 }
 
-/** Fetches the stored page within both deadlines and the size cap. Returns its body and content type, or null. The home page URL has no trailing slash, which the app would answer with a redirect. */
+export type PageFormat = "markdown" | "html";
+
+/** Markdown only when the agent lists `text/markdown` with a nonzero q, so an agent that asks for HTML or for anything gets HTML. */
+export function pageFormat(accept: string): PageFormat {
+	return accept.split(",").some((range) => {
+		const [type = "", ...params] = range
+			.split(";")
+			.map((part) => part.trim().toLowerCase());
+		if (type !== "text/markdown") {
+			return false;
+		}
+		const q = params.find((param) => param.startsWith("q="));
+		return q === undefined || Number(q.slice(2)) > 0;
+	})
+		? "markdown"
+		: "html";
+}
+
+/** Fetches the stored page in the agent's format within both deadlines and the size cap. Returns its body and content type, or null. The home page URL has no trailing slash, which the app would answer with a redirect. */
 export async function fetchAgentPage(
 	rules: SiteRules,
 	hostname: string,
 	path: string,
+	format: PageFormat,
 ): Promise<{ body: Uint8Array<ArrayBuffer>; contentType: string } | null> {
 	const controller = new AbortController();
 	try {
 		const response = await within(
 			fetch(`${rules.pagesUrl}/${hostname}${path === "/" ? "" : path}`, {
 				headers: {
-					accept: "text/markdown, text/html;q=0.9",
+					accept: format === "markdown" ? "text/markdown" : "text/html",
 					"x-waniwani-relay": RELAY_VERSION,
 				},
 				signal: controller.signal,
