@@ -3,6 +3,8 @@ import {
 	loadSiteRules,
 	matchesPath,
 	normalizePath,
+	type PageFormat,
+	pageFormat,
 	type SiteRules,
 } from "./agent-page";
 import { readCappedHeaders } from "./headers";
@@ -193,6 +195,7 @@ type PageRequest = {
 	hostname: string;
 	pathname: string;
 	userAgent: string;
+	accept: string;
 	rendering: boolean;
 };
 
@@ -254,6 +257,7 @@ async function serveFetch(
 			hostname: url.hostname,
 			pathname: url.pathname,
 			userAgent: request.headers.get("user-agent") ?? "",
+			accept: request.headers.get("accept") ?? "",
 			rendering: request.headers.has("x-waniwani-render"),
 		},
 		options,
@@ -271,10 +275,11 @@ async function serveCloudFront(
 	request: CloudFrontRequest,
 	options: ServeAgentPageOptions,
 ): Promise<CloudFrontResultResponse | null> {
-	const hostname = takeMarkFromUri(request);
-	if (hostname === null) {
+	const mark = takeMarkFromUri(request);
+	if (mark === null) {
 		return null;
 	}
+	const { hostname, format } = mark;
 	const method = request.method.toUpperCase();
 	if (!isPageMethod(method)) {
 		return null;
@@ -288,6 +293,7 @@ async function serveCloudFront(
 		hostname,
 		normalizePath(request.uri),
 		method,
+		format,
 	);
 	if (!answer) {
 		return null;
@@ -392,7 +398,7 @@ async function answerAgentPage(
 	if (!rules.userAgentTokens.some((token) => userAgent.includes(token))) {
 		return null;
 	}
-	return pageAnswer(rules, hostname, path, method);
+	return pageAnswer(rules, hostname, path, method, pageFormat(request.accept));
 }
 
 async function pageAnswer(
@@ -400,8 +406,9 @@ async function pageAnswer(
 	hostname: string,
 	path: string,
 	method: string,
+	format: PageFormat,
 ): Promise<PageAnswer | null> {
-	const page = await fetchAgentPage(rules, hostname, path);
+	const page = await fetchAgentPage(rules, hostname, path, format);
 	if (!page) {
 		return null;
 	}
@@ -419,17 +426,30 @@ async function pageAnswer(
 
 const AGENT_URI_PREFIX = "/__waniwani-agent/";
 
-function splitAgentUri(
-	uri: string,
-): { encodedHost: string; originalUri: string } | null {
+const PAGE_FORMATS: readonly PageFormat[] = ["markdown", "html"];
+
+/** Splits `/__waniwani-agent/<format>/<host><original uri>`. The format is null when the mark names none the relay knows. */
+function splitAgentUri(uri: string): {
+	format: PageFormat | null;
+	encodedHost: string;
+	originalUri: string;
+} | null {
 	if (!uri.startsWith(AGENT_URI_PREFIX)) {
 		return null;
 	}
 	const rest = uri.slice(AGENT_URI_PREFIX.length);
-	const slash = rest.indexOf("/");
+	const formatEnd = rest.indexOf("/");
+	const formatName = formatEnd === -1 ? rest : rest.slice(0, formatEnd);
+	const format = PAGE_FORMATS.find((known) => known === formatName) ?? null;
+	const afterFormat = formatEnd === -1 ? "" : rest.slice(formatEnd + 1);
+	const slash = afterFormat.indexOf("/");
 	return slash === -1
-		? { encodedHost: rest, originalUri: "/" }
-		: { encodedHost: rest.slice(0, slash), originalUri: rest.slice(slash) };
+		? { format, encodedHost: afterFormat, originalUri: "/" }
+		: {
+				format,
+				encodedHost: afterFormat.slice(0, slash),
+				originalUri: afterFormat.slice(slash),
+			};
 }
 
 function stripForgedMark(request: CloudFrontRequest): void {
@@ -440,14 +460,20 @@ function stripForgedMark(request: CloudFrontRequest): void {
 	}
 }
 
-function takeMarkFromUri(request: CloudFrontRequest): string | null {
+function takeMarkFromUri(
+	request: CloudFrontRequest,
+): { hostname: string; format: PageFormat } | null {
 	const parts = splitAgentUri(request.uri);
 	if (!parts) {
 		return null;
 	}
 	request.uri = parts.originalUri;
+	if (parts.format === null) {
+		return null;
+	}
 	try {
-		return hostnameOf(decodeURIComponent(parts.encodedHost));
+		const hostname = hostnameOf(decodeURIComponent(parts.encodedHost));
+		return hostname === null ? null : { hostname, format: parts.format };
 	} catch {
 		return null;
 	}
@@ -493,7 +519,8 @@ export async function handleViewerRequest(
 		) {
 			return null;
 		}
-		const uri = `${AGENT_URI_PREFIX}${encodeURIComponent(hostname)}${request.uri}`;
+		const format = pageFormat(cloudFrontHeader(request, "accept") ?? "");
+		const uri = `${AGENT_URI_PREFIX}${format}/${encodeURIComponent(hostname)}${request.uri}`;
 		if (
 			new TextEncoder().encode(uri).byteLength <= settings.cloudFrontMaxUriBytes
 		) {

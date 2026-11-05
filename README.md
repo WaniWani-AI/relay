@@ -114,6 +114,8 @@ Serves the agent page of a request: a text-first copy of the page that Waniwani 
 
 You can block AI agents per site in Waniwani. When the `User-Agent` of a `GET` or `HEAD` request contains a blocked token, the function answers `403` with the text body `Forbidden`. That check runs before the agent page checks and before the `x-waniwani-render` check, so it works with agent pages off. The response carries `x-waniwani-blocked: 1`, `cache-control: private, no-store` and `vary: user-agent`.
 
+The agent gets the page as Markdown when its `Accept` header lists `text/markdown` with a `q` above 0. Every other agent gets the page as HTML, including an agent that sends `*/*` or no `Accept` header.
+
 The page response carries the stored content type, `x-waniwani-agent-page: hit`, `cache-control: private, no-store` and `vary: user-agent, accept`. A `HEAD` request gets the same headers with no body. The settings load on the first call, with a 300 ms limit, and stay in memory for 60 seconds. After that the relay keeps serving the cached settings while it loads new ones in the background. The function never throws, and the promise never rejects.
 
 On Vercel, in `middleware.ts`:
@@ -161,7 +163,7 @@ The two events do these jobs:
 
 - **Viewer request** runs on every request, before the CloudFront cache. `handleViewerRequest` decides what to do with the request:
   - When the site blocks this `User-Agent`, it answers `403`. CloudFront does not cache a response from this event, so a change to your block list applies to the next request.
-  - When an AI agent that acts for a user asks for a path that has an agent page, it marks the request. To mark it, it adds `/__waniwani-agent/<host>` in front of the path in `request.uri`. On CloudFront, `request.uri` is the path only, with no host and no query string. For `https://example.com/pricing?a=1`, `request.uri` changes from `/pricing` to `/__waniwani-agent/example.com/pricing`, and the query string stays as it is.
+  - When an AI agent that acts for a user asks for a path that has an agent page, it marks the request. To mark it, it adds `/__waniwani-agent/<format>/<host>` in front of the path in `request.uri`. The format is `markdown` or `html`, from the agent's `Accept` header. On CloudFront, `request.uri` is the path only, with no host and no query string. For `https://example.com/pricing?a=1` from an agent that asks for HTML, `request.uri` changes from `/pricing` to `/__waniwani-agent/html/example.com/pricing`, and the query string stays as it is.
   - In all other cases it returns `null`, and the request continues with no change.
 - **Origin request** runs only on a cache miss, which is when CloudFront has no stored response for the request. The agent page has `cache-control: private, no-store`, so CloudFront never stores it, and a marked request is always a cache miss. `serveAgentPage` sends the agent page for a marked request. It removes the mark first. So when it cannot send the page, `?? request` sends the original path to your origin.
 

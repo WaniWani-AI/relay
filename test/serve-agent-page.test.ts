@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { pageFormat } from "../src/agent-page";
 import type { ServeAgentPageOptions } from "../src/index";
 import { RELAY_VERSION } from "../src/version";
 import {
@@ -119,13 +120,13 @@ describe("serveAgentPage: a hit", () => {
 		});
 	});
 
-	it("asks for markdown first and names the relay version", async () => {
+	it("asks for HTML when the agent sends no Accept header and names the relay version", async () => {
 		const { serve, calls } = await setup();
 		await serve();
 		const headers = new Headers(
 			calls.find((call) => call.url === PRICING_URL)?.init?.headers,
 		);
-		expect(headers.get("accept")).toBe("text/markdown, text/html;q=0.9");
+		expect(headers.get("accept")).toBe("text/html");
 		expect(headers.get("x-waniwani-relay")).toBe(RELAY_VERSION);
 	});
 
@@ -761,4 +762,90 @@ describe("serveAgentPage: the page URL it fetches", () => {
 			}
 		},
 	);
+});
+
+describe("pageFormat", () => {
+	it.each([
+		["text/markdown", "markdown"],
+		["text/markdown;q=1", "markdown"],
+		["text/markdown;q=0.001", "markdown"],
+		["text/markdown; q=0.5", "markdown"],
+		["text/markdown ; level=1 ; q=0.8", "markdown"],
+		["TEXT/MARKDOWN", "markdown"],
+		["Text/Markdown;Q=0.5", "markdown"],
+		["  text/markdown  ", "markdown"],
+		["text/html, text/markdown", "markdown"],
+		["text/html;q=0.9, application/json, text/markdown;q=0.1", "markdown"],
+		["text/markdown; charset=utf-8", "markdown"],
+		["text/markdown;q=0, text/markdown", "markdown"],
+		["text/html", "html"],
+		["*/*", "html"],
+		["text/*", "html"],
+		["", "html"],
+		["text/markdown;q=0", "html"],
+		["text/markdown;q=0.0", "html"],
+		["text/markdown; q=0.000", "html"],
+		["TEXT/MARKDOWN;Q=0", "html"],
+		["text/html, text/markdown;q=0", "html"],
+		["text/markdownx", "html"],
+		["application/text/markdown", "html"],
+		["text/plain, application/json", "html"],
+	])("reads %j as %s", (accept, expected) => {
+		expect(pageFormat(accept)).toBe(expected);
+	});
+});
+
+describe("serveAgentPage: the page format follows the Accept header", () => {
+	const acceptSentUpstream = async (accept: string | undefined) => {
+		const { serve, calls } = await setup();
+		await serve(
+			agentPageRequest("/pricing", {
+				headers: accept === undefined ? {} : { accept },
+			}),
+		);
+		return new Headers(
+			calls.find((call) => call.url === PRICING_URL)?.init?.headers,
+		).get("accept");
+	};
+
+	it.each([
+		["text/markdown", "text/markdown"],
+		["text/html, text/markdown;q=0.5", "text/markdown"],
+		["text/html", "text/html"],
+		["*/*", "text/html"],
+		["text/markdown;q=0", "text/html"],
+		[undefined, "text/html"],
+	])("with Accept %j it fetches with %j", async (accept, upstream) => {
+		expect(await acceptSentUpstream(accept)).toBe(upstream);
+	});
+
+	it("serves the body the upstream returned for a Markdown agent", async () => {
+		const { serve } = await setup({
+			[RULES_URL]: rulesAnswer(),
+			[PRICING_URL]: page("# Pricing"),
+		});
+		const response = await serve(
+			agentPageRequest("/pricing", { headers: { accept: "text/markdown" } }),
+		);
+		expect(response?.status).toBe(200);
+		expect(response?.headers.get("content-type")).toBe(
+			"text/markdown; charset=utf-8",
+		);
+		expect(await response?.text()).toBe("# Pricing");
+	});
+
+	it("serves the body the upstream returned for an HTML agent", async () => {
+		const { serve } = await setup({
+			[RULES_URL]: rulesAnswer(),
+			[PRICING_URL]: page("<h1>Pricing</h1>", "text/html; charset=utf-8"),
+		});
+		const response = await serve(
+			agentPageRequest("/pricing", { headers: { accept: "text/html" } }),
+		);
+		expect(response?.status).toBe(200);
+		expect(response?.headers.get("content-type")).toBe(
+			"text/html; charset=utf-8",
+		);
+		expect(await response?.text()).toBe("<h1>Pricing</h1>");
+	});
 });
