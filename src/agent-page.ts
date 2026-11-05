@@ -237,7 +237,7 @@ async function readCapped(
 	return out;
 }
 
-/** Fetches the stored page within both deadlines and the size cap. Returns its body and content type, or null. */
+/** Fetches the stored page within both deadlines and the size cap. Returns its body and content type, or null. The home page URL has no trailing slash, which the app would answer with a redirect. */
 export async function fetchAgentPage(
 	rules: SiteRules,
 	hostname: string,
@@ -246,7 +246,7 @@ export async function fetchAgentPage(
 	const controller = new AbortController();
 	try {
 		const response = await within(
-			fetch(`${rules.pagesUrl}/${hostname}${path}`, {
+			fetch(`${rules.pagesUrl}/${hostname}${path === "/" ? "" : path}`, {
 				headers: {
 					accept: "text/markdown, text/html;q=0.9",
 					"x-waniwani-relay": RELAY_VERSION,
