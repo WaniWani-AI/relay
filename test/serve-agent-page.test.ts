@@ -373,22 +373,6 @@ describe("serveAgentPage: paths", () => {
 		expect(await served("/pricing", ["/"])).toBe(false);
 	});
 
-	it("fetches the root page at the host with a slash", async () => {
-		const rootUrl = `${PAGES_URL}/${HOST}/`;
-		const { serve, urls } = await setup({
-			[RULES_URL]: rulesAnswer(
-				siteRules({
-					sites: [
-						{ hostname: HOST, agentPages: { enabled: true, paths: ["/"] } },
-					],
-				}),
-			),
-			[rootUrl]: page(),
-		});
-		expect((await serve(agentPageRequest("/")))?.status).toBe(200);
-		expect(urls()).toContain(rootUrl);
-	});
-
 	it("returns null when no entry matches", async () => {
 		expect(await served("/blog", ["/pricing", "/products/*"])).toBe(false);
 	});
@@ -686,4 +670,95 @@ describe("serveAgentPage: never throws", () => {
 			relay.serveAgentPage(request, { key: KEY, apiUrl: API_URL }),
 		).resolves.toBeNull();
 	});
+});
+
+describe("serveAgentPage: the page URL it fetches", () => {
+	const HOME_PAGE_URL =
+		"https://relay.test/api/v2/agent-traffic/serve/tok-EN_123/pages/www.example.com";
+	const HARDCODED_PRICING_URL =
+		"https://relay.test/api/v2/agent-traffic/serve/tok-EN_123/pages/www.example.com/pricing";
+	const redirect: Handler = () =>
+		new Response(null, {
+			status: 308,
+			headers: { location: HOME_PAGE_URL },
+		});
+
+	const setupWithHome = () =>
+		setup({
+			[RULES_URL]: rulesAnswer(
+				siteRules({
+					sites: [
+						{
+							hostname: HOST,
+							agentPages: { enabled: true, paths: ["/", "/pricing"] },
+						},
+					],
+				}),
+			),
+			[HOME_PAGE_URL]: page("# Home"),
+			[`${HOME_PAGE_URL}/`]: redirect,
+			[HARDCODED_PRICING_URL]: page(),
+			[`${HARDCODED_PRICING_URL}/`]: redirect,
+		});
+
+	const pageUrls = (urls: string[]) => urls.filter((url) => url !== RULES_URL);
+
+	it.each(["/", "//", "///"])(
+		"fetches the home page without a trailing slash for %s",
+		async (path) => {
+			const { serve, urls } = await setupWithHome();
+			const response = await serve(agentPageRequest(path));
+			expect(response?.status).toBe(200);
+			expect(await response?.text()).toBe("# Home");
+			expect(pageUrls(urls())).toEqual([HOME_PAGE_URL]);
+		},
+	);
+
+	it("fetches the home page without a trailing slash for a bare origin", async () => {
+		const { serve, urls } = await setupWithHome();
+		const response = await serve(
+			new Request(`https://${HOST}`, {
+				headers: { "user-agent": "ChatGPT-User/1.0" },
+			}),
+		);
+		expect(response?.status).toBe(200);
+		expect(pageUrls(urls())).toEqual([HOME_PAGE_URL]);
+	});
+
+	it.each(["/pricing", "/pricing/", "/pricing//"])(
+		"fetches the slashless pricing page for %s",
+		async (path) => {
+			const { serve, urls } = await setupWithHome();
+			const response = await serve(agentPageRequest(path));
+			expect(await response?.text()).toBe("# Pricing");
+			expect(pageUrls(urls())).toEqual([HARDCODED_PRICING_URL]);
+		},
+	);
+
+	it.each([
+		["/?q=1", HOME_PAGE_URL],
+		["/?", HOME_PAGE_URL],
+		["/#top", HOME_PAGE_URL],
+		["/pricing?plan=team&x=%2F", HARDCODED_PRICING_URL],
+		["/pricing/?plan=team", HARDCODED_PRICING_URL],
+	])("leaves the query string of %s out of the page URL", async (path, url) => {
+		const { serve, urls } = await setupWithHome();
+		const response = await serve(agentPageRequest(path));
+		expect(response?.status).toBe(200);
+		expect(pageUrls(urls())).toEqual([url]);
+	});
+
+	it.each(["/", "//", "/pricing/", "/pricing"])(
+		"never puts a double slash after the scheme for %s",
+		async (path) => {
+			const { serve, urls } = await setupWithHome();
+			await serve(agentPageRequest(path));
+			const fetched = urls();
+			expect(fetched.length).toBeGreaterThan(1);
+			for (const url of fetched) {
+				expect(url.slice("https://".length)).not.toContain("//");
+				expect(url.endsWith("/")).toBe(false);
+			}
+		},
+	);
 });

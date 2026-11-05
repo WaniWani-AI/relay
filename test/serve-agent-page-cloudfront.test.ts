@@ -874,3 +874,94 @@ describe("handleViewerRequest then serveAgentPage", () => {
 		expect((await ctx.serve(toOrigin(shop)))?.body).toBe("# Shop");
 	});
 });
+
+describe("serveAgentPage on CloudFront: the page URL it fetches", () => {
+	const HOME_PAGE_URL =
+		"https://relay.test/api/v2/agent-traffic/serve/tok-EN_123/pages/www.example.com";
+	const HARDCODED_PRICING_URL =
+		"https://relay.test/api/v2/agent-traffic/serve/tok-EN_123/pages/www.example.com/pricing";
+	const redirect: Handler = () =>
+		new Response(null, {
+			status: 308,
+			headers: { location: HOME_PAGE_URL },
+		});
+
+	const setupWithHome = () =>
+		setup({
+			[RULES_URL]: rulesAnswer(
+				siteRules([
+					site({ agentPages: { enabled: true, paths: ["/", "/pricing"] } }),
+				]),
+			),
+			[HOME_PAGE_URL]: page("# Home"),
+			[`${HOME_PAGE_URL}/`]: redirect,
+			[HARDCODED_PRICING_URL]: page(),
+			[`${HARDCODED_PRICING_URL}/`]: redirect,
+		});
+
+	const pageUrls = (urls: string[]) => urls.filter((url) => url !== RULES_URL);
+
+	it.each([
+		["/__waniwani-agent/www.example.com/", "/"],
+		["/__waniwani-agent/www.example.com", "/"],
+		["/__waniwani-agent/www.example.com//", "//"],
+		["/__waniwani-agent/WWW.Example.COM%3A8443/", "/"],
+	])(
+		"fetches the home page without a trailing slash for %s",
+		async (uri, restored) => {
+			const { serve, urls } = await setupWithHome();
+			const request = originRequest({ uri });
+			const result = await serve(request);
+			expect(result?.status).toBe("200");
+			expect(result?.body).toBe("# Home");
+			expect(request.uri).toBe(restored);
+			expect(pageUrls(urls())).toEqual([HOME_PAGE_URL]);
+		},
+	);
+
+	it.each([
+		"/__waniwani-agent/www.example.com/pricing",
+		"/__waniwani-agent/www.example.com/pricing/",
+	])("fetches the slashless pricing page for %s", async (uri) => {
+		const { serve, urls } = await setupWithHome();
+		const result = await serve(originRequest({ uri }));
+		expect(result?.body).toBe("# Pricing");
+		expect(pageUrls(urls())).toEqual([HARDCODED_PRICING_URL]);
+	});
+
+	it("marks the home page at viewer-request and fetches it without a trailing slash at origin-request", async () => {
+		const { view, serve, urls } = await setupWithHome();
+		const viewer = viewerRequest({ uri: "/", querystring: "q=1&next=%2F" });
+		expect(await view(viewer)).toBeNull();
+		expect(viewer.uri).toBe("/__waniwani-agent/www.example.com/");
+		const origin = toOrigin(viewer);
+		const result = await serve(origin);
+		expect(result?.body).toBe("# Home");
+		expect(origin.uri).toBe("/");
+		expect(origin.querystring).toBe("q=1&next=%2F");
+		expect(pageUrls(urls())).toEqual([HOME_PAGE_URL]);
+	});
+
+	it("leaves the query string out of the fetched pricing URL", async () => {
+		const { serve, urls } = await setupWithHome();
+		await serve({
+			...originRequest({ uri: marked("/pricing/") }),
+			querystring: "plan=team",
+		});
+		expect(pageUrls(urls())).toEqual([HARDCODED_PRICING_URL]);
+	});
+
+	it.each([marked("/"), marked("//"), marked("/pricing/"), marked("/pricing")])(
+		"never puts a double slash after the scheme for %s",
+		async (uri) => {
+			const { serve, urls } = await setupWithHome();
+			await serve(originRequest({ uri }));
+			const fetched = urls();
+			expect(fetched.length).toBeGreaterThan(1);
+			for (const url of fetched) {
+				expect(url.slice("https://".length)).not.toContain("//");
+				expect(url.endsWith("/")).toBe(false);
+			}
+		},
+	);
+});
