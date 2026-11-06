@@ -68,6 +68,7 @@ For each matched request, `recordAgentVisit` posts one JSON record of type `Agen
 | `sourceEventId` | A random UUID for this request |
 | `relayVersion` | The version of this library |
 | `platform` | `vercel`, `cloudflare` or `cloudfront`, when the library knows the platform it runs on |
+| `uses` | The relay functions this process called so far: `recordAgentVisit`, `serveAgentPage` and `handleViewerRequest`. Waniwani reads it to tell whether the code has the calls that agent pages and blocking need |
 
 The `headers` field can hold only these request headers:
 

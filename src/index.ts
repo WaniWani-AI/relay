@@ -74,7 +74,16 @@ export type AgentVisitRecord = {
 	sourceEventId: string;
 	relayVersion: string;
 	platform?: Platform;
+	/** The relay functions this process called, so WaniWani can show which setup steps the code has. */
+	uses: RelayFunction[];
 };
+
+export type RelayFunction =
+	| "recordAgentVisit"
+	| "serveAgentPage"
+	| "handleViewerRequest";
+
+const used = new Set<RelayFunction>();
 
 /**
  * Tells whether a request, or the `cf.request` of a Lambda@Edge event, comes from an AI agent. Reads headers only and never waits on the network.
@@ -119,6 +128,7 @@ export function recordAgentVisit(
 	request: Request | CloudFrontRequest,
 	options: RelayOptions = {},
 ): Promise<void> {
+	used.add("recordAgentVisit");
 	try {
 		const key = readKey(options.key);
 		if (!key) {
@@ -156,6 +166,7 @@ export function recordAgentVisit(
 			headers,
 			sourceEventId: crypto.randomUUID(),
 			relayVersion: RELAY_VERSION,
+			uses: [],
 		};
 		if (capped["user-agent"] !== undefined && !omitted.has("user-agent")) {
 			record.userAgent = capped["user-agent"];
@@ -173,6 +184,9 @@ export function recordAgentVisit(
 				: { timeoutMs: settings.requestTimeoutMs, retry: true };
 		const ingestUrl = `${apiUrl}/api/v2/agent-traffic/ingest/middleware/${key.ingestToken}`;
 		const withMatchKey = async () => {
+			// Lets a serveAgentPage or handleViewerRequest call that follows on the same request join `used`.
+			await Promise.resolve();
+			record.uses = [...used];
 			if (ip !== null && !omitted.has("matchkey")) {
 				record.matchKey = await deriveMatchKey(key.orgKey, ip).catch(
 					() => undefined,
@@ -237,6 +251,7 @@ export async function serveAgentPage(
 	request: Request | CloudFrontRequest,
 	options: ServeAgentPageOptions = {},
 ): Promise<Response | CloudFrontResultResponse | null> {
+	used.add("serveAgentPage");
 	try {
 		return isCloudFrontRequest(request)
 			? await serveCloudFront(request, options)
@@ -489,6 +504,7 @@ export async function handleViewerRequest(
 	request: CloudFrontRequest,
 	options: ServeAgentPageOptions = {},
 ): Promise<CloudFrontResultResponse | null> {
+	used.add("handleViewerRequest");
 	try {
 		stripForgedMark(request);
 		const method = request.method.toUpperCase();

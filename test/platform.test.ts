@@ -228,6 +228,7 @@ describe("platform: the other fields", () => {
 				"sourceEventId",
 				"relayVersion",
 				"platform",
+				"uses",
 			].sort(),
 		);
 		expect(record.headers).toEqual({ referer: "https://claude.ai/" });
