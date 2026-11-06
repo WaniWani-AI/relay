@@ -78,6 +78,7 @@ describe("recordAgentVisit: the event", () => {
 				"matchKey",
 				"sourceEventId",
 				"relayVersion",
+				"uses",
 			].sort(),
 		);
 		expect(record.method).toBe("GET");

@@ -25,6 +25,7 @@ const ALLOWED_FIELDS = [
 	"sourceEventId",
 	"relayVersion",
 	"platform",
+	"uses",
 ];
 
 afterEach(() => {

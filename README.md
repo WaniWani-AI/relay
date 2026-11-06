@@ -68,6 +68,7 @@ For each matched request, `recordAgentVisit` posts one JSON record of type `Agen
 | `sourceEventId` | A random UUID for this request |
 | `relayVersion` | The version of this library |
 | `platform` | `vercel`, `cloudflare` or `cloudfront`, when the library knows the platform it runs on |
+| `uses` | The relay functions this process called so far: `recordAgentVisit`, `serveAgentPage` and `handleViewerRequest`. Waniwani reads it to tell whether the code has the calls that agent pages and blocking need |
 
 The `headers` field can hold only these request headers:
 
@@ -173,9 +174,13 @@ Viewer-request handler:
 
 ```ts
 const request = event.Records[0].cf.request;
-if (isAgent(request)) await recordAgentVisit(request, { key });
-return (await handleViewerRequest(request, { key })) ?? request;
+const visit = isAgent(request) ? recordAgentVisit(request, { key }) : null;
+const answer = await handleViewerRequest(request, { key });
+await visit;
+return answer ?? request;
 ```
+
+`recordAgentVisit` reads the path when you call it, so the record keeps the original path although `handleViewerRequest` can mark it. Start the record before `handleViewerRequest` and await it after: the record then reports both calls in `uses`.
 
 Origin-request handler:
 
