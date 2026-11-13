@@ -104,18 +104,20 @@ function serveAgentPage(
 
 `ServeAgentPageOptions` takes `region`, `apiUrl` and `key` from `RelayOptions`.
 
-Serves the agent page of a request: a text-first copy of the page that Waniwani renders and stores. It returns that page when all of these hold, and `null` otherwise, so your middleware passes the request on to your site:
+Serves the agent page of a request: a text-first copy of the page that Waniwani renders and stores. Call it for every request, not only for AI agents. A request that `isAgent` does not match and that does not prefer Markdown returns `null` at once, with no network call, so people never wait on it. This check uses the AI bot list that `isAgent` loaded, and does not start a load of its own. `handleViewerRequest` makes the same check on CloudFront. It returns the page when all of these hold, and `null` otherwise, so your middleware passes the request on to your site:
 
 - A key is set.
 - The method is `GET` or `HEAD`.
 - The request has no `x-waniwani-render` header. Waniwani sends that header when it renders your page.
 - Agent pages are on in Waniwani for the hostname of the request, and its path is in the list of agent page paths. An entry is an exact path such as `/pricing`, or a folder such as `/products/*`, which covers `/products` and every path under it. `*` covers every path.
-- The `User-Agent` belongs to an AI agent that acts for a user, for example `ChatGPT-User` or `Claude-User`. Crawlers that collect training data get your site as usual.
+- The `User-Agent` belongs to an AI agent that acts for a user, for example `ChatGPT-User` or `Claude-User`, or the client prefers Markdown (see below). Crawlers that collect training data and ask for HTML get your site as usual.
 - Waniwani sends the stored page in time. The rules and the deadlines come from your Waniwani settings.
 
-You can block AI agents per site in Waniwani. When the `User-Agent` of a `GET` or `HEAD` request contains a blocked token, the function answers `403` with the text body `Forbidden`. That check runs before the agent page checks and before the `x-waniwani-render` check, so it works with agent pages off. The response carries `x-waniwani-blocked: 1`, `cache-control: private, no-store` and `vary: user-agent`.
+You can block AI agents per site in Waniwani. When the `User-Agent` of a `GET` or `HEAD` request from an AI agent, or from a client that prefers Markdown, contains a blocked token, the function answers `403` with the text body `Forbidden`. That check runs before the agent page checks and before the `x-waniwani-render` check, so it works with agent pages off. The response carries `x-waniwani-blocked: 1`, `cache-control: private, no-store` and `vary: user-agent`.
 
-The agent gets the page as Markdown when its `Accept` header lists `text/markdown` with a `q` above 0. Every other agent gets the page as HTML, including an agent that sends `*/*` or no `Accept` header.
+An agent that acts for a user gets the page as Markdown when its `Accept` header lists `text/markdown` with a `q` above 0. It gets the page as HTML in all other cases, including when it sends `*/*` or no `Accept` header.
+
+Any other client, a person's browser or a script, gets the Markdown page only when it prefers Markdown: its `Accept` header lists `text/markdown` with a `q` above 0, and that `q` is not lower than the `q` of the most specific range that covers `text/html` (`text/html`, then `text/*`, then `*/*`). So `Accept: text/markdown` and `Accept: text/markdown, text/html;q=0.9` get Markdown, and `Accept: text/html, text/markdown;q=0.5` does not. A browser never lists `text/markdown`, so it always gets your site. Such a client never gets the HTML agent page.
 
 The page response carries the stored content type, `x-waniwani-agent-page: hit`, `cache-control: private, no-store` and `vary: user-agent, accept`. A `HEAD` request gets the same headers with no body. The settings load on the first call, with a 300 ms limit, and stay in memory for 60 seconds. After that the relay keeps serving the cached settings while it loads new ones in the background. The function never throws, and the promise never rejects.
 
@@ -128,11 +130,12 @@ import { NextResponse, type NextRequest } from "next/server";
 export async function middleware(request: NextRequest) {
   if (isAgent(request)) {
     recordAgentVisit(request);
-    return (await serveAgentPage(request)) ?? NextResponse.next();
   }
-  return NextResponse.next();
+  return (await serveAgentPage(request)) ?? NextResponse.next();
 }
 ```
+
+`serveAgentPage` is outside the `isAgent` check, so a client that is not on the AI bot list and asks for Markdown gets the Markdown page. `recordAgentVisit` stays inside it, so a person's visit sends nothing.
 
 In a Cloudflare Worker, pass the key and fall back to your origin:
 
@@ -164,7 +167,7 @@ The two events do these jobs:
 
 - **Viewer request** runs on every request, before the CloudFront cache. `handleViewerRequest` decides what to do with the request:
   - When the site blocks this `User-Agent`, it answers `403`. CloudFront does not cache a response from this event, so a change to your block list applies to the next request.
-  - When an AI agent that acts for a user asks for a path that has an agent page, it marks the request. To mark it, it adds `/__waniwani-agent/<format>/<host>` in front of the path in `request.uri`. The format is `markdown` or `html`, from the agent's `Accept` header. On CloudFront, `request.uri` is the path only, with no host and no query string. For `https://example.com/pricing?a=1` from an agent that asks for HTML, `request.uri` changes from `/pricing` to `/__waniwani-agent/html/example.com/pricing`, and the query string stays as it is.
+  - When an AI agent that acts for a user, or any client that prefers Markdown, asks for a path that has an agent page, it marks the request. To mark it, it adds `/__waniwani-agent/<format>/<host>` in front of the path in `request.uri`. The format is `markdown` or `html`, from the `Accept` header, with the rules of `serveAgentPage`. On CloudFront, `request.uri` is the path only, with no host and no query string. For `https://example.com/pricing?a=1` from an agent that asks for HTML, `request.uri` changes from `/pricing` to `/__waniwani-agent/html/example.com/pricing`, and the query string stays as it is.
   - In all other cases it returns `null`, and the request continues with no change.
 - **Origin request** runs only on a cache miss, which is when CloudFront has no stored response for the request. The agent page has `cache-control: private, no-store`, so CloudFront never stores it, and a marked request is always a cache miss. `serveAgentPage` sends the agent page for a marked request. It removes the mark first. So when it cannot send the page, `?? request` sends the original path to your origin.
 
@@ -189,7 +192,7 @@ const request = event.Records[0].cf.request;
 return (await serveAgentPage(request, { key })) ?? request;
 ```
 
-Only requests that will get an agent page are marked, so crawlers and people share the normal cache entry, and each listed path gets one extra entry. Lambda@Edge has no environment variables, so pass `key`. People never wait on the site rules: the viewer handler loads them only for an AI agent. A page too large for the 1 MB limit of Lambda@Edge falls through to your origin, and the body goes out as UTF-8 text.
+Only requests that will get an agent page are marked, so crawlers and people share the normal cache entry, and each listed path gets one extra entry. Lambda@Edge has no environment variables, so pass `key`. People never wait on the site rules: the viewer handler loads them only for an AI agent or a request that prefers Markdown. A page too large for the 1 MB limit of Lambda@Edge falls through to your origin, and the body goes out as UTF-8 text.
 
 ## Dependencies
 

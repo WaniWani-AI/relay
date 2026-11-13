@@ -239,20 +239,45 @@ async function readCapped(
 
 export type PageFormat = "markdown" | "html";
 
-/** Markdown only when the agent lists `text/markdown` with a nonzero q, so an agent that asks for HTML or for anything gets HTML. */
-export function pageFormat(accept: string): PageFormat {
-	return accept.split(",").some((range) => {
+type MediaRange = { type: string; q: number };
+
+function mediaRanges(accept: string): MediaRange[] {
+	return accept.split(",").map((range) => {
 		const [type = "", ...params] = range
 			.split(";")
 			.map((part) => part.trim().toLowerCase());
-		if (type !== "text/markdown") {
-			return false;
-		}
-		const q = params.find((param) => param.startsWith("q="));
-		return q === undefined || Number(q.slice(2)) > 0;
-	})
-		? "markdown"
-		: "html";
+		const q = params
+			.map((param) => param.split("=").map((part) => part.trim()))
+			.find(([name]) => name === "q");
+		const value = q === undefined ? 1 : Number(q[1]);
+		return { type, q: Number.isFinite(value) ? value : 0 };
+	});
+}
+
+/** The highest q among the ranges of exactly this type, or null when none names it. */
+function qualityOf(ranges: MediaRange[], type: string): number | null {
+	const named = ranges.filter((range) => range.type === type);
+	return named.length === 0 ? null : Math.max(...named.map((range) => range.q));
+}
+
+const markdownQuality = (ranges: MediaRange[]): number =>
+	qualityOf(ranges, "text/markdown") ?? 0;
+
+/** Markdown only when the agent lists `text/markdown` with a nonzero q, so an agent that asks for HTML or for anything gets HTML. */
+export function pageFormat(accept: string): PageFormat {
+	return markdownQuality(mediaRanges(accept)) > 0 ? "markdown" : "html";
+}
+
+/** Whether a client names `text/markdown` and ranks it at least as high as the most specific range that covers `text/html`. A browser never names `text/markdown`. */
+export function prefersMarkdown(accept: string): boolean {
+	const ranges = mediaRanges(accept);
+	const markdown = markdownQuality(ranges);
+	const html =
+		qualityOf(ranges, "text/html") ??
+		qualityOf(ranges, "text/*") ??
+		qualityOf(ranges, "*/*") ??
+		0;
+	return markdown > 0 && markdown >= html;
 }
 
 /** Fetches the stored page in the agent's format within both deadlines and the size cap. Returns its body and content type, or null. The home page URL has no trailing slash, which the app would answer with a redirect. */
