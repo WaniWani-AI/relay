@@ -52,6 +52,17 @@ export function hostnameOf(host: string | undefined): string | null {
 	return origin === null ? null : new URL(origin).hostname;
 }
 
+/** Every line of a header that CloudFront splits into several entries, joined like a fetch `Headers` joins them. */
+export function cloudFrontHeaderList(
+	input: CloudFrontRequest,
+	name: string,
+): string | null {
+	const values = (input.headers?.[name] ?? [])
+		.map((entry) => entry?.value)
+		.filter((value) => typeof value === "string");
+	return values.length === 0 ? null : values.join(", ");
+}
+
 export function cloudFrontHeader(
 	input: CloudFrontRequest,
 	name: string,

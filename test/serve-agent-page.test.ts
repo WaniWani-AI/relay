@@ -381,16 +381,16 @@ describe("serveAgentPage: paths", () => {
 
 describe("serveAgentPage: user agents", () => {
 	it.each([
-		["a browser", "Mozilla/5.0 (Macintosh) Safari/605.1.15"],
-		["a training crawler", "Mozilla/5.0 (compatible; GPTBot/1.2)"],
-		["no user agent", ""],
-	])("returns null for %s", async (_name, userAgent) => {
+		["a browser", "Mozilla/5.0 (Macintosh) Safari/605.1.15", []],
+		["a training crawler", "Mozilla/5.0 (compatible; GPTBot/1.2)", [RULES_URL]],
+		["no user agent", "", []],
+	])("returns null for %s", async (_name, userAgent, fetched) => {
 		const { serve, urls } = await setup();
 		const request = new Request(`https://${HOST}/pricing`, {
 			headers: userAgent ? { "user-agent": userAgent } : {},
 		});
 		expect(await serve(request)).toBeNull();
-		expect(urls()).toEqual([RULES_URL]);
+		expect(urls()).toEqual(fetched);
 	});
 
 	it("matches a token whatever the case of the user agent", async () => {

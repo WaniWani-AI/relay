@@ -5,6 +5,7 @@ import {
 	normalizePath,
 	type PageFormat,
 	pageFormat,
+	prefersMarkdown,
 	type SiteRules,
 } from "./agent-page";
 import { readCappedHeaders } from "./headers";
@@ -17,6 +18,7 @@ import { refreshRules } from "./refresh";
 import {
 	type CloudFrontRequest,
 	cloudFrontHeader,
+	cloudFrontHeaderList,
 	hostnameOf,
 	isCloudFrontRequest,
 	toRelayRequest,
@@ -94,13 +96,16 @@ export function isAgent(
 	options: IsAgentOptions = {},
 ): boolean {
 	startRulesRefresh(options);
+	return matchesAgent(request, options.rules === "bundled");
+}
+
+function matchesAgent(
+	request: Request | CloudFrontRequest,
+	useBundled = false,
+): boolean {
 	try {
 		const { headers, ip } = toRelayRequest(request);
-		return decide({
-			headers: readCappedHeaders(headers),
-			ip,
-			useBundled: options.rules === "bundled",
-		});
+		return decide({ headers: readCappedHeaders(headers), ip, useBundled });
 	} catch {
 		return false;
 	}
@@ -211,6 +216,7 @@ type PageRequest = {
 	userAgent: string;
 	accept: string;
 	rendering: boolean;
+	agent: boolean;
 };
 
 type PageAnswer = {
@@ -274,6 +280,7 @@ async function serveFetch(
 			userAgent: request.headers.get("user-agent") ?? "",
 			accept: request.headers.get("accept") ?? "",
 			rendering: request.headers.has("x-waniwani-render"),
+			agent: matchesAgent(request),
 		},
 		options,
 	);
@@ -390,7 +397,10 @@ async function answerAgentPage(
 	options: ServeAgentPageOptions,
 ): Promise<PageAnswer | null> {
 	const { method, hostname } = request;
-	if (!isPageMethod(method)) {
+	if (
+		!isPageMethod(method) ||
+		!(request.agent || prefersMarkdown(request.accept))
+	) {
 		return null;
 	}
 	const match = await findSite(hostname, options);
@@ -410,10 +420,20 @@ async function answerAgentPage(
 	if (!matchesPath(path, site.agentPages.paths)) {
 		return null;
 	}
-	if (!rules.userAgentTokens.some((token) => userAgent.includes(token))) {
-		return null;
+	const format = servedFormat(rules, userAgent, request.accept);
+	return format && pageAnswer(rules, hostname, path, method, format);
+}
+
+/** An agent that acts for a user gets the page in the format it asks for. Any other client gets the Markdown page only when it prefers Markdown. */
+function servedFormat(
+	rules: SiteRules,
+	userAgent: string,
+	accept: string,
+): PageFormat | null {
+	if (rules.userAgentTokens.some((token) => userAgent.includes(token))) {
+		return pageFormat(accept);
 	}
-	return pageAnswer(rules, hostname, path, method, pageFormat(request.accept));
+	return prefersMarkdown(accept) ? "markdown" : null;
 }
 
 async function pageAnswer(
@@ -508,7 +528,11 @@ export async function handleViewerRequest(
 	try {
 		stripForgedMark(request);
 		const method = request.method.toUpperCase();
-		if (!isPageMethod(method) || !isAgent(request, options)) {
+		const accept = cloudFrontHeaderList(request, "accept") ?? "";
+		if (
+			!isPageMethod(method) ||
+			!(prefersMarkdown(accept) || isAgent(request, options))
+		) {
 			return null;
 		}
 		const hostname = hostnameOf(cloudFrontHeader(request, "host") ?? undefined);
@@ -527,15 +551,15 @@ export async function handleViewerRequest(
 		if (blocked) {
 			return toCloudFrontResponse(blocked);
 		}
+		const format = servedFormat(rules, userAgent, accept);
 		if (
 			cloudFrontHeader(request, "x-waniwani-render") !== null ||
 			!site.agentPages.enabled ||
 			!matchesPath(normalizePath(request.uri), site.agentPages.paths) ||
-			!rules.userAgentTokens.some((token) => userAgent.includes(token))
+			format === null
 		) {
 			return null;
 		}
-		const format = pageFormat(cloudFrontHeader(request, "accept") ?? "");
 		const uri = `${AGENT_URI_PREFIX}${format}/${encodeURIComponent(hostname)}${request.uri}`;
 		if (
 			new TextEncoder().encode(uri).byteLength <= settings.cloudFrontMaxUriBytes
