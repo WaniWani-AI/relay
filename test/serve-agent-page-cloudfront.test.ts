@@ -74,8 +74,13 @@ const page =
 
 const header = (key: string, value: string) => [{ key, value }];
 
-const marked = (path = "/pricing", host = HOST, format = "html") =>
-	`${PREFIX}${format}/${encodeURIComponent(host)}${path}`;
+const marked = (
+	path = "/pricing",
+	host = HOST,
+	format = "html",
+	{ query = "", userAgent = CHATGPT_USER_UA } = {},
+) =>
+	`${PREFIX}${format};${encodeURIComponent(query)};${encodeURIComponent(userAgent)}/${encodeURIComponent(host)}${path}`;
 
 const byteLength = (text: string) => new TextEncoder().encode(text).byteLength;
 
@@ -168,7 +173,9 @@ describe("handleViewerRequest: marking", () => {
 		const { view, urls } = await setup();
 		const request = viewerRequest();
 		expect(await view(request)).toBeNull();
-		expect(request.uri).toBe(`${PREFIX}html/${HOST}/pricing`);
+		expect(request.uri).toBe(
+			`${PREFIX}html;;${encodeURIComponent(CHATGPT_USER_UA)}/${HOST}/pricing`,
+		);
 		expect(urls()).toEqual([RULES_URL]);
 	});
 
@@ -184,18 +191,22 @@ describe("handleViewerRequest: marking", () => {
 		for (const uri of ["/docs", "/docs/", "/docs/a/b"]) {
 			const request = viewerRequest({ userAgent: CLAUDE_USER_UA, uri });
 			await view(request);
-			expect(request.uri).toBe(marked(uri));
+			expect(request.uri).toBe(
+				marked(uri, HOST, "html", { userAgent: CLAUDE_USER_UA }),
+			);
 		}
 	});
 
-	it("keeps the query string and the headers as they are", async () => {
+	it("copies the query string into the mark and keeps it and the headers as they are", async () => {
 		const { view } = await setup();
 		const request = viewerRequest({
 			querystring: "a=1&b=%20x",
 			headers: { cookie: header("Cookie", "a=1") },
 		});
 		await view(request);
-		expect(request.uri).toBe(marked());
+		expect(request.uri).toBe(
+			marked("/pricing", HOST, "html", { query: "a=1&b=%20x" }),
+		);
 		expect(request.querystring).toBe("a=1&b=%20x");
 		expect(request.headers).toEqual({
 			host: header("Host", HOST),
@@ -402,7 +413,9 @@ describe("handleViewerRequest: two hosts on one distribution", () => {
 
 		const mainClaude = viewerRequest({ userAgent: CLAUDE_USER_UA });
 		expect(await view(mainClaude)).toBeNull();
-		expect(mainClaude.uri).toBe(marked());
+		expect(mainClaude.uri).toBe(
+			marked("/pricing", HOST, "html", { userAgent: CLAUDE_USER_UA }),
+		);
 
 		expect((await view(viewerRequest({ userAgent: GPTBOT_UA })))?.status).toBe(
 			"403",
@@ -818,7 +831,10 @@ describe("handleViewerRequest then serveAgentPage", () => {
 		expect(result).toBeNull();
 		expect(origin.uri).toBe("/docs/guide");
 		expect(origin.querystring).toBe("page=2");
-		expect(urls()).toEqual([RULES_URL, `${PAGES_URL}/${HOST}/docs/guide`]);
+		expect(urls()).toEqual([
+			RULES_URL,
+			`${PAGES_URL}/${HOST}/docs/guide?page=2`,
+		]);
 	});
 
 	it("restores a path holding percent-encoded characters unchanged", async () => {
@@ -886,8 +902,9 @@ describe("serveAgentPage on CloudFront: the page URL it fetches", () => {
 			headers: { location: HOME_PAGE_URL },
 		});
 
-	const setupWithHome = () =>
+	const setupWithHome = (routes: Record<string, Handler> = {}) =>
 		setup({
+			...routes,
 			[RULES_URL]: rulesAnswer(
 				siteRules([
 					site({ agentPages: { enabled: true, paths: ["/", "/pricing"] } }),
@@ -930,25 +947,30 @@ describe("serveAgentPage on CloudFront: the page URL it fetches", () => {
 	});
 
 	it("marks the home page at viewer-request and fetches it without a trailing slash at origin-request", async () => {
-		const { view, serve, urls } = await setupWithHome();
+		const { view, serve, urls } = await setupWithHome({
+			[`${HOME_PAGE_URL}?q=1&next=%2F`]: page("# Home"),
+		});
 		const viewer = viewerRequest({ uri: "/", querystring: "q=1&next=%2F" });
 		expect(await view(viewer)).toBeNull();
-		expect(viewer.uri).toBe("/__waniwani-agent/html/www.example.com/");
+		expect(viewer.uri).toBe(
+			marked("/", HOST, "html", { query: "q=1&next=%2F" }),
+		);
 		const origin = toOrigin(viewer);
 		const result = await serve(origin);
-		expect(result?.body).toBe("# Home");
 		expect(origin.uri).toBe("/");
 		expect(origin.querystring).toBe("q=1&next=%2F");
-		expect(pageUrls(urls())).toEqual([HOME_PAGE_URL]);
+		expect(result?.body).toBe("# Home");
+		expect(pageUrls(urls())).toEqual([`${HOME_PAGE_URL}?q=1&next=%2F`]);
 	});
 
-	it("leaves the query string out of the fetched pricing URL", async () => {
+	it("puts the query string of the mark after the slashless pricing URL", async () => {
 		const { serve, urls } = await setupWithHome();
-		await serve({
-			...originRequest({ uri: marked("/pricing/") }),
-			querystring: "plan=team",
-		});
-		expect(pageUrls(urls())).toEqual([HARDCODED_PRICING_URL]);
+		await serve(
+			originRequest({
+				uri: marked("/pricing/", HOST, "html", { query: "plan=team" }),
+			}),
+		);
+		expect(pageUrls(urls())).toEqual([`${HARDCODED_PRICING_URL}?plan=team`]);
 	});
 
 	it.each([marked("/"), marked("//"), marked("/pricing/"), marked("/pricing")])(

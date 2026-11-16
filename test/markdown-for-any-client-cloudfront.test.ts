@@ -112,8 +112,12 @@ function toOrigin(viewer: CloudFrontRequest): CloudFrontRequest {
 	};
 }
 
-const markedAs = (format: "markdown" | "html", path = "/pricing") =>
-	`${PREFIX}${format}/${HOST}${path}`;
+const markedAs = (
+	format: "markdown" | "html",
+	userAgent: string | null = CHROME_UA,
+	path = "/pricing",
+) =>
+	`${PREFIX}${format};;${encodeURIComponent(userAgent ?? "")}/${HOST}${path}`;
 
 async function setup(routes: Record<string, Handler> = {}) {
 	const relay = await freshRelay();
@@ -190,7 +194,7 @@ describe("CloudFront: a person who prefers Markdown", () => {
 		const { view } = await setup();
 		const viewer = viewerRequest({ userAgent, accept });
 		await view(viewer);
-		expect(viewer.uri).toBe(markedAs("markdown"));
+		expect(viewer.uri).toBe(markedAs("markdown", userAgent));
 	});
 
 	it("marks HEAD the same as GET", async () => {
@@ -364,12 +368,12 @@ describe("CloudFront: AI agents keep their behavior", () => {
 			const { view } = await setup();
 			const viewer = viewerRequest({ userAgent: CHATGPT_USER_UA, accept });
 			await view(viewer);
-			expect(viewer.uri).toBe(markedAs(format));
+			expect(viewer.uri).toBe(markedAs(format, CHATGPT_USER_UA));
 		},
 	);
 
 	it.each([
-		["text/markdown", markedAs("markdown")],
+		["text/markdown", markedAs("markdown", CLAUDEBOT_UA)],
 		["text/html", "/pricing"],
 		["*/*", "/pricing"],
 		["text/html, text/markdown;q=0.5", "/pricing"],
@@ -416,7 +420,7 @@ describe("CloudFront: the viewer-request snippet records nothing for a person wh
 			accept: "text/markdown",
 		});
 		await viewerHandler(relay, viewer);
-		expect(viewer.uri).toBe(markedAs("markdown"));
+		expect(viewer.uri).toBe(markedAs("markdown", CHATGPT_USER_UA));
 		const requests = ingestBodies(calls).flatMap((body) => body.requests);
 		expect(requests).toHaveLength(1);
 		expect(requests[0].path).toBe("/pricing");

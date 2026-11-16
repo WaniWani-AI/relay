@@ -8,6 +8,13 @@ export type CloudFrontRequest = {
 	uri: string;
 	querystring: string;
 	headers: Record<string, Array<{ key?: string; value: string }>>;
+	/** Present at origin request when the trigger has "Include body" on. */
+	body?: {
+		inputTruncated?: boolean;
+		action?: string;
+		encoding?: "base64" | "text";
+		data?: string;
+	};
 };
 
 export type RelayRequest = {

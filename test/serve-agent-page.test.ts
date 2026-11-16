@@ -130,11 +130,14 @@ describe("serveAgentPage: a hit", () => {
 		expect(headers.get("x-waniwani-relay")).toBe(RELAY_VERSION);
 	});
 
-	it("drops the query string and the trailing slash from the page URL", async () => {
-		const { serve, urls } = await setup();
+	it("keeps the query string, and drops the trailing slash and the fragment, in the page URL", async () => {
+		const { serve, urls } = await setup({
+			[RULES_URL]: rulesAnswer(),
+			[`${PRICING_URL}?plan=team`]: page(),
+		});
 		const response = await serve(agentPageRequest("/pricing/?plan=team#top"));
 		expect(response?.status).toBe(200);
-		expect(urls()).toContain(PRICING_URL);
+		expect(urls()).toContain(`${PRICING_URL}?plan=team`);
 	});
 
 	it("answers HEAD with the same headers and no body", async () => {
@@ -737,17 +740,19 @@ describe("serveAgentPage: the page URL it fetches", () => {
 	);
 
 	it.each([
-		["/?q=1", HOME_PAGE_URL],
+		["/?q=1", `${HOME_PAGE_URL}?q=1`],
 		["/?", HOME_PAGE_URL],
 		["/#top", HOME_PAGE_URL],
-		["/pricing?plan=team&x=%2F", HARDCODED_PRICING_URL],
-		["/pricing/?plan=team", HARDCODED_PRICING_URL],
-	])("leaves the query string of %s out of the page URL", async (path, url) => {
-		const { serve, urls } = await setupWithHome();
-		const response = await serve(agentPageRequest(path));
-		expect(response?.status).toBe(200);
-		expect(pageUrls(urls())).toEqual([url]);
-	});
+		["/pricing?plan=team&x=%2F", `${HARDCODED_PRICING_URL}?plan=team&x=%2F`],
+		["/pricing/?plan=team", `${HARDCODED_PRICING_URL}?plan=team`],
+	])(
+		"puts the query string of %s after the slashless page URL",
+		async (path, url) => {
+			const { serve, urls } = await setupWithHome();
+			await serve(agentPageRequest(path));
+			expect(pageUrls(urls())).toEqual([url]);
+		},
+	);
 
 	it.each(["/", "//", "/pricing/", "/pricing"])(
 		"never puts a double slash after the scheme for %s",

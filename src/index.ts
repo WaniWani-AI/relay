@@ -1,4 +1,6 @@
 import {
+	type AgentPageRequest,
+	ASK_PATH,
 	fetchAgentPage,
 	loadSiteRules,
 	matchesPath,
@@ -6,6 +8,7 @@ import {
 	type PageFormat,
 	pageFormat,
 	prefersMarkdown,
+	readRequestBody,
 	type SiteRules,
 } from "./agent-page";
 import { readCappedHeaders } from "./headers";
@@ -213,14 +216,16 @@ type PageRequest = {
 	method: string;
 	hostname: string;
 	pathname: string;
+	query: string;
 	userAgent: string;
 	accept: string;
 	rendering: boolean;
 	agent: boolean;
+	readBody: (rules: SiteRules) => Promise<Uint8Array<ArrayBuffer> | null>;
 };
 
 type PageAnswer = {
-	status: 200 | 403;
+	status: 200 | 403 | 429;
 	headers: Record<string, string>;
 	body: Uint8Array<ArrayBuffer> | string | null;
 };
@@ -277,10 +282,17 @@ async function serveFetch(
 			method: request.method.toUpperCase(),
 			hostname: url.hostname,
 			pathname: url.pathname,
+			query: url.search.slice(1),
 			userAgent: request.headers.get("user-agent") ?? "",
 			accept: request.headers.get("accept") ?? "",
 			rendering: request.headers.has("x-waniwani-render"),
 			agent: matchesAgent(request),
+			readBody: (rules) =>
+				readRequestBody(
+					request,
+					settings.askMaxBodyBytes,
+					rules.deadlines.bodyMs,
+				),
 		},
 		options,
 	);
@@ -303,7 +315,13 @@ async function serveCloudFront(
 	}
 	const { hostname, format } = mark;
 	const method = request.method.toUpperCase();
-	if (!isPageMethod(method)) {
+	const path = normalizePath(request.uri);
+	const ask = isAskPost(method, path);
+	if (!isPageMethod(method) && !ask) {
+		return null;
+	}
+	const body = ask ? cloudFrontBody(request) : null;
+	if (ask && body === null) {
 		return null;
 	}
 	const match = await findSite(hostname, options);
@@ -312,10 +330,15 @@ async function serveCloudFront(
 	}
 	const answer = await pageAnswer(
 		match.rules,
-		hostname,
-		normalizePath(request.uri),
+		{
+			hostname,
+			path,
+			query: mark.query ?? request.querystring ?? "",
+			format,
+			userAgent: mark.userAgent,
+			body,
+		},
 		method,
-		format,
 	);
 	if (!answer) {
 		return null;
@@ -331,6 +354,29 @@ async function serveCloudFront(
 	return result;
 }
 
+/** The body of a POST that CloudFront passes to the origin-request function when the trigger has "Include body" on. Null when it is missing, cut by CloudFront, empty or over the cap. */
+function cloudFrontBody(
+	request: CloudFrontRequest,
+): Uint8Array<ArrayBuffer> | null {
+	const body = request.body;
+	if (!body || body.inputTruncated || typeof body.data !== "string") {
+		return null;
+	}
+	const bytes =
+		body.encoding === "base64"
+			? Uint8Array.from(atob(body.data), (char) => char.charCodeAt(0))
+			: new TextEncoder().encode(body.data);
+	return bytes.byteLength > 0 && bytes.byteLength <= settings.askMaxBodyBytes
+		? bytes
+		: null;
+}
+
+const STATUS_TEXT: Record<PageAnswer["status"], string> = {
+	200: "OK",
+	403: "Forbidden",
+	429: "Too Many Requests",
+};
+
 function toCloudFrontResponse(answer: PageAnswer): CloudFrontResultResponse {
 	const headers: CloudFrontResultResponse["headers"] = {};
 	for (const [name, value] of Object.entries(answer.headers)) {
@@ -338,7 +384,7 @@ function toCloudFrontResponse(answer: PageAnswer): CloudFrontResultResponse {
 	}
 	const result: CloudFrontResultResponse = {
 		status: String(answer.status),
-		statusDescription: answer.status === 200 ? "OK" : "Forbidden",
+		statusDescription: STATUS_TEXT[answer.status],
 		headers,
 	};
 	if (answer.body !== null) {
@@ -359,6 +405,9 @@ function headerKey(name: string): string {
 
 const isPageMethod = (method: string): boolean =>
 	method === "GET" || method === "HEAD";
+
+const isAskPost = (method: string, path: string): boolean =>
+	method === "POST" && path === ASK_PATH;
 
 async function findSite(
 	hostname: string,
@@ -397,8 +446,10 @@ async function answerAgentPage(
 	options: ServeAgentPageOptions,
 ): Promise<PageAnswer | null> {
 	const { method, hostname } = request;
+	const path = normalizePath(request.pathname);
+	const ask = isAskPost(method, path);
 	if (
-		!isPageMethod(method) ||
+		!(isPageMethod(method) || ask) ||
 		!(request.agent || prefersMarkdown(request.accept))
 	) {
 		return null;
@@ -416,12 +467,29 @@ async function answerAgentPage(
 	if (request.rendering || !site.agentPages.enabled) {
 		return null;
 	}
-	const path = normalizePath(request.pathname);
 	if (!matchesPath(path, site.agentPages.paths)) {
 		return null;
 	}
 	const format = servedFormat(rules, userAgent, request.accept);
-	return format && pageAnswer(rules, hostname, path, method, format);
+	if (!format) {
+		return null;
+	}
+	const body = ask ? await request.readBody(rules) : null;
+	if (ask && body === null) {
+		return null;
+	}
+	return pageAnswer(
+		rules,
+		{
+			hostname,
+			path,
+			query: request.query,
+			format,
+			userAgent: request.userAgent,
+			body,
+		},
+		method,
+	);
 }
 
 /** An agent that acts for a user gets the page in the format it asks for. Any other client gets the Markdown page only when it prefers Markdown. */
@@ -438,19 +506,24 @@ function servedFormat(
 
 async function pageAnswer(
 	rules: SiteRules,
-	hostname: string,
-	path: string,
+	request: AgentPageRequest,
 	method: string,
-	format: PageFormat,
 ): Promise<PageAnswer | null> {
-	const page = await fetchAgentPage(rules, hostname, path, format);
+	const page = await fetchAgentPage(rules, request);
 	if (!page) {
 		return null;
 	}
+	const headers: Record<string, string> = {};
+	if (page.contentType !== null) {
+		headers["content-type"] = page.contentType;
+	}
+	if (page.retryAfter !== null) {
+		headers["retry-after"] = page.retryAfter;
+	}
 	return {
-		status: 200,
+		status: page.status,
 		headers: {
-			"content-type": page.contentType,
+			...headers,
 			"x-waniwani-agent-page": "hit",
 			"cache-control": "private, no-store",
 			vary: "user-agent, accept",
@@ -463,28 +536,39 @@ const AGENT_URI_PREFIX = "/__waniwani-agent/";
 
 const PAGE_FORMATS: readonly PageFormat[] = ["markdown", "html"];
 
-/** Splits `/__waniwani-agent/<format>/<host><original uri>`. The format is null when the mark names none the relay knows. */
-function splitAgentUri(uri: string): {
+type AgentUri = {
 	format: PageFormat | null;
+	encodedQuery: string | null;
+	encodedAgent: string;
 	encodedHost: string;
 	originalUri: string;
-} | null {
+};
+
+/**
+ * Splits `/__waniwani-agent/<format>;<query>;<user agent>/<host><original uri>`, with the query and the user agent URI-encoded. The format is null when the mark names none the relay knows.
+ * A mark from relay 0.6.0 or older has `<format>` alone and no query.
+ */
+function splitAgentUri(uri: string): AgentUri | null {
 	if (!uri.startsWith(AGENT_URI_PREFIX)) {
 		return null;
 	}
 	const rest = uri.slice(AGENT_URI_PREFIX.length);
-	const formatEnd = rest.indexOf("/");
-	const formatName = formatEnd === -1 ? rest : rest.slice(0, formatEnd);
-	const format = PAGE_FORMATS.find((known) => known === formatName) ?? null;
-	const afterFormat = formatEnd === -1 ? "" : rest.slice(formatEnd + 1);
-	const slash = afterFormat.indexOf("/");
-	return slash === -1
-		? { format, encodedHost: afterFormat, originalUri: "/" }
-		: {
-				format,
-				encodedHost: afterFormat.slice(0, slash),
-				originalUri: afterFormat.slice(slash),
-			};
+	const markEnd = rest.indexOf("/");
+	const fields = (markEnd === -1 ? rest : rest.slice(0, markEnd)).split(";");
+	const [formatName, encodedQuery = null, encodedAgent = ""] = fields;
+	const format =
+		fields.length === 1 || fields.length === 3
+			? (PAGE_FORMATS.find((known) => known === formatName) ?? null)
+			: null;
+	const afterMark = markEnd === -1 ? "" : rest.slice(markEnd + 1);
+	const slash = afterMark.indexOf("/");
+	return {
+		format,
+		encodedQuery,
+		encodedAgent,
+		encodedHost: slash === -1 ? afterMark : afterMark.slice(0, slash),
+		originalUri: slash === -1 ? "/" : afterMark.slice(slash),
+	};
 }
 
 function stripForgedMark(request: CloudFrontRequest): void {
@@ -495,9 +579,14 @@ function stripForgedMark(request: CloudFrontRequest): void {
 	}
 }
 
-function takeMarkFromUri(
-	request: CloudFrontRequest,
-): { hostname: string; format: PageFormat } | null {
+type Mark = {
+	hostname: string;
+	format: PageFormat;
+	query: string | null;
+	userAgent: string;
+};
+
+function takeMarkFromUri(request: CloudFrontRequest): Mark | null {
 	const parts = splitAgentUri(request.uri);
 	if (!parts) {
 		return null;
@@ -508,16 +597,26 @@ function takeMarkFromUri(
 	}
 	try {
 		const hostname = hostnameOf(decodeURIComponent(parts.encodedHost));
-		return hostname === null ? null : { hostname, format: parts.format };
+		return hostname === null
+			? null
+			: {
+					hostname,
+					format: parts.format,
+					query:
+						parts.encodedQuery === null
+							? null
+							: decodeURIComponent(parts.encodedQuery),
+					userAgent: decodeURIComponent(parts.encodedAgent),
+				};
 	} catch {
 		return null;
 	}
 }
 
 /**
- * For the viewer-request handler on CloudFront. Strips a `/__waniwani-agent/` prefix the client sent, then, for a GET or HEAD from an AI agent, loads the rules of the site of the `host` header.
+ * For the viewer-request handler on CloudFront. Strips a `/__waniwani-agent/` prefix the client sent, then, for a GET or HEAD from an AI agent or a `POST /ask`, loads the rules of the site of the `host` header.
  * Returns the 403 response when the site blocks the user agent. CloudFront never caches a response made at viewer-request, so a block takes effect at once.
- * When the site serves an agent page for the path and the user agent acts for a user, rewrites `request.uri` to `/__waniwani-agent/<host><original uri>` so the origin-request handler serves the page under its own cache key. The request stays unmarked when the new URI would pass the CloudFront URI limit.
+ * When the site serves an agent page for the path and the user agent acts for a user, rewrites `request.uri` to `/__waniwani-agent/<format>;<query>;<user agent>/<host><original uri>` so the origin-request handler serves the page under its own cache key, which holds the query whatever the cache policy. The origin-request handler often gets neither the query nor the user agent of the viewer. The request stays unmarked when the new URI would pass the CloudFront URI limit.
  * Call `recordAgentVisit` before it, so the event holds the original path. Never throws and never rejects.
  */
 export async function handleViewerRequest(
@@ -528,9 +627,10 @@ export async function handleViewerRequest(
 	try {
 		stripForgedMark(request);
 		const method = request.method.toUpperCase();
+		const path = normalizePath(request.uri);
 		const accept = cloudFrontHeaderList(request, "accept") ?? "";
 		if (
-			!isPageMethod(method) ||
+			!(isPageMethod(method) || isAskPost(method, path)) ||
 			!(prefersMarkdown(accept) || isAgent(request, options))
 		) {
 			return null;
@@ -544,9 +644,8 @@ export async function handleViewerRequest(
 			return null;
 		}
 		const { rules, site } = match;
-		const userAgent = (
-			cloudFrontHeader(request, "user-agent") ?? ""
-		).toLowerCase();
+		const rawUserAgent = cloudFrontHeader(request, "user-agent") ?? "";
+		const userAgent = rawUserAgent.toLowerCase();
 		const blocked = blockedAnswer(site, userAgent, method);
 		if (blocked) {
 			return toCloudFrontResponse(blocked);
@@ -555,12 +654,17 @@ export async function handleViewerRequest(
 		if (
 			cloudFrontHeader(request, "x-waniwani-render") !== null ||
 			!site.agentPages.enabled ||
-			!matchesPath(normalizePath(request.uri), site.agentPages.paths) ||
+			!matchesPath(path, site.agentPages.paths) ||
 			format === null
 		) {
 			return null;
 		}
-		const uri = `${AGENT_URI_PREFIX}${format}/${encodeURIComponent(hostname)}${request.uri}`;
+		const mark = [
+			format,
+			encodeURIComponent(request.querystring ?? ""),
+			encodeURIComponent(rawUserAgent),
+		].join(";");
+		const uri = `${AGENT_URI_PREFIX}${mark}/${encodeURIComponent(hostname)}${request.uri}`;
 		if (
 			new TextEncoder().encode(uri).byteLength <= settings.cloudFrontMaxUriBytes
 		) {
