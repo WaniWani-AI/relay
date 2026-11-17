@@ -5,7 +5,7 @@ export type SiteRules = {
 	version: 1;
 	pagesUrl: string;
 	userAgentTokens: string[];
-	deadlines: { headersMs: number; bodyMs: number };
+	deadlines: { headersMs: number; bodyMs: number; askMs: number };
 	maxBodyBytes: number;
 	sites: Array<{
 		hostname: string;
@@ -74,7 +74,13 @@ export function parseSiteRules(body: unknown): SiteRules | null {
 		version: 1,
 		pagesUrl: pagesUrl.replace(/\/+$/, ""),
 		userAgentTokens: cleanTokens(userAgentTokens),
-		deadlines: { headersMs: deadlines.headersMs, bodyMs: deadlines.bodyMs },
+		deadlines: {
+			headersMs: deadlines.headersMs,
+			bodyMs: deadlines.bodyMs,
+			askMs: isPositive(deadlines.askMs)
+				? deadlines.askMs
+				: settings.askHeadersMs,
+		},
 		maxBodyBytes,
 		sites: parsedSites,
 	};
@@ -237,6 +243,36 @@ async function readCapped(
 	return out;
 }
 
+async function readWithin(
+	body: ReadableStream<Uint8Array>,
+	ms: number,
+	maxBytes: number,
+): Promise<Uint8Array<ArrayBuffer> | null> {
+	let timer: ReturnType<typeof setTimeout> | undefined;
+	const deadline = new Promise<typeof TIMEOUT>((resolve) => {
+		timer = setTimeout(() => resolve(TIMEOUT), ms);
+	});
+	try {
+		return await readCapped(body, deadline, maxBytes);
+	} finally {
+		clearTimeout(timer);
+	}
+}
+
+/** Reads a copy of the request body, so the original can still go to the origin. Null when the body is empty, larger than `maxBytes` or slower than `ms`. */
+export async function readRequestBody(
+	request: Request,
+	maxBytes: number,
+	ms: number,
+): Promise<Uint8Array<ArrayBuffer> | null> {
+	if (Number(request.headers.get("content-length")) > maxBytes) {
+		return null;
+	}
+	const body = request.clone().body;
+	const bytes = body ? await readWithin(body, ms, maxBytes) : null;
+	return bytes && bytes.byteLength > 0 ? bytes : null;
+}
+
 export type PageFormat = "markdown" | "html";
 
 type MediaRange = { type: string; q: number };
@@ -280,51 +316,105 @@ export function prefersMarkdown(accept: string): boolean {
 	return markdown > 0 && markdown >= html;
 }
 
-/** Fetches the stored page in the agent's format within both deadlines and the size cap. Returns its body and content type, or null. The home page URL has no trailing slash, which the app would answer with a redirect. */
+export const ASK_PATH = "/ask";
+
+/** The paths the service answers with JSON. Every other path must answer `text/*`. */
+const JSON_PATHS = new Set([
+	ASK_PATH,
+	"/.well-known/ai-catalog.json",
+	"/openapi.json",
+	"/.well-known/mcp.json",
+	"/.well-known/mcp/server-card.json",
+]);
+
+function servableType(path: string, contentType: string): boolean {
+	const type = (contentType.split(";")[0] ?? "").trim().toLowerCase();
+	return (
+		type.startsWith("text/") ||
+		(JSON_PATHS.has(path) && type === "application/json")
+	);
+}
+
+export type AgentPageRequest = {
+	hostname: string;
+	path: string;
+	/** The query string without its `?`. */
+	query: string;
+	format: PageFormat;
+	userAgent: string;
+	/** The body of a `POST /ask`, which the relay forwards as a POST. Null for a GET. */
+	body: Uint8Array<ArrayBuffer> | null;
+};
+
+export type AgentPage = {
+	status: 200 | 429;
+	body: Uint8Array<ArrayBuffer> | null;
+	contentType: string | null;
+	retryAfter: string | null;
+};
+
+/**
+ * Fetches the stored page in the agent's format within both deadlines and the size cap, or null. The home page URL has no trailing slash, which the app would answer with a redirect.
+ * `/ask` waits `askMs` for the headers, since the service searches before it answers.
+ * A 429 for `/ask` comes back with its `Retry-After`, so the agent sees the rate limit. Any other answer that is not a 200 gives null.
+ */
 export async function fetchAgentPage(
 	rules: SiteRules,
-	hostname: string,
-	path: string,
-	format: PageFormat,
-): Promise<{ body: Uint8Array<ArrayBuffer>; contentType: string } | null> {
+	page: AgentPageRequest,
+): Promise<AgentPage | null> {
+	const headers: Record<string, string> = {
+		accept: page.format === "markdown" ? "text/markdown" : "text/html",
+		"x-waniwani-relay": RELAY_VERSION,
+	};
+	if (page.userAgent !== "") {
+		headers["x-waniwani-agent"] = page.userAgent;
+	}
 	const controller = new AbortController();
+	const init: RequestInit = { headers, signal: controller.signal };
+	if (page.body !== null) {
+		init.method = "POST";
+		init.body = page.body;
+		headers["content-type"] = "application/json";
+	}
+	const path = page.path === "/" ? "" : page.path;
+	const search = page.query === "" ? "" : `?${page.query}`;
 	try {
 		const response = await within(
-			fetch(`${rules.pagesUrl}/${hostname}${path === "/" ? "" : path}`, {
-				headers: {
-					accept: format === "markdown" ? "text/markdown" : "text/html",
-					"x-waniwani-relay": RELAY_VERSION,
-				},
-				signal: controller.signal,
-			}),
-			rules.deadlines.headersMs,
+			fetch(`${rules.pagesUrl}/${page.hostname}${path}${search}`, init),
+			page.path === ASK_PATH
+				? rules.deadlines.askMs
+				: rules.deadlines.headersMs,
 		);
 		if (response === TIMEOUT) {
 			return null;
 		}
+		const limited = response.status === 429 && page.path === ASK_PATH;
 		const contentType = response.headers.get("content-type") ?? "";
-		if (
-			response.status !== 200 ||
-			!contentType.toLowerCase().startsWith("text/") ||
-			!response.body
-		) {
+		const servable = servableType(page.path, contentType) && response.body;
+		if (limited) {
+			const body = servable
+				? await readWithin(servable, rules.deadlines.bodyMs, rules.maxBodyBytes)
+				: null;
+			if (!servable) {
+				await response.body?.cancel().catch(() => {});
+			}
+			return {
+				status: 429,
+				body,
+				contentType: body ? contentType : null,
+				retryAfter: response.headers.get("retry-after"),
+			};
+		}
+		if (response.status !== 200 || !servable) {
 			await response.body?.cancel().catch(() => {});
 			return null;
 		}
-		let timer: ReturnType<typeof setTimeout> | undefined;
-		const deadline = new Promise<typeof TIMEOUT>((resolve) => {
-			timer = setTimeout(() => resolve(TIMEOUT), rules.deadlines.bodyMs);
-		});
-		try {
-			const body = await readCapped(
-				response.body,
-				deadline,
-				rules.maxBodyBytes,
-			);
-			return body ? { body, contentType } : null;
-		} finally {
-			clearTimeout(timer);
-		}
+		const body = await readWithin(
+			servable,
+			rules.deadlines.bodyMs,
+			rules.maxBodyBytes,
+		);
+		return body ? { status: 200, body, contentType, retryAfter: null } : null;
 	} catch {
 		return null;
 	} finally {
