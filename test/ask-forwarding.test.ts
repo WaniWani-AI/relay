@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { parseSiteRules } from "../src/agent-page";
 import type { CloudFrontRequest } from "../src/index";
 import {
 	API_URL,
@@ -35,12 +36,12 @@ const JSON_FILES = [
 	"/.well-known/mcp/server-card.json",
 ];
 
-function siteRules() {
+function siteRules(deadlines: Record<string, unknown> = {}) {
 	return {
 		version: 1,
 		pagesUrl: PAGES_URL,
 		userAgentTokens: ["chatgpt-user", "claude-user"],
-		deadlines: { headersMs: 50, bodyMs: 50 },
+		deadlines: { headersMs: 50, bodyMs: 50, ...deadlines },
 		maxBodyBytes: 4096,
 		sites: [
 			{
@@ -55,8 +56,16 @@ function siteRules() {
 	};
 }
 
-const rulesAnswer: Handler = () =>
-	Response.json({ success: true, message: "success", data: siteRules() });
+const rulesWith =
+	(deadlines: Record<string, unknown> = {}): Handler =>
+	() =>
+		Response.json({
+			success: true,
+			message: "success",
+			data: siteRules(deadlines),
+		});
+
+const rulesAnswer = rulesWith();
 
 const answer =
 	(
@@ -68,6 +77,11 @@ const answer =
 			status: init.status ?? 200,
 			headers: { "content-type": "application/json", ...init.headers },
 		});
+
+const delayed =
+	(ms: number, handler: Handler): Handler =>
+	(url, init) =>
+		new Promise((resolve) => setTimeout(() => resolve(handler(url, init)), ms));
 
 const textAnswer = (body: string): Handler =>
 	answer(body, {
@@ -297,6 +311,99 @@ describe("serveAgentPage: POST /ask", () => {
 		expect(response).toBeNull();
 		expect(calls).toEqual([]);
 	});
+});
+
+describe("serveAgentPage: the /ask deadline", () => {
+	it("gives /ask 3 seconds when the rules have no askMs", () => {
+		expect(parseSiteRules(siteRules())?.deadlines).toEqual({
+			headersMs: 50,
+			bodyMs: 50,
+			askMs: 3000,
+		});
+	});
+
+	it("keeps a positive askMs from the rules", () => {
+		expect(parseSiteRules(siteRules({ askMs: 2500 }))?.deadlines.askMs).toBe(
+			2500,
+		);
+	});
+
+	it.each([
+		["zero", 0],
+		["negative", -1],
+		["a string", "2500"],
+		["infinite", Number.POSITIVE_INFINITY],
+		["null", null],
+	])("uses 3 seconds when askMs is %s", (_label, askMs) => {
+		expect(parseSiteRules(siteRules({ askMs }))?.deadlines.askMs).toBe(3000);
+	});
+
+	it("waits past headersMs for a slow /ask when the rules have no askMs", async () => {
+		const { serve } = await setup({
+			[`${ASK_URL}?query=a`]: delayed(150, answer()),
+			[ASK_URL]: delayed(150, answer()),
+		});
+		const get = await serve(agentRequest("/ask?query=a"));
+		expect(get?.status).toBe(200);
+		expect(await get?.text()).toBe(ASK_ANSWER);
+		const post = await serve(
+			agentRequest("/ask", { method: "POST", body: ASK_BODY }),
+		);
+		expect(post?.status).toBe(200);
+		expect(await post?.text()).toBe(ASK_ANSWER);
+	});
+
+	it("serves a slow /ask within askMs", async () => {
+		const { serve } = await setup({
+			[RULES_URL]: rulesWith({ askMs: 400 }),
+			[`${ASK_URL}?query=a`]: delayed(150, answer()),
+		});
+		const response = await serve(agentRequest("/ask?query=a"));
+		expect(response?.status).toBe(200);
+	});
+
+	it("passes a slow 429 for /ask on within askMs", async () => {
+		const { serve } = await setup({
+			[RULES_URL]: rulesWith({ askMs: 400 }),
+			[`${ASK_URL}?query=a`]: delayed(
+				150,
+				answer("{}", { status: 429, headers: { "retry-after": "9" } }),
+			),
+		});
+		const response = await serve(agentRequest("/ask?query=a"));
+		expect(response?.status).toBe(429);
+		expect(response?.headers.get("retry-after")).toBe("9");
+	});
+
+	it("falls back to the origin when /ask misses askMs", async () => {
+		let aborted = false;
+		const { serve } = await setup({
+			[RULES_URL]: rulesWith({ askMs: 100 }),
+			[ASK_URL]: (url, init) => {
+				init?.signal?.addEventListener("abort", () => {
+					aborted = true;
+				});
+				return delayed(400, answer())(url, init);
+			},
+		});
+		const started = Date.now();
+		expect(
+			await serve(agentRequest("/ask", { method: "POST", body: ASK_BODY })),
+		).toBeNull();
+		expect(Date.now() - started).toBeLessThan(350);
+		expect(aborted).toBe(true);
+	});
+
+	it.each(["/pricing", "/.well-known/ai-catalog.json"])(
+		"keeps headersMs for %s when the rules have a longer askMs",
+		async (path) => {
+			const { serve } = await setup({
+				[RULES_URL]: rulesWith({ askMs: 400 }),
+				[`${SITE_URL}${path}`]: delayed(150, textAnswer("# Page")),
+			});
+			expect(await serve(agentRequest(path))).toBeNull();
+		},
+	);
 });
 
 describe("serveAgentPage: answers that are not a 200", () => {

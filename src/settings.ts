@@ -8,6 +8,7 @@ export const settings = {
 	cloudFrontMaxUriBytes: 8192,
 	cloudFrontMaxBodyBytes: 1_000_000 - 16_384,
 	askMaxBodyBytes: 16_384,
+	askHeadersMs: 3000,
 	retryDelayMs: 500,
 	rulesRefreshMs: 12 * 60 * 60 * 1000,
 	rulesRetryMs: 5 * 60 * 1000,

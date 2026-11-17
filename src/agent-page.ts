@@ -5,7 +5,7 @@ export type SiteRules = {
 	version: 1;
 	pagesUrl: string;
 	userAgentTokens: string[];
-	deadlines: { headersMs: number; bodyMs: number };
+	deadlines: { headersMs: number; bodyMs: number; askMs: number };
 	maxBodyBytes: number;
 	sites: Array<{
 		hostname: string;
@@ -74,7 +74,13 @@ export function parseSiteRules(body: unknown): SiteRules | null {
 		version: 1,
 		pagesUrl: pagesUrl.replace(/\/+$/, ""),
 		userAgentTokens: cleanTokens(userAgentTokens),
-		deadlines: { headersMs: deadlines.headersMs, bodyMs: deadlines.bodyMs },
+		deadlines: {
+			headersMs: deadlines.headersMs,
+			bodyMs: deadlines.bodyMs,
+			askMs: isPositive(deadlines.askMs)
+				? deadlines.askMs
+				: settings.askHeadersMs,
+		},
 		maxBodyBytes,
 		sites: parsedSites,
 	};
@@ -349,6 +355,7 @@ export type AgentPage = {
 
 /**
  * Fetches the stored page in the agent's format within both deadlines and the size cap, or null. The home page URL has no trailing slash, which the app would answer with a redirect.
+ * `/ask` waits `askMs` for the headers, since the service searches before it answers.
  * A 429 for `/ask` comes back with its `Retry-After`, so the agent sees the rate limit. Any other answer that is not a 200 gives null.
  */
 export async function fetchAgentPage(
@@ -374,7 +381,9 @@ export async function fetchAgentPage(
 	try {
 		const response = await within(
 			fetch(`${rules.pagesUrl}/${page.hostname}${path}${search}`, init),
-			rules.deadlines.headersMs,
+			page.path === ASK_PATH
+				? rules.deadlines.askMs
+				: rules.deadlines.headersMs,
 		);
 		if (response === TIMEOUT) {
 			return null;
