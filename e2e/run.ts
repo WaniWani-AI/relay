@@ -25,6 +25,8 @@ const { values: args } = parseArgs({
 		"page-path": { type: "string", default: "/" },
 		"no-page-path": { type: "string" },
 		"blocked-ua": { type: "string" },
+		"waniwani-api": { type: "string" },
+		"relay-version": { type: "string" },
 	},
 });
 
@@ -467,11 +469,11 @@ const defaultScenarios: Scenario[] = [
 				headers: { "user-agent": BROWSER, accept: "text/markdown" },
 			});
 			expectAgentPage(reply, "P1");
+			check(
+				reply.headers["content-type"]?.startsWith("text/markdown"),
+				`P1: content-type is ${reply.headers["content-type"]}`,
+			);
 			if (!args.live) {
-				check(
-					reply.headers["content-type"]?.startsWith("text/markdown"),
-					`P1: content-type is ${reply.headers["content-type"]}`,
-				);
 				await wait(1000);
 				check(
 					context.fake.records().filter(byMarker(m)).length === 0,
@@ -1048,6 +1050,79 @@ function readMemory(): number | null {
 	return Number.isFinite(value) ? value : null;
 }
 
+type Website = {
+	hostname: string;
+	platform: string;
+	middleware: {
+		seenAt: string | null;
+		relayVersion: string | null;
+		uses: string[] | null;
+	};
+	lastAgentRequestAt: string | null;
+};
+
+async function waniwaniWebsite(): Promise<Website> {
+	const token = process.env.WANIWANI_API_KEY ?? "";
+	check(token !== "", "W1 needs WANIWANI_API_KEY");
+	const response = await fetch(
+		new URL("/api/v2/agent-traffic/sites", args["waniwani-api"]),
+		{ headers: { authorization: `Bearer ${token}` } },
+	);
+	check(response.ok, `W1: the website list answered ${response.status}`);
+	const body = (await response.json()) as {
+		data?: { sites: Website[] };
+		sites?: Website[];
+	};
+	const sites = body.data?.sites ?? body.sites ?? [];
+	const site = sites.find((entry) => entry.hostname === TARGET.hostname);
+	check(site, `W1: Waniwani has no website ${TARGET.hostname}`);
+	return site;
+}
+
+const RUN_STARTED = Date.now();
+
+const waniwaniReceived: Scenario = {
+	id: "W1",
+	title: "Waniwani received the visits and the relay calls",
+	run: async () => {
+		const version = args["relay-version"] ?? RELAY_VERSION;
+		const after = (value: string | null) =>
+			value !== null && Date.parse(value) >= RUN_STARTED - 5_000;
+		let site = await waniwaniWebsite();
+		for (
+			let attempt = 0;
+			attempt < 24 &&
+			!(after(site.middleware.seenAt) && after(site.lastAgentRequestAt));
+			attempt++
+		) {
+			await wait(5_000);
+			site = await waniwaniWebsite();
+		}
+		check(
+			after(site.lastAgentRequestAt),
+			`W1: the last agent visit is ${site.lastAgentRequestAt}, before this run`,
+		);
+		check(
+			after(site.middleware.seenAt),
+			`W1: the relay was last seen ${site.middleware.seenAt}, before this run`,
+		);
+		check(
+			site.middleware.relayVersion === version,
+			`W1: the relay version is ${site.middleware.relayVersion}, expected ${version}`,
+		);
+		check(
+			site.platform === args.platform,
+			`W1: the platform is ${site.platform}, expected ${args.platform}`,
+		);
+		for (const use of ["recordAgentVisit", "serveAgentPage"]) {
+			check(
+				site.middleware.uses?.includes(use),
+				`W1: the relay calls are ${JSON.stringify(site.middleware.uses)}, ${use} is missing`,
+			);
+		}
+	},
+};
+
 async function main() {
 	const suites: Record<string, Scenario[]> = {
 		default: defaultScenarios,
@@ -1090,6 +1165,7 @@ async function main() {
 			...scenarios.filter(
 				(scenario) => scenario.id !== "B1" || args["blocked-ua"],
 			),
+			...(args["waniwani-api"] ? [waniwaniReceived] : []),
 		];
 	}
 	if (args.only) {

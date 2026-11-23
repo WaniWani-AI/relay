@@ -10,8 +10,16 @@ jobs:
   tests:
     uses: ./.github/workflows/dotnet.yml
 
-  publish:
+  reference-site:
     needs: tests
+    uses: ./.github/workflows/reference-site.yml
+    permissions:
+      contents: read
+      id-token: write
+    secrets: inherit
+
+  publish:
+    needs: reference-site
     runs-on: ubuntu-latest
     permissions:
       contents: read
