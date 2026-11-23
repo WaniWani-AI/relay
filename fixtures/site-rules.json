@@ -1,0 +1,1038 @@
+{
+	"relayVersion": "0.7.0",
+	"cases": [
+		{
+			"name": "valid",
+			"input": {
+				"version": 1,
+				"pagesUrl": "https://pages.test/serve/tok/pages",
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude-user"
+				],
+				"deadlines": {
+					"headersMs": 50,
+					"bodyMs": 50
+				},
+				"maxBodyBytes": 1000,
+				"sites": [
+					{
+						"hostname": "www.example.com",
+						"agentPages": {
+							"enabled": true,
+							"paths": [
+								"/pricing",
+								"/products/*"
+							]
+						}
+					}
+				]
+			},
+			"expected": {
+				"version": 1,
+				"pagesUrl": "https://pages.test/serve/tok/pages",
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude-user"
+				],
+				"deadlines": {
+					"headersMs": 50,
+					"bodyMs": 50,
+					"askMs": 3000
+				},
+				"maxBodyBytes": 1000,
+				"sites": [
+					{
+						"hostname": "www.example.com",
+						"blockedUserAgentTokens": [],
+						"agentPages": {
+							"enabled": true,
+							"paths": [
+								"/pricing",
+								"/products/*"
+							]
+						}
+					}
+				]
+			}
+		},
+		{
+			"name": "ask deadline",
+			"input": {
+				"version": 1,
+				"pagesUrl": "https://pages.test/serve/tok/pages",
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude-user"
+				],
+				"deadlines": {
+					"headersMs": 50,
+					"bodyMs": 50,
+					"askMs": 900
+				},
+				"maxBodyBytes": 1000,
+				"sites": [
+					{
+						"hostname": "www.example.com",
+						"agentPages": {
+							"enabled": true,
+							"paths": [
+								"/pricing",
+								"/products/*"
+							]
+						}
+					}
+				]
+			},
+			"expected": {
+				"version": 1,
+				"pagesUrl": "https://pages.test/serve/tok/pages",
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude-user"
+				],
+				"deadlines": {
+					"headersMs": 50,
+					"bodyMs": 50,
+					"askMs": 900
+				},
+				"maxBodyBytes": 1000,
+				"sites": [
+					{
+						"hostname": "www.example.com",
+						"blockedUserAgentTokens": [],
+						"agentPages": {
+							"enabled": true,
+							"paths": [
+								"/pricing",
+								"/products/*"
+							]
+						}
+					}
+				]
+			}
+		},
+		{
+			"name": "ask deadline zero",
+			"input": {
+				"version": 1,
+				"pagesUrl": "https://pages.test/serve/tok/pages",
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude-user"
+				],
+				"deadlines": {
+					"headersMs": 50,
+					"bodyMs": 50,
+					"askMs": 0
+				},
+				"maxBodyBytes": 1000,
+				"sites": [
+					{
+						"hostname": "www.example.com",
+						"agentPages": {
+							"enabled": true,
+							"paths": [
+								"/pricing",
+								"/products/*"
+							]
+						}
+					}
+				]
+			},
+			"expected": {
+				"version": 1,
+				"pagesUrl": "https://pages.test/serve/tok/pages",
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude-user"
+				],
+				"deadlines": {
+					"headersMs": 50,
+					"bodyMs": 50,
+					"askMs": 3000
+				},
+				"maxBodyBytes": 1000,
+				"sites": [
+					{
+						"hostname": "www.example.com",
+						"blockedUserAgentTokens": [],
+						"agentPages": {
+							"enabled": true,
+							"paths": [
+								"/pricing",
+								"/products/*"
+							]
+						}
+					}
+				]
+			}
+		},
+		{
+			"name": "ask deadline text",
+			"input": {
+				"version": 1,
+				"pagesUrl": "https://pages.test/serve/tok/pages",
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude-user"
+				],
+				"deadlines": {
+					"headersMs": 50,
+					"bodyMs": 50,
+					"askMs": "900"
+				},
+				"maxBodyBytes": 1000,
+				"sites": [
+					{
+						"hostname": "www.example.com",
+						"agentPages": {
+							"enabled": true,
+							"paths": [
+								"/pricing",
+								"/products/*"
+							]
+						}
+					}
+				]
+			},
+			"expected": {
+				"version": 1,
+				"pagesUrl": "https://pages.test/serve/tok/pages",
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude-user"
+				],
+				"deadlines": {
+					"headersMs": 50,
+					"bodyMs": 50,
+					"askMs": 3000
+				},
+				"maxBodyBytes": 1000,
+				"sites": [
+					{
+						"hostname": "www.example.com",
+						"blockedUserAgentTokens": [],
+						"agentPages": {
+							"enabled": true,
+							"paths": [
+								"/pricing",
+								"/products/*"
+							]
+						}
+					}
+				]
+			}
+		},
+		{
+			"name": "fractional deadlines",
+			"input": {
+				"version": 1,
+				"pagesUrl": "https://pages.test/serve/tok/pages",
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude-user"
+				],
+				"deadlines": {
+					"headersMs": 0.5,
+					"bodyMs": 1.5
+				},
+				"maxBodyBytes": 1000,
+				"sites": [
+					{
+						"hostname": "www.example.com",
+						"agentPages": {
+							"enabled": true,
+							"paths": [
+								"/pricing",
+								"/products/*"
+							]
+						}
+					}
+				]
+			},
+			"expected": {
+				"version": 1,
+				"pagesUrl": "https://pages.test/serve/tok/pages",
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude-user"
+				],
+				"deadlines": {
+					"headersMs": 0.5,
+					"bodyMs": 1.5,
+					"askMs": 3000
+				},
+				"maxBodyBytes": 1000,
+				"sites": [
+					{
+						"hostname": "www.example.com",
+						"blockedUserAgentTokens": [],
+						"agentPages": {
+							"enabled": true,
+							"paths": [
+								"/pricing",
+								"/products/*"
+							]
+						}
+					}
+				]
+			}
+		},
+		{
+			"name": "zero headers deadline",
+			"input": {
+				"version": 1,
+				"pagesUrl": "https://pages.test/serve/tok/pages",
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude-user"
+				],
+				"deadlines": {
+					"headersMs": 0,
+					"bodyMs": 50
+				},
+				"maxBodyBytes": 1000,
+				"sites": [
+					{
+						"hostname": "www.example.com",
+						"agentPages": {
+							"enabled": true,
+							"paths": [
+								"/pricing",
+								"/products/*"
+							]
+						}
+					}
+				]
+			},
+			"expected": null
+		},
+		{
+			"name": "negative body deadline",
+			"input": {
+				"version": 1,
+				"pagesUrl": "https://pages.test/serve/tok/pages",
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude-user"
+				],
+				"deadlines": {
+					"headersMs": 50,
+					"bodyMs": -1
+				},
+				"maxBodyBytes": 1000,
+				"sites": [
+					{
+						"hostname": "www.example.com",
+						"agentPages": {
+							"enabled": true,
+							"paths": [
+								"/pricing",
+								"/products/*"
+							]
+						}
+					}
+				]
+			},
+			"expected": null
+		},
+		{
+			"name": "deadline as text",
+			"input": {
+				"version": 1,
+				"pagesUrl": "https://pages.test/serve/tok/pages",
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude-user"
+				],
+				"deadlines": {
+					"headersMs": "50",
+					"bodyMs": 50
+				},
+				"maxBodyBytes": 1000,
+				"sites": [
+					{
+						"hostname": "www.example.com",
+						"agentPages": {
+							"enabled": true,
+							"paths": [
+								"/pricing",
+								"/products/*"
+							]
+						}
+					}
+				]
+			},
+			"expected": null
+		},
+		{
+			"name": "no deadlines",
+			"input": {
+				"version": 1,
+				"pagesUrl": "https://pages.test/serve/tok/pages",
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude-user"
+				],
+				"deadlines": null,
+				"maxBodyBytes": 1000,
+				"sites": [
+					{
+						"hostname": "www.example.com",
+						"agentPages": {
+							"enabled": true,
+							"paths": [
+								"/pricing",
+								"/products/*"
+							]
+						}
+					}
+				]
+			},
+			"expected": null
+		},
+		{
+			"name": "huge max body",
+			"input": {
+				"version": 1,
+				"pagesUrl": "https://pages.test/serve/tok/pages",
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude-user"
+				],
+				"deadlines": {
+					"headersMs": 50,
+					"bodyMs": 50
+				},
+				"maxBodyBytes": 1e+300,
+				"sites": [
+					{
+						"hostname": "www.example.com",
+						"agentPages": {
+							"enabled": true,
+							"paths": [
+								"/pricing",
+								"/products/*"
+							]
+						}
+					}
+				]
+			},
+			"expected": {
+				"version": 1,
+				"pagesUrl": "https://pages.test/serve/tok/pages",
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude-user"
+				],
+				"deadlines": {
+					"headersMs": 50,
+					"bodyMs": 50,
+					"askMs": 3000
+				},
+				"maxBodyBytes": 1e+300,
+				"sites": [
+					{
+						"hostname": "www.example.com",
+						"blockedUserAgentTokens": [],
+						"agentPages": {
+							"enabled": true,
+							"paths": [
+								"/pricing",
+								"/products/*"
+							]
+						}
+					}
+				]
+			}
+		},
+		{
+			"name": "zero max body",
+			"input": {
+				"version": 1,
+				"pagesUrl": "https://pages.test/serve/tok/pages",
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude-user"
+				],
+				"deadlines": {
+					"headersMs": 50,
+					"bodyMs": 50
+				},
+				"maxBodyBytes": 0,
+				"sites": [
+					{
+						"hostname": "www.example.com",
+						"agentPages": {
+							"enabled": true,
+							"paths": [
+								"/pricing",
+								"/products/*"
+							]
+						}
+					}
+				]
+			},
+			"expected": null
+		},
+		{
+			"name": "version 2",
+			"input": {
+				"version": 2,
+				"pagesUrl": "https://pages.test/serve/tok/pages",
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude-user"
+				],
+				"deadlines": {
+					"headersMs": 50,
+					"bodyMs": 50
+				},
+				"maxBodyBytes": 1000,
+				"sites": [
+					{
+						"hostname": "www.example.com",
+						"agentPages": {
+							"enabled": true,
+							"paths": [
+								"/pricing",
+								"/products/*"
+							]
+						}
+					}
+				]
+			},
+			"expected": null
+		},
+		{
+			"name": "version as text",
+			"input": {
+				"version": "1",
+				"pagesUrl": "https://pages.test/serve/tok/pages",
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude-user"
+				],
+				"deadlines": {
+					"headersMs": 50,
+					"bodyMs": 50
+				},
+				"maxBodyBytes": 1000,
+				"sites": [
+					{
+						"hostname": "www.example.com",
+						"agentPages": {
+							"enabled": true,
+							"paths": [
+								"/pricing",
+								"/products/*"
+							]
+						}
+					}
+				]
+			},
+			"expected": null
+		},
+		{
+			"name": "pages url slashes",
+			"input": {
+				"version": 1,
+				"pagesUrl": "https://pages.test/x///",
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude-user"
+				],
+				"deadlines": {
+					"headersMs": 50,
+					"bodyMs": 50
+				},
+				"maxBodyBytes": 1000,
+				"sites": [
+					{
+						"hostname": "www.example.com",
+						"agentPages": {
+							"enabled": true,
+							"paths": [
+								"/pricing",
+								"/products/*"
+							]
+						}
+					}
+				]
+			},
+			"expected": {
+				"version": 1,
+				"pagesUrl": "https://pages.test/x",
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude-user"
+				],
+				"deadlines": {
+					"headersMs": 50,
+					"bodyMs": 50,
+					"askMs": 3000
+				},
+				"maxBodyBytes": 1000,
+				"sites": [
+					{
+						"hostname": "www.example.com",
+						"blockedUserAgentTokens": [],
+						"agentPages": {
+							"enabled": true,
+							"paths": [
+								"/pricing",
+								"/products/*"
+							]
+						}
+					}
+				]
+			}
+		},
+		{
+			"name": "pages url missing",
+			"input": {
+				"version": 1,
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude-user"
+				],
+				"deadlines": {
+					"headersMs": 50,
+					"bodyMs": 50
+				},
+				"maxBodyBytes": 1000,
+				"sites": [
+					{
+						"hostname": "www.example.com",
+						"agentPages": {
+							"enabled": true,
+							"paths": [
+								"/pricing",
+								"/products/*"
+							]
+						}
+					}
+				]
+			},
+			"expected": null
+		},
+		{
+			"name": "tokens cleaned",
+			"input": {
+				"version": 1,
+				"pagesUrl": "https://pages.test/serve/tok/pages",
+				"userAgentTokens": [
+					" ChatGPT-User ",
+					"",
+					"  ",
+					"CLAUDE"
+				],
+				"deadlines": {
+					"headersMs": 50,
+					"bodyMs": 50
+				},
+				"maxBodyBytes": 1000,
+				"sites": [
+					{
+						"hostname": "www.example.com",
+						"agentPages": {
+							"enabled": true,
+							"paths": [
+								"/pricing",
+								"/products/*"
+							]
+						}
+					}
+				]
+			},
+			"expected": {
+				"version": 1,
+				"pagesUrl": "https://pages.test/serve/tok/pages",
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude"
+				],
+				"deadlines": {
+					"headersMs": 50,
+					"bodyMs": 50,
+					"askMs": 3000
+				},
+				"maxBodyBytes": 1000,
+				"sites": [
+					{
+						"hostname": "www.example.com",
+						"blockedUserAgentTokens": [],
+						"agentPages": {
+							"enabled": true,
+							"paths": [
+								"/pricing",
+								"/products/*"
+							]
+						}
+					}
+				]
+			}
+		},
+		{
+			"name": "tokens not strings",
+			"input": {
+				"version": 1,
+				"pagesUrl": "https://pages.test/serve/tok/pages",
+				"userAgentTokens": [
+					"a",
+					1
+				],
+				"deadlines": {
+					"headersMs": 50,
+					"bodyMs": 50
+				},
+				"maxBodyBytes": 1000,
+				"sites": [
+					{
+						"hostname": "www.example.com",
+						"agentPages": {
+							"enabled": true,
+							"paths": [
+								"/pricing",
+								"/products/*"
+							]
+						}
+					}
+				]
+			},
+			"expected": null
+		},
+		{
+			"name": "sites missing",
+			"input": {
+				"version": 1,
+				"pagesUrl": "https://pages.test/serve/tok/pages",
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude-user"
+				],
+				"deadlines": {
+					"headersMs": 50,
+					"bodyMs": 50
+				},
+				"maxBodyBytes": 1000
+			},
+			"expected": null
+		},
+		{
+			"name": "sites empty",
+			"input": {
+				"version": 1,
+				"pagesUrl": "https://pages.test/serve/tok/pages",
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude-user"
+				],
+				"deadlines": {
+					"headersMs": 50,
+					"bodyMs": 50
+				},
+				"maxBodyBytes": 1000,
+				"sites": []
+			},
+			"expected": {
+				"version": 1,
+				"pagesUrl": "https://pages.test/serve/tok/pages",
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude-user"
+				],
+				"deadlines": {
+					"headersMs": 50,
+					"bodyMs": 50,
+					"askMs": 3000
+				},
+				"maxBodyBytes": 1000,
+				"sites": []
+			}
+		},
+		{
+			"name": "site hostname upper",
+			"input": {
+				"version": 1,
+				"pagesUrl": "https://pages.test/serve/tok/pages",
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude-user"
+				],
+				"deadlines": {
+					"headersMs": 50,
+					"bodyMs": 50
+				},
+				"maxBodyBytes": 1000,
+				"sites": [
+					{
+						"hostname": "WWW.Example.COM",
+						"blockedUserAgentTokens": [
+							" GPTBot ",
+							""
+						],
+						"agentPages": {
+							"enabled": false,
+							"paths": []
+						}
+					}
+				]
+			},
+			"expected": {
+				"version": 1,
+				"pagesUrl": "https://pages.test/serve/tok/pages",
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude-user"
+				],
+				"deadlines": {
+					"headersMs": 50,
+					"bodyMs": 50,
+					"askMs": 3000
+				},
+				"maxBodyBytes": 1000,
+				"sites": [
+					{
+						"hostname": "www.example.com",
+						"blockedUserAgentTokens": [
+							"gptbot"
+						],
+						"agentPages": {
+							"enabled": false,
+							"paths": []
+						}
+					}
+				]
+			}
+		},
+		{
+			"name": "site blocked null",
+			"input": {
+				"version": 1,
+				"pagesUrl": "https://pages.test/serve/tok/pages",
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude-user"
+				],
+				"deadlines": {
+					"headersMs": 50,
+					"bodyMs": 50
+				},
+				"maxBodyBytes": 1000,
+				"sites": [
+					{
+						"hostname": "a.test",
+						"blockedUserAgentTokens": null,
+						"agentPages": {
+							"enabled": true,
+							"paths": [
+								"*"
+							]
+						}
+					}
+				]
+			},
+			"expected": {
+				"version": 1,
+				"pagesUrl": "https://pages.test/serve/tok/pages",
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude-user"
+				],
+				"deadlines": {
+					"headersMs": 50,
+					"bodyMs": 50,
+					"askMs": 3000
+				},
+				"maxBodyBytes": 1000,
+				"sites": [
+					{
+						"hostname": "a.test",
+						"blockedUserAgentTokens": [],
+						"agentPages": {
+							"enabled": true,
+							"paths": [
+								"*"
+							]
+						}
+					}
+				]
+			}
+		},
+		{
+			"name": "site blocked wrong",
+			"input": {
+				"version": 1,
+				"pagesUrl": "https://pages.test/serve/tok/pages",
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude-user"
+				],
+				"deadlines": {
+					"headersMs": 50,
+					"bodyMs": 50
+				},
+				"maxBodyBytes": 1000,
+				"sites": [
+					{
+						"hostname": "a.test",
+						"blockedUserAgentTokens": "x",
+						"agentPages": {
+							"enabled": true,
+							"paths": [
+								"*"
+							]
+						}
+					}
+				]
+			},
+			"expected": null
+		},
+		{
+			"name": "site enabled text",
+			"input": {
+				"version": 1,
+				"pagesUrl": "https://pages.test/serve/tok/pages",
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude-user"
+				],
+				"deadlines": {
+					"headersMs": 50,
+					"bodyMs": 50
+				},
+				"maxBodyBytes": 1000,
+				"sites": [
+					{
+						"hostname": "a.test",
+						"agentPages": {
+							"enabled": "true",
+							"paths": [
+								"*"
+							]
+						}
+					}
+				]
+			},
+			"expected": null
+		},
+		{
+			"name": "site paths missing",
+			"input": {
+				"version": 1,
+				"pagesUrl": "https://pages.test/serve/tok/pages",
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude-user"
+				],
+				"deadlines": {
+					"headersMs": 50,
+					"bodyMs": 50
+				},
+				"maxBodyBytes": 1000,
+				"sites": [
+					{
+						"hostname": "a.test",
+						"agentPages": {
+							"enabled": true
+						}
+					}
+				]
+			},
+			"expected": null
+		},
+		{
+			"name": "site not object",
+			"input": {
+				"version": 1,
+				"pagesUrl": "https://pages.test/serve/tok/pages",
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude-user"
+				],
+				"deadlines": {
+					"headersMs": 50,
+					"bodyMs": 50
+				},
+				"maxBodyBytes": 1000,
+				"sites": [
+					"a.test"
+				]
+			},
+			"expected": null
+		},
+		{
+			"name": "extra fields",
+			"input": {
+				"version": 1,
+				"pagesUrl": "https://pages.test/serve/tok/pages",
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude-user"
+				],
+				"deadlines": {
+					"headersMs": 50,
+					"bodyMs": 50
+				},
+				"maxBodyBytes": 1000,
+				"sites": [
+					{
+						"hostname": "a.test",
+						"extra": 1,
+						"agentPages": {
+							"enabled": true,
+							"paths": [
+								"/x"
+							],
+							"extra": 2
+						}
+					}
+				],
+				"extra": true
+			},
+			"expected": {
+				"version": 1,
+				"pagesUrl": "https://pages.test/serve/tok/pages",
+				"userAgentTokens": [
+					"chatgpt-user",
+					"claude-user"
+				],
+				"deadlines": {
+					"headersMs": 50,
+					"bodyMs": 50,
+					"askMs": 3000
+				},
+				"maxBodyBytes": 1000,
+				"sites": [
+					{
+						"hostname": "a.test",
+						"blockedUserAgentTokens": [],
+						"agentPages": {
+							"enabled": true,
+							"paths": [
+								"/x"
+							]
+						}
+					}
+				]
+			}
+		},
+		{
+			"name": "null",
+			"input": null,
+			"expected": null
+		},
+		{
+			"name": "array",
+			"input": [],
+			"expected": null
+		},
+		{
+			"name": "text",
+			"input": "rules",
+			"expected": null
+		}
+	]
+}

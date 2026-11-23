@@ -7,3 +7,6 @@ coverage/
 .env.local
 package-lock.json
 *.tgz
+dotnet/**/bin/
+dotnet/**/obj/
+dotnet/artifacts/

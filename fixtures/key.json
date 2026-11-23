@@ -1,0 +1,59 @@
+{
+	"relayVersion": "0.7.0",
+	"cases": [
+		{
+			"key": "wwt_tok-EN_123.b3JnLWtleS1zZWNyZXQ",
+			"expected": {
+				"ingestToken": "tok-EN_123",
+				"orgKey": "b3JnLWtleS1zZWNyZXQ"
+			}
+		},
+		{
+			"key": "  wwt_tok.b3Jn==  ",
+			"expected": {
+				"ingestToken": "tok",
+				"orgKey": "b3Jn=="
+			}
+		},
+		{
+			"key": "wwt_tok.b3Jn===",
+			"expected": null
+		},
+		{
+			"key": "wwt_tok.",
+			"expected": null
+		},
+		{
+			"key": "wwt_.abc",
+			"expected": null
+		},
+		{
+			"key": "wwt_tok.abc.def",
+			"expected": null
+		},
+		{
+			"key": "wwx_tok.abc",
+			"expected": null
+		},
+		{
+			"key": "WWT_tok.abc",
+			"expected": null
+		},
+		{
+			"key": "wwt_t o k.abc",
+			"expected": null
+		},
+		{
+			"key": "wwt_tok.a+b",
+			"expected": null
+		},
+		{
+			"key": "",
+			"expected": null
+		},
+		{
+			"key": "   ",
+			"expected": null
+		}
+	]
+}

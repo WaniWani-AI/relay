@@ -1,0 +1,49 @@
+name: Release to NuGet
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  tests:
+    uses: ./.github/workflows/dotnet.yml
+
+  publish:
+    needs: tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Check the tag matches package.json
+        run: |
+          VERSION=$(jq -r .version package.json)
+          if [[ "$TAG" != "v$VERSION" ]]; then
+            echo "::error::Tag $TAG does not match package.json version $VERSION"
+            exit 1
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+        env:
+          TAG: ${{ github.ref_name }}
+
+      - name: Pack
+        run: |
+          for project in Waniwani.Relay Waniwani.Relay.AspNet Waniwani.Relay.AspNetCore; do
+            dotnet pack "dotnet/src/$project/$project.csproj" -c Release -p:Version="$VERSION" -o artifacts
+          done
+
+      - name: Log in to NuGet with trusted publishing
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
+      - name: Push
+        run: dotnet nuget push "artifacts/*.nupkg" --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<configuration xmlns:xdt="http://schemas.microsoft.com/XML-Document-Transform">
+  <appSettings xdt:Transform="InsertIfMissing">
+    <add key="Waniwani:AgentTrafficKey" value="" xdt:Transform="InsertIfMissing" xdt:Locator="Match(key)" />
+    <add key="Waniwani:Region" value="us" xdt:Transform="InsertIfMissing" xdt:Locator="Match(key)" />
+    <add key="Waniwani:Enabled" value="true" xdt:Transform="InsertIfMissing" xdt:Locator="Match(key)" />
+  </appSettings>
+  <system.webServer xdt:Transform="InsertIfMissing">
+    <modules xdt:Transform="InsertIfMissing">
+      <add name="WaniwaniRelay" type="Waniwani.Relay.AspNet.WaniwaniRelayModule, Waniwani.Relay.AspNet" xdt:Transform="InsertIfMissing" xdt:Locator="Match(name)" />
+    </modules>
+  </system.webServer>
+</configuration>
