@@ -1,9 +1,9 @@
-import { execSync } from "node:child_process";
+import { exec, execSync } from "node:child_process";
 import { createHmac } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { request as httpRequest } from "node:http";
 import { request as httpsRequest } from "node:https";
-import { parseArgs } from "node:util";
+import { parseArgs, promisify } from "node:util";
 import { FakeWaniwani } from "./fake-waniwani.ts";
 import { CLIENT_IP_HEADER, startProxy } from "./ogo-proxy.ts";
 
@@ -303,8 +303,10 @@ function percentile(values: number[], p: number) {
 	);
 }
 
-function restart() {
-	execSync(args["restart-cmd"] ?? "", { stdio: "inherit" });
+const execAsync = promisify(exec);
+
+async function restart() {
+	await execAsync(args["restart-cmd"] ?? "");
 }
 
 async function warmUp() {
@@ -894,7 +896,7 @@ const defaultScenarios: Scenario[] = [
 		run: async (context) => {
 			context.fake.state.agentRulesDown = true;
 			context.fake.state.siteRulesDown = true;
-			restart();
+			await restart();
 			const person = await send({
 				path: "/contact",
 				headers: { "user-agent": BROWSER },
@@ -934,7 +936,7 @@ const defaultScenarios: Scenario[] = [
 				),
 			);
 			const recycledAt = Date.now();
-			restart();
+			await restart();
 			const found = await recordsWhere(context, byMarker(m), 200, 8000);
 			const last = Math.max(
 				...context.fake.attempts
@@ -943,6 +945,15 @@ const defaultScenarios: Scenario[] = [
 			);
 			console.log(
 				`    L1: ${found.length} of 200 records arrived, the last ${last - recycledAt} ms after the recycle started`,
+			);
+			const timeline = context.fake.attempts
+				.filter((attempt) => attempt.records.some(byMarker(m)))
+				.map(
+					(attempt) =>
+						`${attempt.at - recycledAt} ms: ${attempt.records.length} records, status ${attempt.status}`,
+				);
+			console.log(
+				`    L1: ingest calls after the recycle started: ${timeline.join("; ")}`,
 			);
 			check(found.length === 200, `L1: ${found.length} of 200 records arrived`);
 		},
