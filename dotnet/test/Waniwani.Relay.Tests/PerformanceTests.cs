@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
+using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -24,7 +25,7 @@ namespace Waniwani.Relay.Tests
         }
 
         [Fact]
-        public void APersonCostsLessThan50MicrosecondsAtP99()
+        public async Task APersonCostsLessThan50MicrosecondsAtP99()
         {
             var relay = new Relay(new RelayOptions { AgentTrafficKey = "wwt_perf.b3JnLWtleQ", BaseUrl = "http://127.0.0.1:9", Rules = "bundled" }, "aspnet", new HttpClient(), new SystemClock(), "0.0.0");
             var headers = new Dictionary<string, string>
@@ -47,7 +48,7 @@ namespace Waniwani.Relay.Tests
                         relay.RecordAgentVisit(request);
                     }
                     relay.MayServe(request);
-                    if (relay.ServeAgentPageAsync(request).GetAwaiter().GetResult() != null)
+                    if (await relay.ServeAgentPageAsync(request) != null)
                     {
                         throw new InvalidOperationException("a person got an answer");
                     }
