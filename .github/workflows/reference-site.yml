@@ -16,9 +16,8 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  AWS_REGION: ${{ vars.REFERENCE_SITE_REGION }}
-  SITE_URL: ${{ vars.REFERENCE_SITE_URL }}
-  WANIWANI_API: ${{ vars.REFERENCE_SITE_WANIWANI_API }}
+  AWS_REGION: eu-west-3
+  SITE_URL: https://iis-relay.waniwani.dev
 
 jobs:
   build:
@@ -62,9 +61,10 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
       - name: Install the build on the reference site
         env:
-          BUCKET: ${{ vars.REFERENCE_SITE_BUCKET }}
+          WANIWANI_API: ${{ secrets.REFERENCE_SITE_WANIWANI_API }}
           NUGET_VERSION: ${{ inputs.nuget_version || '' }}
         run: |
+          BUCKET="relay-reference-$(aws sts get-caller-identity --query Account --output text)-$AWS_REGION"
           BUILD="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           aws s3 cp site.zip "s3://$BUCKET/builds/$BUILD/site.zip"
           aws s3 cp e2e/iis/deploy-reference.ps1 "s3://$BUCKET/builds/$BUILD/deploy.ps1"
@@ -80,11 +80,12 @@ jobs:
       - name: Run the live tests against the reference site and Waniwani staging
         env:
           WANIWANI_API_KEY: ${{ secrets.REFERENCE_SITE_WANIWANI_API_KEY }}
+          WANIWANI_API: ${{ secrets.REFERENCE_SITE_WANIWANI_API }}
           NUGET_VERSION: ${{ inputs.nuget_version || '' }}
         run: |
           VERSION="${NUGET_VERSION:-$(node -p "require('./package.json').version")}"
           node e2e/run.ts --live --target "$SITE_URL" --platform aspnet \
-            --page-path "${{ vars.REFERENCE_SITE_PAGE_PATH || '/' }}" \
-            --no-page-path "${{ vars.REFERENCE_SITE_NO_PAGE_PATH || '/contact' }}" \
-            --blocked-ua "${{ vars.REFERENCE_SITE_BLOCKED_UA || 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; GPTBot/1.2; +https://openai.com/gptbot' }}" \
+            --page-path / \
+            --no-page-path /contact \
+            --blocked-ua 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; GPTBot/1.2; +https://openai.com/gptbot' \
             --waniwani-api "$WANIWANI_API" --relay-version "$VERSION"
