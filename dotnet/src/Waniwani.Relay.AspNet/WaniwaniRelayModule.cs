@@ -39,7 +39,7 @@ namespace Waniwani.Relay.AspNet
             {
                 return;
             }
-            var helper = new EventHandlerTaskAsyncHelper(context => OnBeginRequestAsync(relay, (HttpApplication)context));
+            var helper = new EventHandlerTaskAsyncHelper((sender, _) => OnBeginRequestAsync(relay, (HttpApplication)sender));
             application.AddOnBeginRequestAsync(helper.BeginEventHandler, helper.EndEventHandler);
         }
 
