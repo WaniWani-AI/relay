@@ -753,34 +753,43 @@ const defaultScenarios: Scenario[] = [
 						.ms,
 				);
 			}
-			const memoryBefore = readMemory();
 			context.fake.state.ingest = { kind: "hang" };
 			const total = 3000;
 			const latencies: number[] = [];
-			let next = 0;
-			await Promise.all(
-				Array.from({ length: 20 }, async () => {
-					while (next < total) {
-						next++;
-						const reply = await send({
-							path: "/contact",
-							headers: { "user-agent": CHATGPT },
-						});
-						check(reply.status === 200, `F5: status ${reply.status}`);
-						latencies.push(reply.ms);
-					}
-				}),
-			);
-			const memoryAfter = readMemory();
+			const sendAgents = async (count: number) => {
+				let next = 0;
+				await Promise.all(
+					Array.from({ length: 20 }, async () => {
+						while (next < count) {
+							next++;
+							const reply = await send({
+								path: "/contact",
+								headers: { "user-agent": CHATGPT },
+							});
+							check(reply.status === 200, `F5: status ${reply.status}`);
+							latencies.push(reply.ms);
+						}
+					}),
+				);
+			};
+			await sendAgents(total / 2);
+			const memoryHalf = readMemory();
+			await sendAgents(total / 2);
+			const memoryEnd = readMemory();
 			const added = percentile(latencies, 99) - percentile(baseline, 99);
 			console.log(
 				`    F5: p99 ${percentile(latencies, 99).toFixed(1)} ms with ingest down, ${percentile(baseline, 99).toFixed(1)} ms for persons before`,
 			);
 			check(added < 50, `F5: p99 grew by ${added.toFixed(1)} ms`);
-			if (memoryBefore !== null && memoryAfter !== null) {
-				const grown = (memoryAfter - memoryBefore) / 1024 / 1024;
-				console.log(`    F5: worker memory grew by ${grown.toFixed(1)} MB`);
-				check(grown < 64, `F5: memory grew by ${grown.toFixed(1)} MB`);
+			if (memoryHalf !== null && memoryEnd !== null) {
+				const grown = (memoryEnd - memoryHalf) / 1024 / 1024;
+				console.log(
+					`    F5: worker memory grew by ${grown.toFixed(1)} MB in the second half, with the queue full`,
+				);
+				check(
+					grown < 32,
+					`F5: memory grew by ${grown.toFixed(1)} MB with the queue full`,
+				);
 			}
 			context.fake.state.ingest = { kind: "accept" };
 			context.fake.releaseHangs();
