@@ -16,9 +16,9 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  AWS_REGION: eu-west-3
-  SITE_URL: https://iis-relay.waniwani.dev
-  WANIWANI_API: https://dev.waniwani.ai
+  AWS_REGION: ${{ vars.REFERENCE_SITE_REGION }}
+  SITE_URL: ${{ vars.REFERENCE_SITE_URL }}
+  WANIWANI_API: ${{ vars.REFERENCE_SITE_WANIWANI_API }}
 
 jobs:
   build:
@@ -67,7 +67,7 @@ jobs:
         run: |
           BUILD="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           aws s3 cp site.zip "s3://$BUCKET/builds/$BUILD/site.zip"
-          aws s3 cp e2e/reference-site/deploy.ps1 "s3://$BUCKET/builds/$BUILD/deploy.ps1"
+          aws s3 cp e2e/iis/deploy-reference.ps1 "s3://$BUCKET/builds/$BUILD/deploy.ps1"
           INSTANCE=$(aws ec2 describe-instances --filters Name=tag:Name,Values=relay-reference Name=instance-state-name,Values=running --query 'Reservations[0].Instances[0].InstanceId' --output text)
           COMMANDS=$(jq -cn --arg b "$BUCKET" --arg r "$AWS_REGION" --arg build "$BUILD" --arg v "$NUGET_VERSION" --arg api "$WANIWANI_API" '{commands: [
             "Read-S3Object -Region \($r) -BucketName \($b) -Key builds/\($build)/deploy.ps1 -File C:\\deploy.ps1 | Out-Null",
