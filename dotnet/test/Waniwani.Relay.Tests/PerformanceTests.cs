@@ -8,6 +8,12 @@ using Xunit.Abstractions;
 
 namespace Waniwani.Relay.Tests
 {
+    [CollectionDefinition("performance", DisableParallelization = true)]
+    public sealed class PerformanceCollection
+    {
+    }
+
+    [Collection("performance")]
     public sealed class PerformanceTests
     {
         private readonly ITestOutputHelper _output;
@@ -41,6 +47,10 @@ namespace Waniwani.Relay.Tests
                         relay.RecordAgentVisit(request);
                     }
                     relay.MayServe(request);
+                    if (relay.ServeAgentPageAsync(request).GetAwaiter().GetResult() != null)
+                    {
+                        throw new InvalidOperationException("a person got an answer");
+                    }
                 }
                 watch.Stop();
                 if (round >= 500)

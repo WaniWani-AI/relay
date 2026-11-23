@@ -9,10 +9,10 @@ namespace Waniwani.Relay
         private const int MaxScannedUserAgent = 1024;
         private const int Prefix = 3;
 
-        private readonly Dictionary<string, string[]> _tokensByPrefix;
+        private readonly Dictionary<long, string[]> _tokensByPrefix;
         private readonly IpRangeSet _ranges;
 
-        private AgentRules(Dictionary<string, string[]> tokensByPrefix, IpRangeSet ranges)
+        private AgentRules(Dictionary<long, string[]> tokensByPrefix, IpRangeSet ranges)
         {
             _tokensByPrefix = tokensByPrefix;
             _ranges = ranges;
@@ -20,10 +20,14 @@ namespace Waniwani.Relay
 
         public static AgentRules Compile(IReadOnlyList<string> tokens, IReadOnlyList<RangeSource> ranges)
         {
-            var grouped = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+            var grouped = new Dictionary<long, List<string>>();
             foreach (var token in tokens)
             {
-                var key = token.Length >= Prefix ? token.Substring(0, Prefix) : token;
+                if (token.Length < Prefix)
+                {
+                    continue;
+                }
+                var key = PrefixKey(token, 0);
                 if (!grouped.TryGetValue(key, out var list))
                 {
                     list = new List<string>();
@@ -31,7 +35,7 @@ namespace Waniwani.Relay
                 }
                 list.Add(token);
             }
-            var byPrefix = new Dictionary<string, string[]>(StringComparer.Ordinal);
+            var byPrefix = new Dictionary<long, string[]>();
             foreach (var pair in grouped)
             {
                 byPrefix[pair.Key] = pair.Value.ToArray();
@@ -101,13 +105,18 @@ namespace Waniwani.Relay
             return Compile(lowered, ranges);
         }
 
+        private static long PrefixKey(string text, int index)
+        {
+            return ((long)text[index] << 32) | ((long)text[index + 1] << 16) | text[index + 2];
+        }
+
         public bool HasAgentToken(string userAgent)
         {
             var scanned = userAgent.Length > MaxScannedUserAgent ? userAgent.Substring(0, MaxScannedUserAgent) : userAgent;
             var text = Text.ToLowerJs(scanned);
             for (var i = 0; i + Prefix <= text.Length; i++)
             {
-                if (_tokensByPrefix.TryGetValue(text.Substring(i, Prefix), out var candidates))
+                if (_tokensByPrefix.TryGetValue(PrefixKey(text, i), out var candidates))
                 {
                     foreach (var token in candidates)
                     {

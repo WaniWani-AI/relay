@@ -219,16 +219,51 @@ namespace Waniwani.Relay
         public static string? ParseAddress(string entry)
         {
             var value = Text.ToLowerJs(Text.TrimJs(entry));
-            var bracketed = Regex.Match(value, @"^\[([^\]]+)\](?::\d+)?$");
-            if (bracketed.Success && bracketed.Groups[1].Value.Length > 0)
+            if (value.Length > 0 && value[0] == '[')
             {
-                value = bracketed.Groups[1].Value;
+                var close = value.IndexOf(']');
+                if (close > 1 && (close == value.Length - 1 || IsPortSuffix(value, close + 1)))
+                {
+                    value = value.Substring(1, close - 1);
+                }
             }
-            else if (Regex.IsMatch(value, @"^[0-9.]+:\d+$"))
+            else
             {
-                value = value.Substring(0, value.LastIndexOf(':'));
+                var colon = value.IndexOf(':');
+                if (colon > 0 && colon == value.LastIndexOf(':') && IsDottedDigits(value, colon) && IsPortSuffix(value, colon))
+                {
+                    value = value.Substring(0, colon);
+                }
             }
             return IpAddresses.TryParse(value, out _) ? value : null;
+        }
+
+        private static bool IsPortSuffix(string value, int colon)
+        {
+            if (colon >= value.Length - 1 || value[colon] != ':')
+            {
+                return false;
+            }
+            for (var i = colon + 1; i < value.Length; i++)
+            {
+                if (value[i] < '0' || value[i] > '9')
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        private static bool IsDottedDigits(string value, int end)
+        {
+            for (var i = 0; i < end; i++)
+            {
+                if ((value[i] < '0' || value[i] > '9') && value[i] != '.')
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         public static IpRangeSet ProxyList(IEnumerable<string> entries)
@@ -339,13 +374,26 @@ namespace Waniwani.Relay
             return best;
         }
 
+        private static bool NamesMarkdown(string accept)
+        {
+            return accept.IndexOf("markdown", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
         public static PageFormat PageFormatOf(string accept)
         {
+            if (!NamesMarkdown(accept))
+            {
+                return PageFormat.Html;
+            }
             return (QualityOf(Ranges(accept), "text/markdown") ?? 0) > 0 ? PageFormat.Markdown : PageFormat.Html;
         }
 
         public static bool PrefersMarkdown(string accept)
         {
+            if (!NamesMarkdown(accept))
+            {
+                return false;
+            }
             var ranges = Ranges(accept);
             var markdown = QualityOf(ranges, "text/markdown") ?? 0;
             var html = QualityOf(ranges, "text/html") ?? QualityOf(ranges, "text/*") ?? QualityOf(ranges, "*/*") ?? 0;

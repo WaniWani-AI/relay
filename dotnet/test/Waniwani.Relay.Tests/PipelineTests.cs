@@ -50,7 +50,7 @@ namespace Waniwani.Relay.Tests
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var url = request.RequestUri!.ToString();
+            var url = request.RequestUri!.AbsoluteUri;
             var seen = new SeenRequest { Url = url, Method = request.Method.Method };
             foreach (var header in request.Headers)
             {

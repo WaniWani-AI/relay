@@ -71,6 +71,8 @@ namespace Waniwani.Relay
 
         /// <summary>Reads the request body for <c>POST /ask</c> and leaves it readable for the site. Returns null when the body is longer than <c>maxBytes</c> or slower than the deadline.</summary>
         public Func<int, TimeSpan, Task<byte[]?>>? ReadBody { get; set; }
+
+        internal bool? Agent { get; set; }
     }
 
     /// <summary>The answer that the adapter writes in place of the site response.</summary>
@@ -250,7 +252,9 @@ namespace Waniwani.Relay
                 return false;
             }
             StartRulesRefresh();
-            return MatchesAgent(request);
+            var agent = MatchesAgent(request);
+            request.Agent = agent;
+            return agent;
         }
 
         private bool MatchesAgent(RelayRequest request)
@@ -424,7 +428,7 @@ namespace Waniwani.Relay
             {
                 return null;
             }
-            if (!MatchesAgent(request) && !Accept.PrefersMarkdown(accept))
+            if (!(request.Agent ?? MatchesAgent(request)) && !Accept.PrefersMarkdown(accept))
             {
                 return null;
             }
