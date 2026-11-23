@@ -3,7 +3,7 @@ param(
 	[Parameter(Mandatory = $true)][string]$Region,
 	[Parameter(Mandatory = $true)][string]$Build,
 	[string]$NuGetVersion = "",
-	[string]$BaseUrl = "https://dev.waniwani.ai"
+	[Parameter(Mandatory = $true)][string]$BaseUrl
 )
 $ErrorActionPreference = "Stop"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
