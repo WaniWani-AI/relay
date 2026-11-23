@@ -27,12 +27,13 @@ if ($NuGetVersion -ne "") {
 }
 
 $key = (Get-SSMParameter -Region $Region -Name "/relay-reference/agent-traffic-key" -WithDecryption $true).Value
+$trustedProxies = (Get-SSMParameter -Region $Region -Name "/relay-reference/trusted-proxies").Value
 [xml]$config = Get-Content "$work\site\web.config"
 $settings = @{
 	"Waniwani:AgentTrafficKey" = $key
 	"Waniwani:BaseUrl" = $BaseUrl
-	"Waniwani:ClientIpHeader" = "Cf-Connecting-Ip"
-	"Waniwani:TrustedProxies" = "127.0.0.1,::1"
+	"Waniwani:ClientIpHeader" = "X-Forwarded-For"
+	"Waniwani:TrustedProxies" = $trustedProxies
 	"Waniwani:Enabled" = "true"
 }
 foreach ($entry in $config.configuration.appSettings.add) {
