@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
 
 jobs:
   tests:
@@ -25,13 +26,14 @@ jobs:
       - name: Check the tag matches package.json
         run: |
           VERSION=$(jq -r .version package.json)
-          if [[ "$TAG" != "v$VERSION" ]]; then
+          if [[ "$EVENT" == "push" && "$TAG" != "v$VERSION" ]]; then
             echo "::error::Tag $TAG does not match package.json version $VERSION"
             exit 1
           fi
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
         env:
           TAG: ${{ github.ref_name }}
+          EVENT: ${{ github.event_name }}
 
       - name: Pack
         run: |

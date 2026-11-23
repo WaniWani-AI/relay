@@ -42,6 +42,19 @@ jobs:
           dotnet build dotnet/src/Waniwani.Relay.AspNetCore/Waniwani.Relay.AspNetCore.csproj -c Release
       - name: Run the fixture conformance tests
         run: dotnet test dotnet/test/Waniwani.Relay.Tests/Waniwani.Relay.Tests.csproj -c Release
+      - name: Pack
+        if: matrix.os == 'windows-latest'
+        shell: bash
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          for project in Waniwani.Relay Waniwani.Relay.AspNet Waniwani.Relay.AspNetCore; do
+            dotnet pack "dotnet/src/$project/$project.csproj" -c Release -p:Version="$VERSION" -o artifacts
+          done
+      - uses: actions/upload-artifact@v5
+        if: matrix.os == 'windows-latest'
+        with:
+          name: nuget-packages
+          path: artifacts/*.nupkg
 
   iis-e2e:
     needs: unit
