@@ -815,18 +815,18 @@ const defaultScenarios: Scenario[] = [
 						memoryThird - memorySecond,
 					].map((bytes) => bytes / 1024 / 1024);
 					console.log(
-						`    F5: worker memory grew by ${grown.map((mb) => mb.toFixed(1)).join(" MB, then ")} MB in two segments of ${segment} requests, with the queue full`,
+						`    F5: the managed heap grew by ${grown.map((mb) => mb.toFixed(1)).join(" MB, then ")} MB in two segments of ${segment} requests, with the queue full`,
 					);
 					check(
-						Math.min(...grown) < 32,
-						`F5: memory grew by ${grown.map((mb) => mb.toFixed(1)).join(" MB and ")} MB with the queue full`,
+						Math.max(...grown) < 8,
+						`F5: the managed heap grew by ${grown.map((mb) => mb.toFixed(1)).join(" MB and ")} MB with the queue full`,
 					);
 				}
 			} finally {
 				context.fake.state.ingest = { kind: "accept" };
 				context.fake.releaseHangs();
+				await wait(8000);
 			}
-			await wait(8000);
 			const received = context.fake
 				.records()
 				.filter((record) => record.path === "/contact").length;
@@ -1099,10 +1099,13 @@ function readMemory(): number | null {
 	if (!args["memory-cmd"]) {
 		return null;
 	}
-	const value = Number(
-		execSync(args["memory-cmd"], { encoding: "utf8" }).trim(),
+	const output = execSync(args["memory-cmd"], { encoding: "utf8" }).trim();
+	const value = Number(output);
+	check(
+		output !== "" && Number.isFinite(value),
+		`the memory command printed ${JSON.stringify(output)}`,
 	);
-	return Number.isFinite(value) ? value : null;
+	return value;
 }
 
 type Website = {

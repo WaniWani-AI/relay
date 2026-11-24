@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Web;
@@ -29,6 +30,12 @@ namespace SampleSite
             {
                 response.ContentType = "text/plain";
                 response.Write("form:" + request.Form["name"]);
+                return;
+            }
+            if (path == "/__heap" && request.IsLocal)
+            {
+                response.ContentType = "text/plain";
+                response.Write(GC.GetTotalMemory(true).ToString(CultureInfo.InvariantCulture));
                 return;
             }
             response.ContentType = "text/html; charset=utf-8";
