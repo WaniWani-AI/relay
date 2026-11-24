@@ -69,4 +69,13 @@ The relay runs at `BeginRequest`, before the ASP.NET output cache. It turns off 
 
 ## Outbound calls
 
-The relay calls `app.waniwani.ai` (or `eu.app.waniwani.ai`) over HTTPS. It sends one event for each agent visit, in batches, from a background queue. The queue holds 1,000 events. When it is full, new events are dropped. When the app pool recycles, the relay waits up to 5 seconds to send the queue.
+The relay makes HTTPS calls to these hosts:
+
+| Region | Hosts |
+| --- | --- |
+| `us` | `app.waniwani.ai` and `pages.waniwani.tools` |
+| `eu` | `eu.app.waniwani.ai` and `eu-pages.waniwani.tools` |
+
+The first host gives the site rules and gets the events. The second host gives the agent pages. When the relay cannot get to them, your site works as usual.
+
+The relay sends one event for each agent visit, in batches, from a background queue. The queue holds 1,000 events. When it is full, new events are dropped. When the app pool recycles, the relay waits up to 5 seconds to send the queue.
