@@ -328,6 +328,22 @@ async function warmUp() {
 	throw new Failure("the site does not answer");
 }
 
+async function waitForSiteRules() {
+	const until = Date.now() + 60_000;
+	while (Date.now() < until) {
+		try {
+			const reply = await send({
+				path: args["page-path"],
+				headers: { "user-agent": CHATGPT },
+			});
+			if (isAgentPage(reply)) {
+				return;
+			}
+		} catch {}
+		await wait(1000);
+	}
+}
+
 const defaultScenarios: Scenario[] = [
 	{
 		id: "D1",
@@ -465,7 +481,7 @@ const defaultScenarios: Scenario[] = [
 		run: async (context) => {
 			const m = nextMarker();
 			const reply = await send({
-				path: page(args.live ? args["page-path"] : "/pricing", m),
+				path: args.live ? args["page-path"] : page("/pricing", m),
 				headers: { "user-agent": BROWSER, accept: "text/markdown" },
 			});
 			expectAgentPage(reply, "P1");
@@ -1226,6 +1242,8 @@ async function main() {
 			}),
 		);
 		await warmUp();
+	} else {
+		await waitForSiteRules();
 	}
 	let failed = 0;
 	let skipped = 0;
