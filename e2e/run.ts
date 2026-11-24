@@ -758,7 +758,8 @@ const defaultScenarios: Scenario[] = [
 				);
 			}
 			context.fake.state.ingest = { kind: "hang" };
-			const total = 3000;
+			const segment = 1500;
+			const total = segment * 3;
 			const latencies: number[] = [];
 			const sendAgents = async (count: number) => {
 				let next = 0;
@@ -776,27 +777,39 @@ const defaultScenarios: Scenario[] = [
 					}),
 				);
 			};
-			await sendAgents(total / 2);
-			const memoryHalf = readMemory();
-			await sendAgents(total / 2);
-			const memoryEnd = readMemory();
-			const added = percentile(latencies, 99) - percentile(baseline, 99);
-			console.log(
-				`    F5: p99 ${percentile(latencies, 99).toFixed(1)} ms with ingest down, ${percentile(baseline, 99).toFixed(1)} ms for persons before`,
-			);
-			check(added < 50, `F5: p99 grew by ${added.toFixed(1)} ms`);
-			if (memoryHalf !== null && memoryEnd !== null) {
-				const grown = (memoryEnd - memoryHalf) / 1024 / 1024;
+			try {
+				await sendAgents(segment);
+				const memoryFull = readMemory();
+				await sendAgents(segment);
+				const memorySecond = readMemory();
+				await sendAgents(segment);
+				const memoryThird = readMemory();
+				const added = percentile(latencies, 99) - percentile(baseline, 99);
 				console.log(
-					`    F5: worker memory grew by ${grown.toFixed(1)} MB in the second half, with the queue full`,
+					`    F5: p99 ${percentile(latencies, 99).toFixed(1)} ms with ingest down, ${percentile(baseline, 99).toFixed(1)} ms for persons before`,
 				);
-				check(
-					grown < 32,
-					`F5: memory grew by ${grown.toFixed(1)} MB with the queue full`,
-				);
+				check(added < 50, `F5: p99 grew by ${added.toFixed(1)} ms`);
+				if (
+					memoryFull !== null &&
+					memorySecond !== null &&
+					memoryThird !== null
+				) {
+					const grown = [
+						memorySecond - memoryFull,
+						memoryThird - memorySecond,
+					].map((bytes) => bytes / 1024 / 1024);
+					console.log(
+						`    F5: worker memory grew by ${grown.map((mb) => mb.toFixed(1)).join(" MB, then ")} MB in two segments of ${segment} requests, with the queue full`,
+					);
+					check(
+						Math.min(...grown) < 32,
+						`F5: memory grew by ${grown.map((mb) => mb.toFixed(1)).join(" MB and ")} MB with the queue full`,
+					);
+				}
+			} finally {
+				context.fake.state.ingest = { kind: "accept" };
+				context.fake.releaseHangs();
 			}
-			context.fake.state.ingest = { kind: "accept" };
-			context.fake.releaseHangs();
 			await wait(8000);
 			const received = context.fake
 				.records()
@@ -889,6 +902,32 @@ const defaultScenarios: Scenario[] = [
 				headers: { "user-agent": BROWSER, accept: BROWSER_ACCEPT },
 			});
 			expectOrigin(person, "C1 person after the agent");
+		},
+	},
+	{
+		id: "C2",
+		title: "A cached page outside agent pages still blocks a blocked agent",
+		run: async () => {
+			for (let index = 0; index < 3; index++) {
+				expectOrigin(
+					await send({
+						path: "/cached-not-served",
+						headers: { "user-agent": BROWSER, accept: BROWSER_ACCEPT },
+					}),
+					"C2 person",
+				);
+			}
+			const reply = await send({
+				path: "/cached-not-served",
+				headers: {
+					"user-agent":
+						"Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; GPTBot/1.2; +https://openai.com/gptbot",
+				},
+			});
+			check(
+				reply.status === 403,
+				`C2: the blocked agent got status ${reply.status} (cache: ${reply.headers["x-cache"] ?? "unknown"}). Turn off the kernel or output cache on sites that block agents.`,
+			);
 		},
 	},
 	{

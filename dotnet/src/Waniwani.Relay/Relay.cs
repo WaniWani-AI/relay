@@ -368,7 +368,7 @@ namespace Waniwani.Relay
             }
         }
 
-        /// <summary>True when this request can get an answer from <see cref="ServeAgentPageAsync"/> by the rules in memory, or when no rules are in memory yet. Never waits.</summary>
+        /// <summary>True when this request can get an answer from <see cref="ServeAgentPageAsync"/> by the rules in memory, or when no rules are in memory yet. A site that blocks agents can answer on every path, so a cached response must not skip the block. Never waits.</summary>
         public bool MayServe(RelayRequest request)
         {
             try
@@ -384,7 +384,7 @@ namespace Waniwani.Relay
                 }
                 var host = HostName.Of(request.Host);
                 var site = rules.Sites.FirstOrDefault(entry => entry.Hostname == host);
-                return site != null && site.AgentPagesEnabled && Paths.Matches(Paths.Normalize(request.Path), site.Paths);
+                return site != null && (site.BlockedUserAgentTokens.Count > 0 || (site.AgentPagesEnabled && Paths.Matches(Paths.Normalize(request.Path), site.Paths)));
             }
             catch
             {

@@ -32,7 +32,7 @@ namespace SampleSite
                 return;
             }
             response.ContentType = "text/html; charset=utf-8";
-            if (path == "/cached")
+            if (path == "/cached" || path == "/cached-not-served")
             {
                 response.Cache.SetCacheability(HttpCacheability.Public);
                 response.Cache.SetExpires(DateTime.Now.AddMinutes(10));

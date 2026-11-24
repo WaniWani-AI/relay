@@ -34,7 +34,7 @@
 		"e2e": "node e2e/run.ts",
 		"e2e:ts-target": "bun --preload ./scripts/relay-version.ts e2e/ts-target.ts",
 		"preversion": "bun run rules",
-		"version": "git add src/logic/agents.generated.json src/logic/ip-ranges.generated.json",
+		"version": "bun run fixtures && git add src/logic/agents.generated.json src/logic/ip-ranges.generated.json fixtures",
 		"prepublishOnly": "bun run build",
 		"release:patch": "npm version patch && git push --follow-tags",
 		"release:minor": "npm version minor && git push --follow-tags"
