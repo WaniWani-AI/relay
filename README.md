@@ -10,7 +10,7 @@ npm install @waniwani/relay
 
 ## Setup
 
-The [setup screen](https://app.waniwani.ai/agent-traffic/setup) in Waniwani gives you the code for your platform: Vercel, Cloudflare Workers or AWS CloudFront (Lambda@Edge). For an organization in the EU region, use [eu.app.waniwani.ai](https://eu.app.waniwani.ai/agent-traffic/setup).
+The [setup screen](https://app.waniwani.ai/agent-traffic/setup) in Waniwani gives you the code for your platform: Vercel, Cloudflare Workers or AWS CloudFront (Lambda@Edge). For ASP.NET on IIS, use the NuGet package in [dotnet](dotnet/README.md). For an organization in the EU region, use [eu.app.waniwani.ai](https://eu.app.waniwani.ai/agent-traffic/setup).
 
 ## API
 
