@@ -1,0 +1,1695 @@
+{
+	"relayVersion": "0.7.0",
+	"cases": [
+		{
+			"accept": "",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "*/*",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/html",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown, text/html",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/html, text/markdown",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/html;q=0.9, text/markdown",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/markdown;q=0.5, text/html",
+			"pageFormat": "markdown",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=0.5, text/*;q=0.4",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/markdown;q=0.5, */*;q=0.6",
+			"pageFormat": "markdown",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown; q=0.000",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "TEXT/MARKDOWN",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/markdown;Q=0.5, text/html;q=0.5",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/markdown;q=abc",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=0x1",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/markdown;q=1e0, text/html;q=1",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/markdown;q=.5, text/html;q=0.4",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/markdown;q=5., text/html",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/markdown;q=+0.7, text/html;q=0.7",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/markdown;q=-1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=Infinity",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q= 0.8 , text/html;q=0.8",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/markdown;q=0.8=9",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/markdown;charset=utf-8;q=0.8, text/html;level=1;q=0.9",
+			"pageFormat": "markdown",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown, text/markdown;q=0",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/markdown;q=0, text/markdown;q=0.3",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json, text/plain, */*",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain;q=1, text/markdown;q=1",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": " text/markdown ",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": ",,text/markdown,,",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/x-markdown",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/*",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=1;q=0",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/markdown;q=0.5;level=2",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "application/json;q=0 , text/html;q=0.1 , text/html;q=1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=1, text/plain;q=1, text/plain;q=1, application/json;q=0.5",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/html;q=0.50 , text/html , */*;q=1.0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "*/*;q=1 , application/json;q=0.9",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/html;q=0.1,application/json;q=0.1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/html;q=1.0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/html;q=0, text/markdown;q=0.9, application/json;q=0, */*",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/plain;q=0.50,text/markdown,text/*;q=0.1,*/*;q=0.50",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/markdown;q=0.5, */*;q=0, text/markdown;q=0.9",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/plain;q=0.9",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json;q=1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json;q=0.5 , text/html;q=0 , text/plain;q=0.5",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/html;q=0.9, text/html;q=0.5, text/markdown;q=0.9",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/plain;q=0.9 , text/html , text/plain;q=0.50 , text/markdown;q=0.50",
+			"pageFormat": "markdown",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain;q=0.5, text/plain;q=1, text/*;q=0.5",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=0.1 , */*;q=0 , text/markdown;q=1.0 , text/html",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/plain",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain;q=0.1, */*;q=0, */*;q=0.1, text/markdown;q=0.9",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "application/json;q=1,text/html;q=0.1,text/plain;q=1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/* , text/html;q=0.5 , text/plain;q=1.0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "application/json;q=1.0 , text/html;q=0 , text/markdown;q=0.1",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "*/*;q=0.50",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/*;q=0 , text/*;q=0.1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json;q=0.1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json;q=1 , text/markdown;q=1 , text/*;q=0",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/plain;q=0.1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain;q=0.50, text/*;q=1.0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "*/*;q=1 , text/*;q=0 , text/plain;q=0.1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=0.9,*/*;q=1.0",
+			"pageFormat": "markdown",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/html;q=1.0, text/plain;q=0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain;q=1,*/*;q=0,text/markdown;q=1",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/markdown;q=0.50, */*;q=0.1",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/html;q=0.5 , application/json;q=1.0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "*/* , text/plain;q=0.1 , text/*;q=1.0 , application/json;q=0.9",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/*;q=0,text/*,text/plain;q=1.0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/html;q=1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json;q=1, text/plain;q=0.50",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown, text/markdown;q=0.9",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/*;q=0.5,*/*;q=0.9,text/*",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain;q=0.9, text/markdown;q=0.50, */*;q=0.9, text/markdown;q=0",
+			"pageFormat": "markdown",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/*,text/html;q=0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "*/*, text/plain;q=0.5, application/json;q=0.5",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain;q=0.5 , text/* , */*;q=0.5 , text/*;q=1.0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/html;q=0.5,text/plain;q=0,application/json;q=1.0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json;q=0.9 , text/html;q=1.0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/html;q=0.1,application/json;q=0.1,text/plain;q=0,text/markdown;q=0.1",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/html;q=0.50 , text/html;q=0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain;q=0.5 , text/plain;q=1 , text/plain;q=0 , */*;q=0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/*;q=0 , text/html;q=0 , */*",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/html;q=0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/html;q=0 , application/json;q=0 , */*;q=0.5 , */*;q=1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "*/*;q=0.9,text/*;q=0,text/html;q=1.0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json;q=1 , application/json , text/markdown;q=0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/html;q=0 , text/markdown;q=0.9 , text/plain;q=0.50 , application/json;q=1.0",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/markdown;q=0.5 , application/json , text/markdown;q=1.0",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "application/json,text/markdown;q=1",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/plain;q=0.1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "*/*;q=0.50",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/*;q=0.50,text/html;q=0.50",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json;q=1 , application/json;q=0.5 , application/json;q=0.50 , text/*;q=0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/*;q=0.5",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/*;q=0.50 , */*;q=1.0 , text/plain;q=0 , text/markdown;q=0.5",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/markdown;q=0 , text/html;q=1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain;q=0 , text/html;q=0.1 , application/json;q=1.0 , application/json;q=0.5",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain;q=1, text/markdown;q=0.50, text/*;q=1.0, */*",
+			"pageFormat": "markdown",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain,text/markdown;q=0.5,text/plain;q=0",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "application/json;q=1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/*;q=1.0,text/*,text/*;q=0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "*/*;q=0.5, application/json;q=1.0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain;q=0.9",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json;q=1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain;q=1 , */*;q=0 , */*;q=0.50 , */*;q=0.50",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/html;q=0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown, text/html;q=0.50",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/html;q=0.1, text/*;q=1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/html;q=0.50,text/markdown;q=1.0,text/markdown;q=0.9",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/html;q=0.1 , text/html;q=1 , */*;q=1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=0, text/plain;q=1.0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/* , text/html;q=0.1 , text/*;q=0.1 , text/html;q=1.0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain;q=0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/html;q=0.9, */*;q=0.50, text/*;q=0.5",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "*/*;q=1.0,application/json;q=1,text/markdown;q=0,*/*;q=1.0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "*/*;q=0.1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain;q=0,text/plain",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/*;q=1.0,text/*;q=0.50,text/markdown;q=0.9,text/html;q=0.9",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "*/*;q=0.50, application/json;q=0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain;q=0.1 , text/plain;q=0.1 , text/markdown;q=0.5",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/html;q=1.0,text/*;q=0.9,text/html,text/plain;q=0.50",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json;q=0.9,*/*;q=0.50,text/markdown;q=0.9",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/*;q=0.50",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain;q=0.5,text/plain;q=0.5",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/html;q=0 , application/json;q=0.9 , text/markdown;q=0.9",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/markdown;q=0.9, application/json;q=1.0",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/plain;q=0.50",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "*/*;q=0 , application/json;q=0.9 , text/plain;q=0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json;q=0.5, text/html;q=0.9, application/json;q=0.50",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/html;q=0.9, text/plain;q=0.9",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/*;q=0, */*;q=0.9, text/html;q=0, text/html;q=0.9",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/html , text/html;q=1.0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain;q=0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=0.9, application/json;q=1",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "application/json;q=0.9,text/markdown;q=0,text/markdown;q=1",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "application/json;q=1, text/markdown;q=0.50, text/html;q=0.1",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "application/json;q=0.50 , text/markdown;q=0.5",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "*/*;q=1 , */*;q=0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json;q=0.1,*/*;q=0,text/markdown;q=1",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/*;q=0,text/plain;q=0.50,text/*",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json;q=1.0 , */*;q=0 , text/plain , text/markdown",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/plain;q=0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json;q=1,text/*;q=0.1,text/*;q=0.9",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=1.0,text/*;q=0",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/*;q=0.1,application/json;q=0.1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=0.50,text/plain;q=1",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/markdown;q=0.1,application/json",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/plain;q=1,text/*;q=0.9,application/json;q=0.5,text/plain;q=0.5",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=1,*/*;q=0.50,*/*",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "application/json;q=0 , text/*;q=0.1 , text/*;q=1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json;q=0.1 , text/*;q=0.50 , text/markdown;q=1.0",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/markdown;q=0.5",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/*;q=0.9, text/markdown;q=0.5, text/markdown;q=0.9",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/*;q=0.9,*/*;q=0.5",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json;q=1.0,text/plain;q=1.0,text/*;q=0.50,text/*;q=0.9",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json;q=0.50, text/*;q=0, application/json, text/plain;q=0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=0 , text/*;q=1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/*;q=1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=0.50, text/html",
+			"pageFormat": "markdown",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "*/*;q=0.5 , application/json;q=0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "*/*;q=0.5, application/json",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=0.5",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/plain;q=0, text/*;q=0, */*;q=1.0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/*;q=1,text/*;q=1.0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown, */*;q=0.50, text/*;q=0.1",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "application/json;q=0.5 , */*;q=0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "*/*;q=0.9 , */*;q=1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "*/*;q=1, text/*;q=0.50, application/json;q=0, text/*;q=0.5",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain;q=1.0, text/plain",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/*,application/json;q=0.9,*/*;q=1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json;q=0.9, */*;q=0.50",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json;q=0.9,text/plain;q=1.0,application/json;q=0.9,application/json;q=0.9",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=0.5 , text/html",
+			"pageFormat": "markdown",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/html",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=0.9",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/markdown , */*;q=0",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "application/json;q=1.0,text/html",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "*/*;q=0.1, text/markdown;q=0.9, text/*;q=1, text/markdown;q=1.0",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/*;q=0.5 , text/html;q=1 , text/*;q=0.50 , text/markdown;q=0.1",
+			"pageFormat": "markdown",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain;q=0.50",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/*;q=0,text/html;q=0.9",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/html;q=1.0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "*/*;q=0.5,application/json,application/json;q=0.5,*/*;q=0.5",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "*/*;q=0,text/markdown;q=1.0",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "application/json;q=0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=0.9,*/*;q=0.9,text/*;q=0.5",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/html;q=0.50,text/*;q=0.1,text/html;q=1.0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=0.50",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/markdown, text/plain;q=1.0, text/html, text/html;q=0.9",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/html;q=0.50, text/markdown;q=0.9, text/plain;q=0.5",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/html;q=0,text/plain;q=0.1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/html;q=0.1,text/markdown;q=0.5,text/plain;q=0.5",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/*;q=0.50, text/plain;q=0.50, text/html",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=0.1,text/*;q=0.50,*/*;q=0.5",
+			"pageFormat": "markdown",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain;q=1 , text/*;q=1.0 , application/json;q=0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/html;q=0.50, text/*;q=0.1, text/markdown;q=0, text/plain;q=0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=1",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/markdown;q=0.5",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "*/*;q=1.0,text/markdown;q=1.0,text/html;q=1.0,text/markdown;q=1.0",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/*;q=0.1, text/markdown;q=0, text/*;q=0.50, text/*;q=0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=0.5",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "application/json;q=0.1, text/*;q=1, */*;q=0.5",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/*,text/plain,application/json;q=1.0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=1 , text/plain , text/html;q=0.50",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/html;q=0.9, text/markdown;q=0.1",
+			"pageFormat": "markdown",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=1,*/*;q=0",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "application/json;q=1.0, application/json;q=1, text/*",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json;q=1.0, text/markdown;q=0, text/plain;q=1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json;q=1.0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/*;q=0.5",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=0 , application/json;q=1 , */* , text/*",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=0, text/markdown;q=0.50",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "application/json;q=0.5",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "*/*, text/html;q=1.0, application/json;q=1, application/json",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/html;q=0,application/json;q=0.9",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json;q=1,text/markdown;q=0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/*;q=1, text/html;q=0.1, text/markdown;q=0.50",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/markdown;q=1, text/markdown;q=0.50, text/plain;q=0.1, text/html;q=0.50",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/markdown;q=0.1,text/plain;q=0",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "application/json",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain;q=1.0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "*/*;q=0.50",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json, text/*;q=0.5",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/*;q=1.0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/*, text/html;q=1, */*;q=1.0, text/html",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json, */*;q=0.1, */*;q=0.9",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json;q=1.0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=0.50,text/markdown;q=1,*/*;q=0",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/plain;q=0.5 , text/*;q=0.1 , */*;q=1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json;q=0.1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/html;q=0.1 , */*;q=0 , text/markdown , text/markdown;q=1",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/markdown;q=1.0",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/markdown, text/plain;q=1.0, text/plain;q=0, text/html",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "application/json;q=1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "*/*;q=0.1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "*/*;q=0.1,text/markdown;q=0.50,text/plain;q=0.1",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "*/*;q=0.9 , text/markdown;q=0.5",
+			"pageFormat": "markdown",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/*",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain;q=1.0, text/*;q=1, text/html;q=0.1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain;q=0.1,*/*;q=0.1,text/*;q=1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "*/*;q=0.1, */*;q=1, text/plain;q=0.50, text/plain",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "*/*;q=0.1,text/markdown;q=0.5",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "*/*;q=0.5",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain;q=0.50,*/*;q=0.1,application/json;q=0,text/markdown;q=0.5",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "application/json;q=0.1 , */*;q=0.50 , text/html;q=0.1 , */*;q=1.0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=0, text/plain;q=1.0, */*;q=0.5",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/*;q=0.5 , application/json;q=0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "*/*;q=0.5 , text/*;q=1 , text/plain;q=1 , text/*;q=0.5",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json;q=0.9, text/html;q=1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/*;q=0.5,application/json;q=0.1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/*;q=0.1 , */*;q=0.1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown , application/json",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/html;q=0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain;q=0, text/plain;q=0.9",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/html;q=0, */*;q=1, text/html;q=0.50",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json;q=0.1, text/html;q=1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=1 , text/html;q=0.1 , */*;q=0.1 , text/html;q=0.1",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/markdown;q=1,application/json;q=1.0,text/*;q=0.1,text/*;q=1.0",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/plain;q=0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/html;q=0.5",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "*/*;q=1.0, text/plain;q=0.5, text/markdown;q=1.0, text/markdown;q=0.5",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/markdown;q=0.1, text/*;q=1.0",
+			"pageFormat": "markdown",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "*/*, text/html;q=0, application/json;q=0.50, text/plain;q=1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/html;q=0.1 , text/*;q=0 , text/markdown;q=1",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/*;q=0 , text/*;q=0.1 , text/*;q=0.1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/*;q=0.5,text/*;q=0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain;q=0,text/*;q=0.50",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json;q=1, */*;q=0.50, text/html;q=0.9",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/html;q=0.5 , text/*;q=1 , text/*;q=0.1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "*/*;q=0.5, */*;q=0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/html;q=0.9",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain,text/html",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain;q=0.1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=0.5,text/plain;q=0,*/*;q=0.5,application/json;q=0",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/html;q=1,text/markdown;q=1,text/html",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/html;q=0.9, text/html;q=1, text/html;q=0.1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json;q=0.9,text/plain;q=0.50,text/*,text/markdown;q=0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json;q=1.0 , text/markdown;q=0.50 , text/html;q=1",
+			"pageFormat": "markdown",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json;q=0.5,text/html;q=0.50",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json;q=0.1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/*;q=0.1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json;q=0.9, text/plain",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain;q=1.0,application/json",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain;q=0.9 , */*",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/*;q=1.0,text/plain;q=0.1,*/*;q=0.1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=1.0",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/html;q=0.50, text/markdown;q=0.1, */*;q=0.5",
+			"pageFormat": "markdown",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain;q=1.0, application/json;q=0.9",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/html;q=0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=0.5,text/markdown;q=1.0,text/*;q=0.5,application/json;q=0.5",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/html;q=1,application/json;q=0.1,text/markdown",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/*;q=0.50",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/html;q=0.1, text/plain;q=1, application/json;q=0.1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json, application/json;q=1, text/html;q=1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=0.9, text/*;q=0.5, */*, text/html",
+			"pageFormat": "markdown",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain;q=0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json;q=0.5,*/*;q=0.9,text/*;q=0.1,text/plain;q=0.50",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=0 , text/markdown;q=1.0",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/markdown;q=0.1 , text/plain;q=0.1",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/*;q=0.5,text/markdown;q=1,text/html,application/json;q=0.1",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/markdown;q=0 , text/*;q=0.1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/*;q=1.0 , text/*;q=0.1 , text/*;q=1.0 , */*;q=1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "*/*;q=1.0, text/markdown;q=1, text/plain, text/*;q=0",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/html;q=0,application/json;q=1.0,application/json;q=1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json;q=0.1 , */*;q=1.0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "*/*;q=1, text/plain;q=1, text/markdown",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/html;q=0.9 , text/html;q=1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/html;q=0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain;q=0.1, text/markdown, text/*;q=0.9, text/markdown;q=0.9",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "application/json;q=0 , application/json;q=0 , text/markdown;q=1 , text/*;q=1.0",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "*/*;q=0.9",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/html;q=0.50, */*;q=0.1, text/html, application/json;q=0.1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/*;q=0.5, text/*;q=0.50",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/*;q=0.1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=0.1, text/plain;q=1.0, text/*;q=1, text/plain;q=0.1",
+			"pageFormat": "markdown",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "*/*;q=0.1 , application/json;q=0.1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/html, application/json;q=1.0, text/markdown;q=1, */*;q=0.1",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/plain;q=1, text/*;q=1.0, text/plain;q=0.50",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "*/*;q=1.0 , application/json;q=0.1 , text/markdown;q=1.0",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/*, application/json;q=0.5",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=0.1, text/html;q=1",
+			"pageFormat": "markdown",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/*;q=0 , */*;q=0.1 , */*;q=1 , text/markdown;q=1.0",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/*;q=0.5",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/markdown;q=1.0",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/html;q=0.5,*/*,text/plain;q=0.9,*/*;q=0",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "application/json;q=0.9,text/*;q=1.0,*/*,*/*;q=1",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain;q=0.9, text/html",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/plain;q=0.9, application/json;q=0.5",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		},
+		{
+			"accept": "text/html;q=1.0,text/markdown;q=1",
+			"pageFormat": "markdown",
+			"prefersMarkdown": true
+		},
+		{
+			"accept": "text/html;q=1.0,text/html;q=1.0,text/*",
+			"pageFormat": "html",
+			"prefersMarkdown": false
+		}
+	]
+}

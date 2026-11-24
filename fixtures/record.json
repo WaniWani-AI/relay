@@ -1,0 +1,587 @@
+{
+	"relayVersion": "0.7.0",
+	"cases": [
+		{
+			"name": "full record",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing?x=1",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"referer": "https://chatgpt.com/",
+					"accept": "text/html",
+					"cookie": "session=secret"
+				},
+				"ip": "198.51.100.23"
+			},
+			"key": "wwt_rec.n2qibGz_0noxBqbFYI_P3xY0WiWLqVmTyKMczeYJ9oA",
+			"apiUrl": "https://api.test",
+			"expected": {
+				"url": "https://api.test/api/v2/agent-traffic/ingest/middleware/rec",
+				"record": {
+					"method": "GET",
+					"host": "www.example.com",
+					"path": "/pricing?x=1",
+					"headers": {
+						"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"referer": "https://chatgpt.com/",
+						"accept": "text/html"
+					},
+					"relayVersion": "0.7.0",
+					"userAgent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"referer": "https://chatgpt.com/",
+					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
+				}
+			}
+		},
+		{
+			"name": "no key",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing?x=1",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"referer": "https://chatgpt.com/",
+					"accept": "text/html",
+					"cookie": "session=secret"
+				},
+				"ip": "198.51.100.23"
+			},
+			"apiUrl": "https://api.test",
+			"expected": null
+		},
+		{
+			"name": "malformed key",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing?x=1",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"referer": "https://chatgpt.com/",
+					"accept": "text/html",
+					"cookie": "session=secret"
+				},
+				"ip": "198.51.100.23"
+			},
+			"key": "wwt_bad",
+			"apiUrl": "https://api.test",
+			"expected": null
+		},
+		{
+			"name": "no ip",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing?x=1",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"referer": "https://chatgpt.com/",
+					"accept": "text/html",
+					"cookie": "session=secret"
+				}
+			},
+			"key": "wwt_rec.n2qibGz_0noxBqbFYI_P3xY0WiWLqVmTyKMczeYJ9oA",
+			"apiUrl": "https://api.test",
+			"expected": {
+				"url": "https://api.test/api/v2/agent-traffic/ingest/middleware/rec",
+				"record": {
+					"method": "GET",
+					"host": "www.example.com",
+					"path": "/pricing?x=1",
+					"headers": {
+						"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"referer": "https://chatgpt.com/",
+						"accept": "text/html"
+					},
+					"relayVersion": "0.7.0",
+					"userAgent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"referer": "https://chatgpt.com/"
+				}
+			}
+		},
+		{
+			"name": "ipv6",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing?x=1",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"referer": "https://chatgpt.com/",
+					"accept": "text/html",
+					"cookie": "session=secret"
+				},
+				"ip": "2001:db8::1"
+			},
+			"key": "wwt_rec.n2qibGz_0noxBqbFYI_P3xY0WiWLqVmTyKMczeYJ9oA",
+			"apiUrl": "https://api.test",
+			"expected": {
+				"url": "https://api.test/api/v2/agent-traffic/ingest/middleware/rec",
+				"record": {
+					"method": "GET",
+					"host": "www.example.com",
+					"path": "/pricing?x=1",
+					"headers": {
+						"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"referer": "https://chatgpt.com/",
+						"accept": "text/html"
+					},
+					"relayVersion": "0.7.0",
+					"userAgent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"referer": "https://chatgpt.com/",
+					"matchKey": "9ecf1896147d53b3350d8c6d0859e7a2cc4815e7f0483465827d83d2cd5c7385"
+				}
+			}
+		},
+		{
+			"name": "authorization scheme only",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing?x=1",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"referer": "https://chatgpt.com/",
+					"accept": "text/html",
+					"cookie": "session=secret",
+					"authorization": "Bearer secret"
+				},
+				"ip": "198.51.100.23"
+			},
+			"key": "wwt_rec.n2qibGz_0noxBqbFYI_P3xY0WiWLqVmTyKMczeYJ9oA",
+			"apiUrl": "https://api.test",
+			"expected": {
+				"url": "https://api.test/api/v2/agent-traffic/ingest/middleware/rec",
+				"record": {
+					"method": "GET",
+					"host": "www.example.com",
+					"path": "/pricing?x=1",
+					"headers": {
+						"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"referer": "https://chatgpt.com/",
+						"accept": "text/html",
+						"authorization": "Bearer"
+					},
+					"relayVersion": "0.7.0",
+					"userAgent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"referer": "https://chatgpt.com/",
+					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
+				}
+			}
+		},
+		{
+			"name": "unknown authorization scheme",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing?x=1",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"referer": "https://chatgpt.com/",
+					"accept": "text/html",
+					"cookie": "session=secret",
+					"authorization": "Secret abc"
+				},
+				"ip": "198.51.100.23"
+			},
+			"key": "wwt_rec.n2qibGz_0noxBqbFYI_P3xY0WiWLqVmTyKMczeYJ9oA",
+			"apiUrl": "https://api.test",
+			"expected": {
+				"url": "https://api.test/api/v2/agent-traffic/ingest/middleware/rec",
+				"record": {
+					"method": "GET",
+					"host": "www.example.com",
+					"path": "/pricing?x=1",
+					"headers": {
+						"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"referer": "https://chatgpt.com/",
+						"accept": "text/html"
+					},
+					"relayVersion": "0.7.0",
+					"userAgent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"referer": "https://chatgpt.com/",
+					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
+				}
+			}
+		},
+		{
+			"name": "omit match key",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing?x=1",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"referer": "https://chatgpt.com/",
+					"accept": "text/html",
+					"cookie": "session=secret"
+				},
+				"ip": "198.51.100.23"
+			},
+			"key": "wwt_rec.n2qibGz_0noxBqbFYI_P3xY0WiWLqVmTyKMczeYJ9oA",
+			"omit": [
+				"matchKey"
+			],
+			"apiUrl": "https://api.test",
+			"expected": {
+				"url": "https://api.test/api/v2/agent-traffic/ingest/middleware/rec",
+				"record": {
+					"method": "GET",
+					"host": "www.example.com",
+					"path": "/pricing?x=1",
+					"headers": {
+						"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"referer": "https://chatgpt.com/",
+						"accept": "text/html"
+					},
+					"relayVersion": "0.7.0",
+					"userAgent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"referer": "https://chatgpt.com/"
+				}
+			}
+		},
+		{
+			"name": "omit user agent field",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing?x=1",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"referer": "https://chatgpt.com/",
+					"accept": "text/html",
+					"cookie": "session=secret"
+				},
+				"ip": "198.51.100.23"
+			},
+			"key": "wwt_rec.n2qibGz_0noxBqbFYI_P3xY0WiWLqVmTyKMczeYJ9oA",
+			"omit": [
+				"userAgent"
+			],
+			"apiUrl": "https://api.test",
+			"expected": {
+				"url": "https://api.test/api/v2/agent-traffic/ingest/middleware/rec",
+				"record": {
+					"method": "GET",
+					"host": "www.example.com",
+					"path": "/pricing?x=1",
+					"headers": {
+						"referer": "https://chatgpt.com/",
+						"accept": "text/html"
+					},
+					"relayVersion": "0.7.0",
+					"referer": "https://chatgpt.com/",
+					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
+				}
+			}
+		},
+		{
+			"name": "omit user agent header",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing?x=1",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"referer": "https://chatgpt.com/",
+					"accept": "text/html",
+					"cookie": "session=secret"
+				},
+				"ip": "198.51.100.23"
+			},
+			"key": "wwt_rec.n2qibGz_0noxBqbFYI_P3xY0WiWLqVmTyKMczeYJ9oA",
+			"omit": [
+				"User-Agent"
+			],
+			"apiUrl": "https://api.test",
+			"expected": {
+				"url": "https://api.test/api/v2/agent-traffic/ingest/middleware/rec",
+				"record": {
+					"method": "GET",
+					"host": "www.example.com",
+					"path": "/pricing?x=1",
+					"headers": {
+						"referer": "https://chatgpt.com/",
+						"accept": "text/html"
+					},
+					"relayVersion": "0.7.0",
+					"referer": "https://chatgpt.com/",
+					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
+				}
+			}
+		},
+		{
+			"name": "omit referer",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing?x=1",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"referer": "https://chatgpt.com/",
+					"accept": "text/html",
+					"cookie": "session=secret"
+				},
+				"ip": "198.51.100.23"
+			},
+			"key": "wwt_rec.n2qibGz_0noxBqbFYI_P3xY0WiWLqVmTyKMczeYJ9oA",
+			"omit": [
+				"referer"
+			],
+			"apiUrl": "https://api.test",
+			"expected": {
+				"url": "https://api.test/api/v2/agent-traffic/ingest/middleware/rec",
+				"record": {
+					"method": "GET",
+					"host": "www.example.com",
+					"path": "/pricing?x=1",
+					"headers": {
+						"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"accept": "text/html"
+					},
+					"relayVersion": "0.7.0",
+					"userAgent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
+				}
+			}
+		},
+		{
+			"name": "omit accept",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing?x=1",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"referer": "https://chatgpt.com/",
+					"accept": "text/html",
+					"cookie": "session=secret"
+				},
+				"ip": "198.51.100.23"
+			},
+			"key": "wwt_rec.n2qibGz_0noxBqbFYI_P3xY0WiWLqVmTyKMczeYJ9oA",
+			"omit": [
+				"ACCEPT"
+			],
+			"apiUrl": "https://api.test",
+			"expected": {
+				"url": "https://api.test/api/v2/agent-traffic/ingest/middleware/rec",
+				"record": {
+					"method": "GET",
+					"host": "www.example.com",
+					"path": "/pricing?x=1",
+					"headers": {
+						"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"referer": "https://chatgpt.com/"
+					},
+					"relayVersion": "0.7.0",
+					"userAgent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"referer": "https://chatgpt.com/",
+					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
+				}
+			}
+		},
+		{
+			"name": "post",
+			"request": {
+				"method": "POST",
+				"url": "https://www.example.com/pricing?x=1",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"referer": "https://chatgpt.com/",
+					"accept": "text/html",
+					"cookie": "session=secret"
+				},
+				"ip": "198.51.100.23"
+			},
+			"key": "wwt_rec.n2qibGz_0noxBqbFYI_P3xY0WiWLqVmTyKMczeYJ9oA",
+			"apiUrl": "https://api.test",
+			"expected": {
+				"url": "https://api.test/api/v2/agent-traffic/ingest/middleware/rec",
+				"record": {
+					"method": "POST",
+					"host": "www.example.com",
+					"path": "/pricing?x=1",
+					"headers": {
+						"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"referer": "https://chatgpt.com/",
+						"accept": "text/html"
+					},
+					"relayVersion": "0.7.0",
+					"userAgent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"referer": "https://chatgpt.com/",
+					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
+				}
+			}
+		},
+		{
+			"name": "head lowercase",
+			"request": {
+				"method": "head",
+				"url": "https://www.example.com/pricing?x=1",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"referer": "https://chatgpt.com/",
+					"accept": "text/html",
+					"cookie": "session=secret"
+				},
+				"ip": "198.51.100.23"
+			},
+			"key": "wwt_rec.n2qibGz_0noxBqbFYI_P3xY0WiWLqVmTyKMczeYJ9oA",
+			"apiUrl": "https://api.test",
+			"expected": {
+				"url": "https://api.test/api/v2/agent-traffic/ingest/middleware/rec",
+				"record": {
+					"method": "HEAD",
+					"host": "www.example.com",
+					"path": "/pricing?x=1",
+					"headers": {
+						"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"referer": "https://chatgpt.com/",
+						"accept": "text/html"
+					},
+					"relayVersion": "0.7.0",
+					"userAgent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"referer": "https://chatgpt.com/",
+					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
+				}
+			}
+		},
+		{
+			"name": "root path",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"referer": "https://chatgpt.com/",
+					"accept": "text/html",
+					"cookie": "session=secret"
+				},
+				"ip": "198.51.100.23"
+			},
+			"key": "wwt_rec.n2qibGz_0noxBqbFYI_P3xY0WiWLqVmTyKMczeYJ9oA",
+			"apiUrl": "https://api.test",
+			"expected": {
+				"url": "https://api.test/api/v2/agent-traffic/ingest/middleware/rec",
+				"record": {
+					"method": "GET",
+					"host": "www.example.com",
+					"path": "/",
+					"headers": {
+						"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"referer": "https://chatgpt.com/",
+						"accept": "text/html"
+					},
+					"relayVersion": "0.7.0",
+					"userAgent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"referer": "https://chatgpt.com/",
+					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
+				}
+			}
+		},
+		{
+			"name": "port and upper host",
+			"request": {
+				"method": "GET",
+				"url": "https://WWW.Example.com:8443/a/b?c=d&e=%20f",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"referer": "https://chatgpt.com/",
+					"accept": "text/html",
+					"cookie": "session=secret"
+				},
+				"ip": "198.51.100.23"
+			},
+			"key": "wwt_rec.n2qibGz_0noxBqbFYI_P3xY0WiWLqVmTyKMczeYJ9oA",
+			"apiUrl": "https://api.test",
+			"expected": {
+				"url": "https://api.test/api/v2/agent-traffic/ingest/middleware/rec",
+				"record": {
+					"method": "GET",
+					"host": "www.example.com",
+					"path": "/a/b?c=d&e=%20f",
+					"headers": {
+						"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"referer": "https://chatgpt.com/",
+						"accept": "text/html"
+					},
+					"relayVersion": "0.7.0",
+					"userAgent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"referer": "https://chatgpt.com/",
+					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
+				}
+			}
+		},
+		{
+			"name": "no user agent",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing?x=1",
+				"headers": {
+					"accept": "*/*"
+				},
+				"ip": "198.51.100.23"
+			},
+			"key": "wwt_rec.n2qibGz_0noxBqbFYI_P3xY0WiWLqVmTyKMczeYJ9oA",
+			"apiUrl": "https://api.test",
+			"expected": {
+				"url": "https://api.test/api/v2/agent-traffic/ingest/middleware/rec",
+				"record": {
+					"method": "GET",
+					"host": "www.example.com",
+					"path": "/pricing?x=1",
+					"headers": {
+						"accept": "*/*"
+					},
+					"relayVersion": "0.7.0",
+					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
+				}
+			}
+		},
+		{
+			"name": "all capped headers",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing?x=1",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"referer": "r",
+					"accept": "a",
+					"accept-language": "fr",
+					"from": "f@x",
+					"signature-agent": "s",
+					"signature-input": "si",
+					"signature": "sg",
+					"dpop": "d",
+					"sec-ch-ua": "u",
+					"sec-ch-ua-platform": "p",
+					"sec-ch-ua-mobile": "?0",
+					"authorization": "DPoP t",
+					"x-other": "o"
+				},
+				"ip": "198.51.100.23"
+			},
+			"key": "wwt_rec.n2qibGz_0noxBqbFYI_P3xY0WiWLqVmTyKMczeYJ9oA",
+			"apiUrl": "https://api.test",
+			"expected": {
+				"url": "https://api.test/api/v2/agent-traffic/ingest/middleware/rec",
+				"record": {
+					"method": "GET",
+					"host": "www.example.com",
+					"path": "/pricing?x=1",
+					"headers": {
+						"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"referer": "r",
+						"accept": "a",
+						"accept-language": "fr",
+						"from": "f@x",
+						"signature-agent": "s",
+						"signature-input": "si",
+						"signature": "sg",
+						"dpop": "d",
+						"sec-ch-ua": "u",
+						"sec-ch-ua-platform": "p",
+						"sec-ch-ua-mobile": "?0",
+						"authorization": "DPoP"
+					},
+					"relayVersion": "0.7.0",
+					"userAgent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"referer": "r",
+					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
+				}
+			}
+		}
+	]
+}

@@ -1,0 +1,956 @@
+{
+	"relayVersion": "0.7.0",
+	"cases": [
+		{
+			"normalize": [
+				{
+					"path": "/",
+					"expected": "/"
+				},
+				{
+					"path": "",
+					"expected": "/"
+				},
+				{
+					"path": "/pricing",
+					"expected": "/pricing"
+				},
+				{
+					"path": "/pricing/",
+					"expected": "/pricing"
+				},
+				{
+					"path": "/pricing///",
+					"expected": "/pricing"
+				},
+				{
+					"path": "///",
+					"expected": "/"
+				},
+				{
+					"path": "/a/b/",
+					"expected": "/a/b"
+				},
+				{
+					"path": "/A/B",
+					"expected": "/A/B"
+				}
+			],
+			"matches": [
+				{
+					"path": "/",
+					"patterns": [
+						"/pricing"
+					],
+					"expected": false
+				},
+				{
+					"path": "/pricing",
+					"patterns": [
+						"/pricing"
+					],
+					"expected": true
+				},
+				{
+					"path": "/pricing/x",
+					"patterns": [
+						"/pricing"
+					],
+					"expected": false
+				},
+				{
+					"path": "/products",
+					"patterns": [
+						"/pricing"
+					],
+					"expected": false
+				},
+				{
+					"path": "/products/a",
+					"patterns": [
+						"/pricing"
+					],
+					"expected": false
+				},
+				{
+					"path": "/products/a/b",
+					"patterns": [
+						"/pricing"
+					],
+					"expected": false
+				},
+				{
+					"path": "/productsx",
+					"patterns": [
+						"/pricing"
+					],
+					"expected": false
+				},
+				{
+					"path": "/a",
+					"patterns": [
+						"/pricing"
+					],
+					"expected": false
+				},
+				{
+					"path": "/b",
+					"patterns": [
+						"/pricing"
+					],
+					"expected": false
+				},
+				{
+					"path": "/b/c",
+					"patterns": [
+						"/pricing"
+					],
+					"expected": false
+				},
+				{
+					"path": "/Pricing",
+					"patterns": [
+						"/pricing"
+					],
+					"expected": false
+				},
+				{
+					"path": "/",
+					"patterns": [
+						"/pricing/"
+					],
+					"expected": false
+				},
+				{
+					"path": "/pricing",
+					"patterns": [
+						"/pricing/"
+					],
+					"expected": true
+				},
+				{
+					"path": "/pricing/x",
+					"patterns": [
+						"/pricing/"
+					],
+					"expected": false
+				},
+				{
+					"path": "/products",
+					"patterns": [
+						"/pricing/"
+					],
+					"expected": false
+				},
+				{
+					"path": "/products/a",
+					"patterns": [
+						"/pricing/"
+					],
+					"expected": false
+				},
+				{
+					"path": "/products/a/b",
+					"patterns": [
+						"/pricing/"
+					],
+					"expected": false
+				},
+				{
+					"path": "/productsx",
+					"patterns": [
+						"/pricing/"
+					],
+					"expected": false
+				},
+				{
+					"path": "/a",
+					"patterns": [
+						"/pricing/"
+					],
+					"expected": false
+				},
+				{
+					"path": "/b",
+					"patterns": [
+						"/pricing/"
+					],
+					"expected": false
+				},
+				{
+					"path": "/b/c",
+					"patterns": [
+						"/pricing/"
+					],
+					"expected": false
+				},
+				{
+					"path": "/Pricing",
+					"patterns": [
+						"/pricing/"
+					],
+					"expected": false
+				},
+				{
+					"path": "/",
+					"patterns": [
+						"/products/*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/pricing",
+					"patterns": [
+						"/products/*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/pricing/x",
+					"patterns": [
+						"/products/*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/products",
+					"patterns": [
+						"/products/*"
+					],
+					"expected": true
+				},
+				{
+					"path": "/products/a",
+					"patterns": [
+						"/products/*"
+					],
+					"expected": true
+				},
+				{
+					"path": "/products/a/b",
+					"patterns": [
+						"/products/*"
+					],
+					"expected": true
+				},
+				{
+					"path": "/productsx",
+					"patterns": [
+						"/products/*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/a",
+					"patterns": [
+						"/products/*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/b",
+					"patterns": [
+						"/products/*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/b/c",
+					"patterns": [
+						"/products/*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/Pricing",
+					"patterns": [
+						"/products/*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/",
+					"patterns": [
+						"/products/*/"
+					],
+					"expected": false
+				},
+				{
+					"path": "/pricing",
+					"patterns": [
+						"/products/*/"
+					],
+					"expected": false
+				},
+				{
+					"path": "/pricing/x",
+					"patterns": [
+						"/products/*/"
+					],
+					"expected": false
+				},
+				{
+					"path": "/products",
+					"patterns": [
+						"/products/*/"
+					],
+					"expected": false
+				},
+				{
+					"path": "/products/a",
+					"patterns": [
+						"/products/*/"
+					],
+					"expected": false
+				},
+				{
+					"path": "/products/a/b",
+					"patterns": [
+						"/products/*/"
+					],
+					"expected": false
+				},
+				{
+					"path": "/productsx",
+					"patterns": [
+						"/products/*/"
+					],
+					"expected": false
+				},
+				{
+					"path": "/a",
+					"patterns": [
+						"/products/*/"
+					],
+					"expected": false
+				},
+				{
+					"path": "/b",
+					"patterns": [
+						"/products/*/"
+					],
+					"expected": false
+				},
+				{
+					"path": "/b/c",
+					"patterns": [
+						"/products/*/"
+					],
+					"expected": false
+				},
+				{
+					"path": "/Pricing",
+					"patterns": [
+						"/products/*/"
+					],
+					"expected": false
+				},
+				{
+					"path": "/",
+					"patterns": [
+						"*"
+					],
+					"expected": true
+				},
+				{
+					"path": "/pricing",
+					"patterns": [
+						"*"
+					],
+					"expected": true
+				},
+				{
+					"path": "/pricing/x",
+					"patterns": [
+						"*"
+					],
+					"expected": true
+				},
+				{
+					"path": "/products",
+					"patterns": [
+						"*"
+					],
+					"expected": true
+				},
+				{
+					"path": "/products/a",
+					"patterns": [
+						"*"
+					],
+					"expected": true
+				},
+				{
+					"path": "/products/a/b",
+					"patterns": [
+						"*"
+					],
+					"expected": true
+				},
+				{
+					"path": "/productsx",
+					"patterns": [
+						"*"
+					],
+					"expected": true
+				},
+				{
+					"path": "/a",
+					"patterns": [
+						"*"
+					],
+					"expected": true
+				},
+				{
+					"path": "/b",
+					"patterns": [
+						"*"
+					],
+					"expected": true
+				},
+				{
+					"path": "/b/c",
+					"patterns": [
+						"*"
+					],
+					"expected": true
+				},
+				{
+					"path": "/Pricing",
+					"patterns": [
+						"*"
+					],
+					"expected": true
+				},
+				{
+					"path": "/",
+					"patterns": [
+						"/*"
+					],
+					"expected": true
+				},
+				{
+					"path": "/pricing",
+					"patterns": [
+						"/*"
+					],
+					"expected": true
+				},
+				{
+					"path": "/pricing/x",
+					"patterns": [
+						"/*"
+					],
+					"expected": true
+				},
+				{
+					"path": "/products",
+					"patterns": [
+						"/*"
+					],
+					"expected": true
+				},
+				{
+					"path": "/products/a",
+					"patterns": [
+						"/*"
+					],
+					"expected": true
+				},
+				{
+					"path": "/products/a/b",
+					"patterns": [
+						"/*"
+					],
+					"expected": true
+				},
+				{
+					"path": "/productsx",
+					"patterns": [
+						"/*"
+					],
+					"expected": true
+				},
+				{
+					"path": "/a",
+					"patterns": [
+						"/*"
+					],
+					"expected": true
+				},
+				{
+					"path": "/b",
+					"patterns": [
+						"/*"
+					],
+					"expected": true
+				},
+				{
+					"path": "/b/c",
+					"patterns": [
+						"/*"
+					],
+					"expected": true
+				},
+				{
+					"path": "/Pricing",
+					"patterns": [
+						"/*"
+					],
+					"expected": true
+				},
+				{
+					"path": "/",
+					"patterns": [
+						"/"
+					],
+					"expected": true
+				},
+				{
+					"path": "/pricing",
+					"patterns": [
+						"/"
+					],
+					"expected": false
+				},
+				{
+					"path": "/pricing/x",
+					"patterns": [
+						"/"
+					],
+					"expected": false
+				},
+				{
+					"path": "/products",
+					"patterns": [
+						"/"
+					],
+					"expected": false
+				},
+				{
+					"path": "/products/a",
+					"patterns": [
+						"/"
+					],
+					"expected": false
+				},
+				{
+					"path": "/products/a/b",
+					"patterns": [
+						"/"
+					],
+					"expected": false
+				},
+				{
+					"path": "/productsx",
+					"patterns": [
+						"/"
+					],
+					"expected": false
+				},
+				{
+					"path": "/a",
+					"patterns": [
+						"/"
+					],
+					"expected": false
+				},
+				{
+					"path": "/b",
+					"patterns": [
+						"/"
+					],
+					"expected": false
+				},
+				{
+					"path": "/b/c",
+					"patterns": [
+						"/"
+					],
+					"expected": false
+				},
+				{
+					"path": "/Pricing",
+					"patterns": [
+						"/"
+					],
+					"expected": false
+				},
+				{
+					"path": "/",
+					"patterns": [
+						"/a",
+						"/b/*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/pricing",
+					"patterns": [
+						"/a",
+						"/b/*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/pricing/x",
+					"patterns": [
+						"/a",
+						"/b/*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/products",
+					"patterns": [
+						"/a",
+						"/b/*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/products/a",
+					"patterns": [
+						"/a",
+						"/b/*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/products/a/b",
+					"patterns": [
+						"/a",
+						"/b/*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/productsx",
+					"patterns": [
+						"/a",
+						"/b/*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/a",
+					"patterns": [
+						"/a",
+						"/b/*"
+					],
+					"expected": true
+				},
+				{
+					"path": "/b",
+					"patterns": [
+						"/a",
+						"/b/*"
+					],
+					"expected": true
+				},
+				{
+					"path": "/b/c",
+					"patterns": [
+						"/a",
+						"/b/*"
+					],
+					"expected": true
+				},
+				{
+					"path": "/Pricing",
+					"patterns": [
+						"/a",
+						"/b/*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/",
+					"patterns": [],
+					"expected": false
+				},
+				{
+					"path": "/pricing",
+					"patterns": [],
+					"expected": false
+				},
+				{
+					"path": "/pricing/x",
+					"patterns": [],
+					"expected": false
+				},
+				{
+					"path": "/products",
+					"patterns": [],
+					"expected": false
+				},
+				{
+					"path": "/products/a",
+					"patterns": [],
+					"expected": false
+				},
+				{
+					"path": "/products/a/b",
+					"patterns": [],
+					"expected": false
+				},
+				{
+					"path": "/productsx",
+					"patterns": [],
+					"expected": false
+				},
+				{
+					"path": "/a",
+					"patterns": [],
+					"expected": false
+				},
+				{
+					"path": "/b",
+					"patterns": [],
+					"expected": false
+				},
+				{
+					"path": "/b/c",
+					"patterns": [],
+					"expected": false
+				},
+				{
+					"path": "/Pricing",
+					"patterns": [],
+					"expected": false
+				},
+				{
+					"path": "/",
+					"patterns": [
+						"/Pricing"
+					],
+					"expected": false
+				},
+				{
+					"path": "/pricing",
+					"patterns": [
+						"/Pricing"
+					],
+					"expected": false
+				},
+				{
+					"path": "/pricing/x",
+					"patterns": [
+						"/Pricing"
+					],
+					"expected": false
+				},
+				{
+					"path": "/products",
+					"patterns": [
+						"/Pricing"
+					],
+					"expected": false
+				},
+				{
+					"path": "/products/a",
+					"patterns": [
+						"/Pricing"
+					],
+					"expected": false
+				},
+				{
+					"path": "/products/a/b",
+					"patterns": [
+						"/Pricing"
+					],
+					"expected": false
+				},
+				{
+					"path": "/productsx",
+					"patterns": [
+						"/Pricing"
+					],
+					"expected": false
+				},
+				{
+					"path": "/a",
+					"patterns": [
+						"/Pricing"
+					],
+					"expected": false
+				},
+				{
+					"path": "/b",
+					"patterns": [
+						"/Pricing"
+					],
+					"expected": false
+				},
+				{
+					"path": "/b/c",
+					"patterns": [
+						"/Pricing"
+					],
+					"expected": false
+				},
+				{
+					"path": "/Pricing",
+					"patterns": [
+						"/Pricing"
+					],
+					"expected": true
+				},
+				{
+					"path": "/",
+					"patterns": [
+						"products/*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/pricing",
+					"patterns": [
+						"products/*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/pricing/x",
+					"patterns": [
+						"products/*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/products",
+					"patterns": [
+						"products/*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/products/a",
+					"patterns": [
+						"products/*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/products/a/b",
+					"patterns": [
+						"products/*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/productsx",
+					"patterns": [
+						"products/*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/a",
+					"patterns": [
+						"products/*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/b",
+					"patterns": [
+						"products/*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/b/c",
+					"patterns": [
+						"products/*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/Pricing",
+					"patterns": [
+						"products/*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/",
+					"patterns": [
+						"/products*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/pricing",
+					"patterns": [
+						"/products*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/pricing/x",
+					"patterns": [
+						"/products*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/products",
+					"patterns": [
+						"/products*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/products/a",
+					"patterns": [
+						"/products*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/products/a/b",
+					"patterns": [
+						"/products*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/productsx",
+					"patterns": [
+						"/products*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/a",
+					"patterns": [
+						"/products*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/b",
+					"patterns": [
+						"/products*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/b/c",
+					"patterns": [
+						"/products*"
+					],
+					"expected": false
+				},
+				{
+					"path": "/Pricing",
+					"patterns": [
+						"/products*"
+					],
+					"expected": false
+				}
+			]
+		}
+	]
+}

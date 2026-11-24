@@ -1,0 +1,125 @@
+name: .NET
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_call:
+
+jobs:
+  fixtures:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "26"
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - name: Check the committed fixtures match the TypeScript relay
+        run: |
+          bun run fixtures
+          git diff --exit-code fixtures
+
+  unit:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+      - name: Build the packages
+        run: |
+          dotnet build dotnet/src/Waniwani.Relay/Waniwani.Relay.csproj -c Release
+          dotnet build dotnet/src/Waniwani.Relay.AspNet/Waniwani.Relay.AspNet.csproj -c Release
+          dotnet build dotnet/src/Waniwani.Relay.AspNetCore/Waniwani.Relay.AspNetCore.csproj -c Release
+      - name: Run the fixture conformance tests
+        run: dotnet test dotnet/test/Waniwani.Relay.Tests/Waniwani.Relay.Tests.csproj -c Release
+      - name: Pack
+        if: matrix.os == 'windows-latest'
+        shell: bash
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          for project in Waniwani.Relay Waniwani.Relay.AspNet Waniwani.Relay.AspNetCore; do
+            dotnet pack "dotnet/src/$project/$project.csproj" -c Release -p:Version="$VERSION" -o artifacts
+          done
+      - uses: actions/upload-artifact@v5
+        if: matrix.os == 'windows-latest'
+        with:
+          name: nuget-packages
+          path: artifacts/*.nupkg
+
+  iis-e2e:
+    needs: unit
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "26"
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
+      - name: Install IIS with ASP.NET 4.x
+        shell: powershell
+        run: |
+          Install-WindowsFeature -Name Web-Server, Web-Asp-Net45, Web-Static-Content, Web-Http-Logging, Web-Mgmt-Console | Out-Null
+          Import-Module WebAdministration
+          Get-Website | ForEach-Object { Stop-Website -Name $_.Name }
+      - name: Build the sample site
+        run: dotnet build dotnet/samples/SampleSite/SampleSite.csproj -c Release -p:Version=$((Get-Content package.json | ConvertFrom-Json).version)
+        shell: powershell
+      - name: Create the sites
+        shell: powershell
+        run: |
+          Import-Module WebAdministration
+          foreach ($name in @("e2e", "e2e-off")) {
+            $root = "C:\sites\$name"
+            New-Item -ItemType Directory -Force -Path "$root\bin" | Out-Null
+            Copy-Item dotnet\samples\SampleSite\bin\*.dll "$root\bin\"
+            Copy-Item dotnet\samples\SampleSite\llms.txt "$root\"
+            New-WebAppPool -Name $name | Out-Null
+            Set-ItemProperty "IIS:\AppPools\$name" -Name managedRuntimeVersion -Value "v4.0"
+          }
+          Copy-Item dotnet\samples\SampleSite\web.config "C:\sites\e2e\web.config"
+          Copy-Item dotnet\samples\SampleSite\web.off.config "C:\sites\e2e-off\web.config"
+          New-Website -Name e2e -Port 8080 -PhysicalPath C:\sites\e2e -ApplicationPool e2e | Out-Null
+          New-Website -Name e2e-off -Port 8082 -PhysicalPath C:\sites\e2e-off -ApplicationPool e2e-off | Out-Null
+          icacls C:\sites /grant "IIS_IUSRS:(OI)(CI)RX" | Out-Null
+      - name: Run the end-to-end tests
+        shell: powershell
+        run: |
+          node e2e/run.ts --target http://127.0.0.1:8080 --platform aspnet --slow --restart-cmd "powershell -NoProfile -File e2e/iis/recycle.ps1 e2e" --memory-cmd "powershell -NoProfile -File e2e/iis/memory.ps1 e2e"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Run the end-to-end tests with the relay turned off
+        shell: powershell
+        run: |
+          (Get-Content C:\sites\e2e\web.config) -replace 'key="Waniwani:Enabled" value="true"', 'key="Waniwani:Enabled" value="false"' | Set-Content C:\sites\e2e\web.config
+          node e2e/run.ts --target http://127.0.0.1:8080 --suite disabled
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Run the end-to-end tests with a key that is not valid
+        shell: powershell
+        run: |
+          (Get-Content C:\sites\e2e\web.config) -replace 'key="Waniwani:Enabled" value="false"', 'key="Waniwani:Enabled" value="true"' -replace 'wwt_e2e\.b3JnLWtleQ', 'wwt_not a key' | Set-Content C:\sites\e2e\web.config
+          node e2e/run.ts --target http://127.0.0.1:8080 --suite bad-key
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Measure the added time for persons
+        shell: powershell
+        run: |
+          (Get-Content C:\sites\e2e\web.config) -replace 'wwt_not a key', 'wwt_e2e.b3JnLWtleQ' | Set-Content C:\sites\e2e\web.config
+          node e2e/load.ts --with http://127.0.0.1:8080 --without http://127.0.0.1:8082
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Check the event log for ASP.NET errors
+        if: always()
+        shell: powershell
+        run: |
+          $errors = Get-WinEvent -FilterHashtable @{ LogName = "Application"; Level = 1, 2; StartTime = (Get-Date).AddHours(-1) } -ErrorAction SilentlyContinue | Where-Object { $_.ProviderName -match "ASP.NET|W3SVC|WAS" }
+          $errors | Format-List TimeCreated, ProviderName, Message
+          if ($errors) { exit 1 }

@@ -1,0 +1,101 @@
+{
+	"relayVersion": "0.7.0",
+	"cases": [
+		{
+			"headers": {
+				"user-agent": "ChatGPT-User/1.0",
+				"referer": "https://chatgpt.com/",
+				"cookie": "a=1",
+				"x-forwarded-for": "1.2.3.4"
+			},
+			"expected": {
+				"user-agent": "ChatGPT-User/1.0",
+				"referer": "https://chatgpt.com/"
+			}
+		},
+		{
+			"headers": {
+				"authorization": "Bearer secret-token"
+			},
+			"expected": {
+				"authorization": "Bearer"
+			}
+		},
+		{
+			"headers": {
+				"authorization": "bearer secret-token"
+			},
+			"expected": {
+				"authorization": "Bearer"
+			}
+		},
+		{
+			"headers": {
+				"authorization": "Bearer"
+			},
+			"expected": {}
+		},
+		{
+			"headers": {
+				"authorization": "Custom secret"
+			},
+			"expected": {}
+		},
+		{
+			"headers": {
+				"authorization": "SCRAM-SHA-256 abc"
+			},
+			"expected": {
+				"authorization": "SCRAM-SHA-256"
+			}
+		},
+		{
+			"headers": {
+				"authorization": "aws4-hmac-sha256 Credential=x"
+			},
+			"expected": {
+				"authorization": "AWS4-HMAC-SHA256"
+			}
+		},
+		{
+			"headers": {
+				"Sec-CH-UA": "\"Chromium\";v=\"142\"",
+				"sec-ch-ua-mobile": "?0",
+				"sec-ch-ua-platform": "\"Windows\""
+			},
+			"expected": {
+				"sec-ch-ua": "\"Chromium\";v=\"142\"",
+				"sec-ch-ua-platform": "\"Windows\"",
+				"sec-ch-ua-mobile": "?0"
+			}
+		},
+		{
+			"headers": {
+				"signature-input": "sig1=(\"@authority\")",
+				"signature": "sig1=:abc:",
+				"from": "bot@example.com",
+				"accept-language": "fr-FR"
+			},
+			"expected": {
+				"accept-language": "fr-FR",
+				"from": "bot@example.com",
+				"signature-input": "sig1=(\"@authority\")",
+				"signature": "sig1=:abc:"
+			}
+		},
+		{
+			"headers": {
+				"accept": "text/markdown",
+				"x-waniwani-render": "1",
+				"host": "www.example.com"
+			},
+			"expected": {
+				"accept": "text/markdown"
+			}
+		},
+		{
+			"headers": {},
+			"expected": {}
+		}
+	]
+}

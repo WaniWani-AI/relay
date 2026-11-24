@@ -1,0 +1,155 @@
+{
+	"relayVersion": "0.7.0",
+	"cases": [
+		{
+			"orgKey": "n2qibGz_0noxBqbFYI_P3xY0WiWLqVmTyKMczeYJ9oA",
+			"ip": "198.51.100.23",
+			"expected": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
+		},
+		{
+			"orgKey": "n2qibGz_0noxBqbFYI_P3xY0WiWLqVmTyKMczeYJ9oA",
+			"ip": "203.0.113.10",
+			"expected": "f88eba717a457c52331f1467bd7a7f35a5316e697ba3e0f39e1526d6caacfc05"
+		},
+		{
+			"orgKey": "n2qibGz_0noxBqbFYI_P3xY0WiWLqVmTyKMczeYJ9oA",
+			"ip": "2001:db8::1",
+			"expected": "9ecf1896147d53b3350d8c6d0859e7a2cc4815e7f0483465827d83d2cd5c7385"
+		},
+		{
+			"orgKey": "n2qibGz_0noxBqbFYI_P3xY0WiWLqVmTyKMczeYJ9oA",
+			"ip": "::ffff:192.0.2.1",
+			"expected": "6949d1ea919164028486530f875901445ed3e14c23b79007802d0610c164faa5"
+		},
+		{
+			"orgKey": "n2qibGz_0noxBqbFYI_P3xY0WiWLqVmTyKMczeYJ9oA",
+			"ip": "0.0.0.0",
+			"expected": "24804188ffb6640d8dd199e2c51f5d5434b0d5b93ead32cbb2b036a01cc5a681"
+		},
+		{
+			"orgKey": "n2qibGz_0noxBqbFYI_P3xY0WiWLqVmTyKMczeYJ9oA",
+			"ip": "fe80::1",
+			"expected": "dc639da7a27d4bb5ebb8e9b5e8e5029d558226542aea41d224207615c4644371"
+		},
+		{
+			"orgKey": "b3JnLWtleS1zZWNyZXQ",
+			"ip": "198.51.100.23",
+			"expected": "bac8499e2e50ee3e2630b3fc03e4d20f893f4aed601d0c95028cb0da0fc69eb6"
+		},
+		{
+			"orgKey": "b3JnLWtleS1zZWNyZXQ",
+			"ip": "203.0.113.10",
+			"expected": "c9a4d3955bc3589be838f9b5fa4ef9a438506528e8c803f5f9002934006171de"
+		},
+		{
+			"orgKey": "b3JnLWtleS1zZWNyZXQ",
+			"ip": "2001:db8::1",
+			"expected": "bf7ad91ac14b615fad91e02a7c05cbad22d205866925caeaed2cf38c4cd2cd2b"
+		},
+		{
+			"orgKey": "b3JnLWtleS1zZWNyZXQ",
+			"ip": "::ffff:192.0.2.1",
+			"expected": "9ea625aefcc5bc3d236b89018ad41b9275ff4c8c9256f576a33d117931975481"
+		},
+		{
+			"orgKey": "b3JnLWtleS1zZWNyZXQ",
+			"ip": "0.0.0.0",
+			"expected": "37840cb30d126c25c5a2113b758339ff4b5ab0297c04b6310836669eccbeaaac"
+		},
+		{
+			"orgKey": "b3JnLWtleS1zZWNyZXQ",
+			"ip": "fe80::1",
+			"expected": "62b2fd6cca0a83328709c9c7869ce1110366ad2e2c0bd110f698fe1906e7a735"
+		},
+		{
+			"orgKey": "a",
+			"ip": "198.51.100.23",
+			"expected": "e0a557e9783b2db65e032640e931b36912320be5ea5e1130e522e998b2385a8a"
+		},
+		{
+			"orgKey": "a",
+			"ip": "203.0.113.10",
+			"expected": "f29d5174674104a32619491ecd1692084c9de54f0dddd3cb52a5208d9bef3db3"
+		},
+		{
+			"orgKey": "a",
+			"ip": "2001:db8::1",
+			"expected": "d25dab418a5da4d1b65c16eaa69259e442712b081a3b3d74ee2ecf37a033db31"
+		},
+		{
+			"orgKey": "a",
+			"ip": "::ffff:192.0.2.1",
+			"expected": "cbfb4cf0b2b87ab884965b078dceb7fe7fc30723ae398e8b3a5e59beb735cccd"
+		},
+		{
+			"orgKey": "a",
+			"ip": "0.0.0.0",
+			"expected": "c9787153b1f0da0e65542c71d499f6419bf9b8ede696bb64bbda41d33e443492"
+		},
+		{
+			"orgKey": "a",
+			"ip": "fe80::1",
+			"expected": "1668998b4214a943c8754752008c9a2e57b17ef3c5d2c5e66a9892b042c62838"
+		},
+		{
+			"orgKey": "b3Jn==",
+			"ip": "198.51.100.23",
+			"expected": "5a67fb5ff3d9a66fa14358cb6440c9b78ed8bcab9d66a64704fb4f30828f8740"
+		},
+		{
+			"orgKey": "b3Jn==",
+			"ip": "203.0.113.10",
+			"expected": "8b0e145017b4d848ca412fcd3bae9f67380eaf9d5f93d87f93e6ee6b8e6bdbdd"
+		},
+		{
+			"orgKey": "b3Jn==",
+			"ip": "2001:db8::1",
+			"expected": "536e09e67f3a20a557713d8e7b9747b49d1afa8a89e521c9858ade49dacdaecd"
+		},
+		{
+			"orgKey": "b3Jn==",
+			"ip": "::ffff:192.0.2.1",
+			"expected": "2551887a80fde3d6a12c1af5fee9ec2818186f8af69b7c16bf623f858702244a"
+		},
+		{
+			"orgKey": "b3Jn==",
+			"ip": "0.0.0.0",
+			"expected": "4293af0d491561a8068d5be280ffbe83de3865693af8723c59a0812983158e9b"
+		},
+		{
+			"orgKey": "b3Jn==",
+			"ip": "fe80::1",
+			"expected": "1376393a6781ffedaeefb6255ccc04930296a1ef54f202c13d95697fbbf07737"
+		},
+		{
+			"orgKey": "Zm9v-_bar=",
+			"ip": "198.51.100.23",
+			"expected": "f11fe485343db1ae3c878b566765653b1d9d5f5f86132ed0131f41577eb23383"
+		},
+		{
+			"orgKey": "Zm9v-_bar=",
+			"ip": "203.0.113.10",
+			"expected": "8fc85f81352430464869a5a1d1727cefc9cfbfcb85d182d5edeadf55fece0cc5"
+		},
+		{
+			"orgKey": "Zm9v-_bar=",
+			"ip": "2001:db8::1",
+			"expected": "aa2fd84b9d4ad87fba3bc2939b3cc1426646e3bef6e6daa7a382818f58df3d48"
+		},
+		{
+			"orgKey": "Zm9v-_bar=",
+			"ip": "::ffff:192.0.2.1",
+			"expected": "20968ef1cf5afd64316fa8681b2d1c0ff9dcbaefffdd1d7983550da50d76af10"
+		},
+		{
+			"orgKey": "Zm9v-_bar=",
+			"ip": "0.0.0.0",
+			"expected": "f03bf28728d887c16c69e2364302582221a6962f39ba86d7d2bcbffa634fbaff"
+		},
+		{
+			"orgKey": "Zm9v-_bar=",
+			"ip": "fe80::1",
+			"expected": "6bf4fd24a01140749c8dc0eb254ca1ac1d41f6705c77921f15c8e39a56027bee"
+		}
+	]
+}

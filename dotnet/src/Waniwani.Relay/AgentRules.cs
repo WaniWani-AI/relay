@@ -1,0 +1,185 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+
+namespace Waniwani.Relay
+{
+    internal sealed class AgentRules
+    {
+        private const int MaxScannedUserAgent = 1024;
+        private const int Prefix = 3;
+
+        private readonly Dictionary<long, string[]> _tokensByPrefix;
+        private readonly IpRangeSet _ranges;
+
+        private AgentRules(Dictionary<long, string[]> tokensByPrefix, IpRangeSet ranges)
+        {
+            _tokensByPrefix = tokensByPrefix;
+            _ranges = ranges;
+        }
+
+        public static AgentRules Compile(IReadOnlyList<string> tokens, IReadOnlyList<RangeSource> ranges)
+        {
+            var grouped = new Dictionary<long, List<string>>();
+            foreach (var token in tokens)
+            {
+                if (token.Length < Prefix)
+                {
+                    continue;
+                }
+                var key = PrefixKey(token, 0);
+                if (!grouped.TryGetValue(key, out var list))
+                {
+                    list = new List<string>();
+                    grouped[key] = list;
+                }
+                list.Add(token);
+            }
+            var byPrefix = new Dictionary<long, string[]>();
+            foreach (var pair in grouped)
+            {
+                byPrefix[pair.Key] = pair.Value.ToArray();
+            }
+            var v4 = new List<string>();
+            var v6 = new List<string>();
+            foreach (var source in ranges)
+            {
+                v4.AddRange(source.V4);
+                v6.AddRange(source.V6);
+            }
+            return new AgentRules(byPrefix, IpRangeSet.Build(v4, v6));
+        }
+
+        public static AgentRules LoadBundled()
+        {
+            var tokens = new List<string>();
+            foreach (var token in ReadResource("Waniwani.Relay.agents.json").Get("tokens")?.Items ?? new List<JsonValue>())
+            {
+                tokens.Add(token.String);
+            }
+            var ranges = new List<RangeSource>();
+            foreach (var source in ReadResource("Waniwani.Relay.ip-ranges.json").Get("sources")?.Items ?? new List<JsonValue>())
+            {
+                Json.TryStringArray(source, "ipv4", out var v4);
+                Json.TryStringArray(source, "ipv6", out var v6);
+                ranges.Add(new RangeSource(v4, v6));
+            }
+            return Compile(tokens, ranges);
+        }
+
+        private static JsonValue ReadResource(string name)
+        {
+            using (var stream = typeof(AgentRules).Assembly.GetManifestResourceStream(name) ?? throw new InvalidOperationException("missing " + name))
+            using (var reader = new StreamReader(stream))
+            {
+                return JsonValue.Parse(reader.ReadToEnd());
+            }
+        }
+
+        /// <summary>The match rules in the <c>data</c> of the agent rules answer, or null when it does not have the expected form. Throws when a range is malformed.</summary>
+        public static AgentRules? ParseRemote(JsonValue data)
+        {
+            if (data.Kind != JsonKind.Object || !Json.IsNumber(data, "version", 1))
+            {
+                return null;
+            }
+            var ipRanges = data.Get("ipRanges");
+            if (!Json.TryStringArray(data, "tokens", out var tokens) || ipRanges == null || ipRanges.Kind != JsonKind.Array)
+            {
+                return null;
+            }
+            var ranges = new List<RangeSource>();
+            foreach (var range in ipRanges.Items)
+            {
+                if (range.Kind != JsonKind.Object || !Json.TryStringArray(range, "ipv4", out var v4) || !Json.TryStringArray(range, "ipv6", out var v6))
+                {
+                    return null;
+                }
+                ranges.Add(new RangeSource(v4, v6));
+            }
+            var lowered = new List<string>(tokens.Count);
+            foreach (var token in tokens)
+            {
+                lowered.Add(Text.ToLowerJs(token));
+            }
+            return Compile(lowered, ranges);
+        }
+
+        private static long PrefixKey(string text, int index)
+        {
+            return ((long)text[index] << 32) | ((long)text[index + 1] << 16) | text[index + 2];
+        }
+
+        public bool HasAgentToken(string userAgent)
+        {
+            var scanned = userAgent.Length > MaxScannedUserAgent ? userAgent.Substring(0, MaxScannedUserAgent) : userAgent;
+            var text = Text.ToLowerJs(scanned);
+            for (var i = 0; i + Prefix <= text.Length; i++)
+            {
+                if (_tokensByPrefix.TryGetValue(PrefixKey(text, i), out var candidates))
+                {
+                    foreach (var token in candidates)
+                    {
+                        if (i + token.Length <= text.Length && string.CompareOrdinal(text, i, token, 0, token.Length) == 0)
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        public bool IsAgentIp(string ip)
+        {
+            return _ranges.Contains(ip);
+        }
+
+        public bool Decide(IReadOnlyDictionary<string, string> cappedHeaders, string? ip)
+        {
+            if (cappedHeaders.TryGetValue("user-agent", out var userAgent) && HasAgentToken(userAgent))
+            {
+                return true;
+            }
+            if (cappedHeaders.ContainsKey("signature-agent") || cappedHeaders.ContainsKey("dpop"))
+            {
+                return true;
+            }
+            if (cappedHeaders.TryGetValue("authorization", out var authorization) && string.Equals(Text.ToLowerJs(authorization), "dpop", StringComparison.Ordinal))
+            {
+                return true;
+            }
+            return ip != null && IsAgentIp(ip);
+        }
+    }
+
+    internal sealed class RangeSource
+    {
+        public RangeSource(IReadOnlyList<string> v4, IReadOnlyList<string> v6)
+        {
+            V4 = v4;
+            V6 = v6;
+        }
+
+        public IReadOnlyList<string> V4 { get; }
+        public IReadOnlyList<string> V6 { get; }
+    }
+
+    internal static class Text
+    {
+        public static string ToLowerJs(string value)
+        {
+            return value.ToLowerInvariant();
+        }
+
+        public static string TrimJs(string value)
+        {
+            return value.Trim(WhiteSpace);
+        }
+
+        private static readonly char[] WhiteSpace =
+        {
+            (char)0x0009, (char)0x000A, (char)0x000B, (char)0x000C, (char)0x000D, (char)0x0020, (char)0x00A0, (char)0x1680, (char)0x2000, (char)0x2001, (char)0x2002, (char)0x2003, (char)0x2004, (char)0x2005, (char)0x2006, (char)0x2007, (char)0x2008, (char)0x2009, (char)0x200A, (char)0x2028, (char)0x2029, (char)0x202F, (char)0x205F, (char)0x3000, (char)0xFEFF,
+        };
+    }
+}

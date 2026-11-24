@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net462</TargetFramework>
+    <RootNamespace>Waniwani.Relay.AspNet</RootNamespace>
+    <Description>The Waniwani relay for classic ASP.NET (System.Web) on IIS. An IHttpModule that records AI agent visits and serves Waniwani agent pages.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Waniwani.Relay\Waniwani.Relay.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.Web" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="content\web.config.install.xdt" Pack="true" PackagePath="content\web.config.install.xdt" />
+    <None Include="content\web.config.uninstall.xdt" Pack="true" PackagePath="content\web.config.uninstall.xdt" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,91 @@
+name: Reference site
+
+on:
+  schedule:
+    - cron: "0 4 * * *"
+  workflow_dispatch:
+    inputs:
+      nuget_version:
+        description: "Install this published version from nuget.org in place of the code of this commit"
+        required: false
+        default: ""
+  workflow_call:
+
+concurrency:
+  group: reference-site
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: eu-west-3
+  SITE_URL: https://iis-relay.waniwani.dev
+
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
+      - name: Build the sample site
+        shell: powershell
+        run: |
+          $version = (Get-Content package.json | ConvertFrom-Json).version
+          dotnet build dotnet/samples/SampleSite/SampleSite.csproj -c Release -p:Version=$version
+          New-Item -ItemType Directory -Force -Path site\bin | Out-Null
+          Copy-Item dotnet\samples\SampleSite\bin\*.dll site\bin\
+          Copy-Item dotnet\samples\SampleSite\web.config, dotnet\samples\SampleSite\llms.txt site\
+          Compress-Archive -Path site\* -DestinationPath site.zip
+      - uses: actions/upload-artifact@v5
+        with:
+          name: reference-site
+          path: site.zip
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "26"
+      - uses: actions/download-artifact@v5
+        with:
+          name: reference-site
+      - uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ vars.REFERENCE_SITE_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Install the build on the reference site
+        env:
+          WANIWANI_API: ${{ secrets.REFERENCE_SITE_WANIWANI_API }}
+          NUGET_VERSION: ${{ inputs.nuget_version || '' }}
+        run: |
+          BUCKET="relay-reference-$(aws sts get-caller-identity --query Account --output text)-$AWS_REGION"
+          BUILD="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          aws s3 cp site.zip "s3://$BUCKET/builds/$BUILD/site.zip"
+          aws s3 cp e2e/iis/deploy-reference.ps1 "s3://$BUCKET/builds/$BUILD/deploy.ps1"
+          INSTANCE=$(aws ec2 describe-instances --filters Name=tag:Name,Values=relay-reference Name=instance-state-name,Values=running --query 'Reservations[0].Instances[0].InstanceId' --output text)
+          COMMANDS=$(jq -cn --arg b "$BUCKET" --arg r "$AWS_REGION" --arg build "$BUILD" --arg v "$NUGET_VERSION" --arg api "$WANIWANI_API" '{commands: [
+            "Read-S3Object -Region \($r) -BucketName \($b) -Key builds/\($build)/deploy.ps1 -File C:\\deploy.ps1 | Out-Null",
+            "& C:\\deploy.ps1 -Bucket \($b) -Region \($r) -Build \($build) -NuGetVersion \"\($v)\" -BaseUrl \($api)"
+          ]}')
+          COMMAND=$(aws ssm send-command --instance-ids "$INSTANCE" --document-name AWS-RunPowerShellScript --parameters "$COMMANDS" --query Command.CommandId --output text)
+          aws ssm wait command-executed --command-id "$COMMAND" --instance-id "$INSTANCE" || true
+          aws ssm get-command-invocation --command-id "$COMMAND" --instance-id "$INSTANCE" --query '[Status,StandardOutputContent,StandardErrorContent]' --output text
+          test "$(aws ssm get-command-invocation --command-id "$COMMAND" --instance-id "$INSTANCE" --query Status --output text)" = Success
+      - name: Run the live tests against the reference site and Waniwani production
+        env:
+          WANIWANI_API_KEY: ${{ secrets.REFERENCE_SITE_WANIWANI_API_KEY }}
+          WANIWANI_API: ${{ secrets.REFERENCE_SITE_WANIWANI_API }}
+          NUGET_VERSION: ${{ inputs.nuget_version || '' }}
+        run: |
+          VERSION="${NUGET_VERSION:-$(node -p "require('./package.json').version")}"
+          node e2e/run.ts --live --target "$SITE_URL" --platform aspnet \
+            --page-path / \
+            --no-page-path /contact \
+            --blocked-ua 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; GPTBot/1.2; +https://openai.com/gptbot' \
+            --waniwani-api "$WANIWANI_API" --relay-version "$VERSION"

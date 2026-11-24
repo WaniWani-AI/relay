@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net462</TargetFrameworks>
+    <RootNamespace>Waniwani.Relay</RootNamespace>
+    <Description>Records AI agent visits to your website and serves Waniwani agent pages. The core of the Waniwani relay. It has no dependencies.</Description>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
+    <Reference Include="System.Net.Http" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\..\src\logic\agents.generated.json" LogicalName="Waniwani.Relay.agents.json" />
+    <EmbeddedResource Include="..\..\..\src\logic\ip-ranges.generated.json" LogicalName="Waniwani.Relay.ip-ranges.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Waniwani.Relay.Tests" />
+  </ItemGroup>
+</Project>

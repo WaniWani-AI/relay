@@ -1,0 +1,2119 @@
+{
+	"relayVersion": "0.7.0",
+	"cases": [
+		{
+			"name": "agent gets the page",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "text/markdown; charset=utf-8"
+				},
+				"body": "# Pricing"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case1",
+			"expected": {
+				"answer": {
+					"status": 200,
+					"headers": {
+						"cache-control": "private, no-store",
+						"content-type": "text/markdown; charset=utf-8",
+						"vary": "user-agent, accept",
+						"x-waniwani-agent-page": "hit"
+					},
+					"body": "# Pricing"
+				},
+				"pageRequest": {
+					"url": "https://pages.test/serve/tok/pages/www.example.com/pricing",
+					"method": "GET",
+					"headers": {
+						"accept": "text/html",
+						"x-waniwani-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"x-waniwani-relay": "0.7.0"
+					},
+					"body": null
+				}
+			}
+		},
+		{
+			"name": "agent asks for markdown",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"accept": "text/markdown"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "text/markdown; charset=utf-8"
+				},
+				"body": "# Pricing"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case2",
+			"expected": {
+				"answer": {
+					"status": 200,
+					"headers": {
+						"cache-control": "private, no-store",
+						"content-type": "text/markdown; charset=utf-8",
+						"vary": "user-agent, accept",
+						"x-waniwani-agent-page": "hit"
+					},
+					"body": "# Pricing"
+				},
+				"pageRequest": {
+					"url": "https://pages.test/serve/tok/pages/www.example.com/pricing",
+					"method": "GET",
+					"headers": {
+						"accept": "text/markdown",
+						"x-waniwani-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"x-waniwani-relay": "0.7.0"
+					},
+					"body": null
+				}
+			}
+		},
+		{
+			"name": "agent asks for html",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"accept": "text/html"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "text/html; charset=utf-8"
+				},
+				"body": "<h1>Pricing</h1>"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case3",
+			"expected": {
+				"answer": {
+					"status": 200,
+					"headers": {
+						"cache-control": "private, no-store",
+						"content-type": "text/html; charset=utf-8",
+						"vary": "user-agent, accept",
+						"x-waniwani-agent-page": "hit"
+					},
+					"body": "<h1>Pricing</h1>"
+				},
+				"pageRequest": {
+					"url": "https://pages.test/serve/tok/pages/www.example.com/pricing",
+					"method": "GET",
+					"headers": {
+						"accept": "text/html",
+						"x-waniwani-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"x-waniwani-relay": "0.7.0"
+					},
+					"body": null
+				}
+			}
+		},
+		{
+			"name": "home page has no trailing slash",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "text/markdown; charset=utf-8"
+				},
+				"body": "# Home"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case4",
+			"expected": {
+				"answer": {
+					"status": 200,
+					"headers": {
+						"cache-control": "private, no-store",
+						"content-type": "text/markdown; charset=utf-8",
+						"vary": "user-agent, accept",
+						"x-waniwani-agent-page": "hit"
+					},
+					"body": "# Home"
+				},
+				"pageRequest": {
+					"url": "https://pages.test/serve/tok/pages/www.example.com",
+					"method": "GET",
+					"headers": {
+						"accept": "text/html",
+						"x-waniwani-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"x-waniwani-relay": "0.7.0"
+					},
+					"body": null
+				}
+			}
+		},
+		{
+			"name": "trailing slash is dropped",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing/",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "text/markdown; charset=utf-8"
+				},
+				"body": "# Pricing"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case5",
+			"expected": {
+				"answer": {
+					"status": 200,
+					"headers": {
+						"cache-control": "private, no-store",
+						"content-type": "text/markdown; charset=utf-8",
+						"vary": "user-agent, accept",
+						"x-waniwani-agent-page": "hit"
+					},
+					"body": "# Pricing"
+				},
+				"pageRequest": {
+					"url": "https://pages.test/serve/tok/pages/www.example.com/pricing",
+					"method": "GET",
+					"headers": {
+						"accept": "text/html",
+						"x-waniwani-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"x-waniwani-relay": "0.7.0"
+					},
+					"body": null
+				}
+			}
+		},
+		{
+			"name": "query is forwarded",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/products/car?model=a%20b&x=1",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "text/markdown; charset=utf-8"
+				},
+				"body": "# Car"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case6",
+			"expected": {
+				"answer": {
+					"status": 200,
+					"headers": {
+						"cache-control": "private, no-store",
+						"content-type": "text/markdown; charset=utf-8",
+						"vary": "user-agent, accept",
+						"x-waniwani-agent-page": "hit"
+					},
+					"body": "# Car"
+				},
+				"pageRequest": {
+					"url": "https://pages.test/serve/tok/pages/www.example.com/products/car?model=a%20b&x=1",
+					"method": "GET",
+					"headers": {
+						"accept": "text/html",
+						"x-waniwani-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"x-waniwani-relay": "0.7.0"
+					},
+					"body": null
+				}
+			}
+		},
+		{
+			"name": "folder pattern covers the folder",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/products",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "text/markdown; charset=utf-8"
+				},
+				"body": "# Products"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case7",
+			"expected": {
+				"answer": {
+					"status": 200,
+					"headers": {
+						"cache-control": "private, no-store",
+						"content-type": "text/markdown; charset=utf-8",
+						"vary": "user-agent, accept",
+						"x-waniwani-agent-page": "hit"
+					},
+					"body": "# Products"
+				},
+				"pageRequest": {
+					"url": "https://pages.test/serve/tok/pages/www.example.com/products",
+					"method": "GET",
+					"headers": {
+						"accept": "text/html",
+						"x-waniwani-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"x-waniwani-relay": "0.7.0"
+					},
+					"body": null
+				}
+			}
+		},
+		{
+			"name": "path not listed",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/contact",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "text/markdown; charset=utf-8"
+				},
+				"body": "# Pricing"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case8",
+			"expected": {
+				"answer": null,
+				"pageRequest": null
+			}
+		},
+		{
+			"name": "host not listed",
+			"request": {
+				"method": "GET",
+				"url": "https://other.example.com/pricing",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "text/markdown; charset=utf-8"
+				},
+				"body": "# Pricing"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case9",
+			"expected": {
+				"answer": null,
+				"pageRequest": null
+			}
+		},
+		{
+			"name": "host upper case",
+			"request": {
+				"method": "GET",
+				"url": "https://WWW.EXAMPLE.COM/pricing",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "text/markdown; charset=utf-8"
+				},
+				"body": "# Pricing"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case10",
+			"expected": {
+				"answer": {
+					"status": 200,
+					"headers": {
+						"cache-control": "private, no-store",
+						"content-type": "text/markdown; charset=utf-8",
+						"vary": "user-agent, accept",
+						"x-waniwani-agent-page": "hit"
+					},
+					"body": "# Pricing"
+				},
+				"pageRequest": {
+					"url": "https://pages.test/serve/tok/pages/www.example.com/pricing",
+					"method": "GET",
+					"headers": {
+						"accept": "text/html",
+						"x-waniwani-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"x-waniwani-relay": "0.7.0"
+					},
+					"body": null
+				}
+			}
+		},
+		{
+			"name": "host with port",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com:8443/pricing",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "text/markdown; charset=utf-8"
+				},
+				"body": "# Pricing"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case11",
+			"expected": {
+				"answer": {
+					"status": 200,
+					"headers": {
+						"cache-control": "private, no-store",
+						"content-type": "text/markdown; charset=utf-8",
+						"vary": "user-agent, accept",
+						"x-waniwani-agent-page": "hit"
+					},
+					"body": "# Pricing"
+				},
+				"pageRequest": {
+					"url": "https://pages.test/serve/tok/pages/www.example.com/pricing",
+					"method": "GET",
+					"headers": {
+						"accept": "text/html",
+						"x-waniwani-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"x-waniwani-relay": "0.7.0"
+					},
+					"body": null
+				}
+			}
+		},
+		{
+			"name": "agent pages off",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":false,\"paths\":[\"*\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "text/markdown; charset=utf-8"
+				},
+				"body": "# Pricing"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case12",
+			"expected": {
+				"answer": null,
+				"pageRequest": null
+			}
+		},
+		{
+			"name": "person browser",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing",
+				"headers": {
+					"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+					"accept": "text/html,*/*;q=0.8"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "text/markdown; charset=utf-8"
+				},
+				"body": "# Pricing"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case13",
+			"expected": {
+				"answer": null,
+				"pageRequest": null
+			}
+		},
+		{
+			"name": "person prefers markdown",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing",
+				"headers": {
+					"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+					"accept": "text/markdown, text/html;q=0.9"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "text/markdown; charset=utf-8"
+				},
+				"body": "# Pricing"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case14",
+			"expected": {
+				"answer": {
+					"status": 200,
+					"headers": {
+						"cache-control": "private, no-store",
+						"content-type": "text/markdown; charset=utf-8",
+						"vary": "user-agent, accept",
+						"x-waniwani-agent-page": "hit"
+					},
+					"body": "# Pricing"
+				},
+				"pageRequest": {
+					"url": "https://pages.test/serve/tok/pages/www.example.com/pricing",
+					"method": "GET",
+					"headers": {
+						"accept": "text/markdown",
+						"x-waniwani-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+						"x-waniwani-relay": "0.7.0"
+					},
+					"body": null
+				}
+			}
+		},
+		{
+			"name": "crawler that is not a user agent token",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing",
+				"headers": {
+					"user-agent": "Mozilla/5.0 (compatible; ClaudeBot/1.0)"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "text/markdown; charset=utf-8"
+				},
+				"body": "# Pricing"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case15",
+			"expected": {
+				"answer": null,
+				"pageRequest": null
+			}
+		},
+		{
+			"name": "crawler that prefers markdown",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing",
+				"headers": {
+					"user-agent": "Mozilla/5.0 (compatible; ClaudeBot/1.0)",
+					"accept": "text/markdown"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "text/markdown; charset=utf-8"
+				},
+				"body": "# Pricing"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case16",
+			"expected": {
+				"answer": {
+					"status": 200,
+					"headers": {
+						"cache-control": "private, no-store",
+						"content-type": "text/markdown; charset=utf-8",
+						"vary": "user-agent, accept",
+						"x-waniwani-agent-page": "hit"
+					},
+					"body": "# Pricing"
+				},
+				"pageRequest": {
+					"url": "https://pages.test/serve/tok/pages/www.example.com/pricing",
+					"method": "GET",
+					"headers": {
+						"accept": "text/markdown",
+						"x-waniwani-agent": "Mozilla/5.0 (compatible; ClaudeBot/1.0)",
+						"x-waniwani-relay": "0.7.0"
+					},
+					"body": null
+				}
+			}
+		},
+		{
+			"name": "agent by ip only",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing",
+				"headers": {
+					"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+				},
+				"ip": "4.227.36.0"
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "text/markdown; charset=utf-8"
+				},
+				"body": "# Pricing"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case17",
+			"expected": {
+				"answer": null,
+				"pageRequest": null
+			}
+		},
+		{
+			"name": "agent by signature only",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing",
+				"headers": {
+					"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+					"signature-agent": "\"https://chatgpt.com\""
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "text/markdown; charset=utf-8"
+				},
+				"body": "# Pricing"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case18",
+			"expected": {
+				"answer": null,
+				"pageRequest": null
+			}
+		},
+		{
+			"name": "blocked agent",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing",
+				"headers": {
+					"user-agent": "Mozilla/5.0 (compatible; GPTBot/1.2)"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "text/markdown; charset=utf-8"
+				},
+				"body": "# Pricing"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case19",
+			"expected": {
+				"answer": {
+					"status": 403,
+					"headers": {
+						"cache-control": "private, no-store",
+						"content-type": "text/plain; charset=utf-8",
+						"vary": "user-agent",
+						"x-waniwani-blocked": "1"
+					},
+					"body": "Forbidden"
+				},
+				"pageRequest": null
+			}
+		},
+		{
+			"name": "blocked agent on a path without pages",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/contact",
+				"headers": {
+					"user-agent": "GPTBot/1.2"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": null,
+			"apiUrl": "https://api.test",
+			"ingestToken": "case20",
+			"expected": {
+				"answer": {
+					"status": 403,
+					"headers": {
+						"cache-control": "private, no-store",
+						"content-type": "text/plain; charset=utf-8",
+						"vary": "user-agent",
+						"x-waniwani-blocked": "1"
+					},
+					"body": "Forbidden"
+				},
+				"pageRequest": null
+			}
+		},
+		{
+			"name": "blocked agent head",
+			"request": {
+				"method": "HEAD",
+				"url": "https://www.example.com/pricing",
+				"headers": {
+					"user-agent": "GPTBot/1.2"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": null,
+			"apiUrl": "https://api.test",
+			"ingestToken": "case21",
+			"expected": {
+				"answer": {
+					"status": 403,
+					"headers": {
+						"cache-control": "private, no-store",
+						"content-type": "text/plain; charset=utf-8",
+						"vary": "user-agent",
+						"x-waniwani-blocked": "1"
+					},
+					"body": null
+				},
+				"pageRequest": null
+			}
+		},
+		{
+			"name": "browser string with a blocked token",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing",
+				"headers": {
+					"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 gptbot"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": null,
+			"apiUrl": "https://api.test",
+			"ingestToken": "case22",
+			"expected": {
+				"answer": {
+					"status": 403,
+					"headers": {
+						"cache-control": "private, no-store",
+						"content-type": "text/plain; charset=utf-8",
+						"vary": "user-agent",
+						"x-waniwani-blocked": "1"
+					},
+					"body": "Forbidden"
+				},
+				"pageRequest": null
+			}
+		},
+		{
+			"name": "head gets headers only",
+			"request": {
+				"method": "HEAD",
+				"url": "https://www.example.com/pricing",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "text/markdown; charset=utf-8"
+				},
+				"body": "# Pricing"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case23",
+			"expected": {
+				"answer": {
+					"status": 200,
+					"headers": {
+						"cache-control": "private, no-store",
+						"content-type": "text/markdown; charset=utf-8",
+						"vary": "user-agent, accept",
+						"x-waniwani-agent-page": "hit"
+					},
+					"body": null
+				},
+				"pageRequest": {
+					"url": "https://pages.test/serve/tok/pages/www.example.com/pricing",
+					"method": "GET",
+					"headers": {
+						"accept": "text/html",
+						"x-waniwani-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"x-waniwani-relay": "0.7.0"
+					},
+					"body": null
+				}
+			}
+		},
+		{
+			"name": "lowercase method",
+			"request": {
+				"method": "get",
+				"url": "https://www.example.com/pricing",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "text/markdown; charset=utf-8"
+				},
+				"body": "# Pricing"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case24",
+			"expected": {
+				"answer": {
+					"status": 200,
+					"headers": {
+						"cache-control": "private, no-store",
+						"content-type": "text/markdown; charset=utf-8",
+						"vary": "user-agent, accept",
+						"x-waniwani-agent-page": "hit"
+					},
+					"body": "# Pricing"
+				},
+				"pageRequest": {
+					"url": "https://pages.test/serve/tok/pages/www.example.com/pricing",
+					"method": "GET",
+					"headers": {
+						"accept": "text/html",
+						"x-waniwani-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"x-waniwani-relay": "0.7.0"
+					},
+					"body": null
+				}
+			}
+		},
+		{
+			"name": "post to a page",
+			"request": {
+				"method": "POST",
+				"url": "https://www.example.com/pricing",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				},
+				"body": "{}"
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "text/markdown; charset=utf-8"
+				},
+				"body": "# Pricing"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case25",
+			"expected": {
+				"answer": null,
+				"pageRequest": null
+			}
+		},
+		{
+			"name": "render request",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"x-waniwani-render": "1"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "text/markdown; charset=utf-8"
+				},
+				"body": "# Pricing"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case26",
+			"expected": {
+				"answer": null,
+				"pageRequest": null
+			}
+		},
+		{
+			"name": "render request from a blocked agent",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing",
+				"headers": {
+					"user-agent": "GPTBot",
+					"x-waniwani-render": "1"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": null,
+			"apiUrl": "https://api.test",
+			"ingestToken": "case27",
+			"expected": {
+				"answer": {
+					"status": 403,
+					"headers": {
+						"cache-control": "private, no-store",
+						"content-type": "text/plain; charset=utf-8",
+						"vary": "user-agent",
+						"x-waniwani-blocked": "1"
+					},
+					"body": "Forbidden"
+				},
+				"pageRequest": null
+			}
+		},
+		{
+			"name": "page service 404",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 404
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case28",
+			"expected": {
+				"answer": null,
+				"pageRequest": {
+					"url": "https://pages.test/serve/tok/pages/www.example.com/pricing",
+					"method": "GET",
+					"headers": {
+						"accept": "text/html",
+						"x-waniwani-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"x-waniwani-relay": "0.7.0"
+					},
+					"body": null
+				}
+			}
+		},
+		{
+			"name": "page service 500",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 500,
+				"body": "boom"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case29",
+			"expected": {
+				"answer": null,
+				"pageRequest": {
+					"url": "https://pages.test/serve/tok/pages/www.example.com/pricing",
+					"method": "GET",
+					"headers": {
+						"accept": "text/html",
+						"x-waniwani-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"x-waniwani-relay": "0.7.0"
+					},
+					"body": null
+				}
+			}
+		},
+		{
+			"name": "page service redirect",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 301,
+				"headers": {
+					"location": "/x"
+				}
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case30",
+			"expected": {
+				"answer": null,
+				"pageRequest": {
+					"url": "https://pages.test/serve/tok/pages/www.example.com/pricing",
+					"method": "GET",
+					"headers": {
+						"accept": "text/html",
+						"x-waniwani-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"x-waniwani-relay": "0.7.0"
+					},
+					"body": null
+				}
+			}
+		},
+		{
+			"name": "page service pdf",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/pdf"
+				},
+				"body": "%PDF"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case31",
+			"expected": {
+				"answer": null,
+				"pageRequest": {
+					"url": "https://pages.test/serve/tok/pages/www.example.com/pricing",
+					"method": "GET",
+					"headers": {
+						"accept": "text/html",
+						"x-waniwani-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"x-waniwani-relay": "0.7.0"
+					},
+					"body": null
+				}
+			}
+		},
+		{
+			"name": "page service no content type",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"body": "# x"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case32",
+			"expected": {
+				"answer": null,
+				"pageRequest": {
+					"url": "https://pages.test/serve/tok/pages/www.example.com/pricing",
+					"method": "GET",
+					"headers": {
+						"accept": "text/html",
+						"x-waniwani-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"x-waniwani-relay": "0.7.0"
+					},
+					"body": null
+				}
+			}
+		},
+		{
+			"name": "page service json on a page",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{}"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case33",
+			"expected": {
+				"answer": null,
+				"pageRequest": {
+					"url": "https://pages.test/serve/tok/pages/www.example.com/pricing",
+					"method": "GET",
+					"headers": {
+						"accept": "text/html",
+						"x-waniwani-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"x-waniwani-relay": "0.7.0"
+					},
+					"body": null
+				}
+			}
+		},
+		{
+			"name": "page service json on a json path",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/openapi.json",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"accept": "application/json"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json; charset=utf-8"
+				},
+				"body": "{\"openapi\":\"3.1.0\"}"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case34",
+			"expected": {
+				"answer": {
+					"status": 200,
+					"headers": {
+						"cache-control": "private, no-store",
+						"content-type": "application/json; charset=utf-8",
+						"vary": "user-agent, accept",
+						"x-waniwani-agent-page": "hit"
+					},
+					"body": "{\"openapi\":\"3.1.0\"}"
+				},
+				"pageRequest": {
+					"url": "https://pages.test/serve/tok/pages/www.example.com/openapi.json",
+					"method": "GET",
+					"headers": {
+						"accept": "text/html",
+						"x-waniwani-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"x-waniwani-relay": "0.7.0"
+					},
+					"body": null
+				}
+			}
+		},
+		{
+			"name": "page over the size cap",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "text/markdown; charset=utf-8"
+				},
+				"body": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case35",
+			"expected": {
+				"answer": null,
+				"pageRequest": {
+					"url": "https://pages.test/serve/tok/pages/www.example.com/pricing",
+					"method": "GET",
+					"headers": {
+						"accept": "text/html",
+						"x-waniwani-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"x-waniwani-relay": "0.7.0"
+					},
+					"body": null
+				}
+			}
+		},
+		{
+			"name": "page at the size cap",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "text/markdown; charset=utf-8"
+				},
+				"body": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case36",
+			"expected": {
+				"answer": {
+					"status": 200,
+					"headers": {
+						"cache-control": "private, no-store",
+						"content-type": "text/markdown; charset=utf-8",
+						"vary": "user-agent, accept",
+						"x-waniwani-agent-page": "hit"
+					},
+					"body": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+				},
+				"pageRequest": {
+					"url": "https://pages.test/serve/tok/pages/www.example.com/pricing",
+					"method": "GET",
+					"headers": {
+						"accept": "text/html",
+						"x-waniwani-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"x-waniwani-relay": "0.7.0"
+					},
+					"body": null
+				}
+			}
+		},
+		{
+			"name": "page service headers too slow",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "text/markdown; charset=utf-8"
+				},
+				"body": "# Pricing",
+				"headerDelayMs": 300
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case37",
+			"expected": {
+				"answer": null,
+				"pageRequest": {
+					"url": "https://pages.test/serve/tok/pages/www.example.com/pricing",
+					"method": "GET",
+					"headers": {
+						"accept": "text/html",
+						"x-waniwani-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"x-waniwani-relay": "0.7.0"
+					},
+					"body": null
+				}
+			}
+		},
+		{
+			"name": "page service body too slow",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "text/markdown; charset=utf-8"
+				},
+				"body": "# Pricing",
+				"bodyDelayMs": 300
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case38",
+			"expected": {
+				"answer": null,
+				"pageRequest": {
+					"url": "https://pages.test/serve/tok/pages/www.example.com/pricing",
+					"method": "GET",
+					"headers": {
+						"accept": "text/html",
+						"x-waniwani-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"x-waniwani-relay": "0.7.0"
+					},
+					"body": null
+				}
+			}
+		},
+		{
+			"name": "page service unreachable",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": null,
+			"apiUrl": "https://api.test",
+			"ingestToken": "case39",
+			"expected": {
+				"answer": null,
+				"pageRequest": {
+					"url": "https://pages.test/serve/tok/pages/www.example.com/pricing",
+					"method": "GET",
+					"headers": {
+						"accept": "text/html",
+						"x-waniwani-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"x-waniwani-relay": "0.7.0"
+					},
+					"body": null
+				}
+			}
+		},
+		{
+			"name": "site rules 500",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				}
+			},
+			"siteRules": {
+				"status": 500
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "text/markdown; charset=utf-8"
+				},
+				"body": "# Pricing"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case40",
+			"expected": {
+				"answer": null,
+				"pageRequest": null
+			}
+		},
+		{
+			"name": "site rules malformed",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"body": "{\"data\":{\"version\":2}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "text/markdown; charset=utf-8"
+				},
+				"body": "# Pricing"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case41",
+			"expected": {
+				"answer": null,
+				"pageRequest": null
+			}
+		},
+		{
+			"name": "site rules too slow",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}",
+				"headerDelayMs": 600
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "text/markdown; charset=utf-8"
+				},
+				"body": "# Pricing"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case42",
+			"expected": {
+				"answer": null,
+				"pageRequest": null
+			}
+		},
+		{
+			"name": "ask post",
+			"request": {
+				"method": "POST",
+				"url": "https://www.example.com/ask",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"content-type": "application/json"
+				},
+				"body": "{\"q\":\"price?\"}"
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"answer\":\"42\"}"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case43",
+			"expected": {
+				"answer": {
+					"status": 200,
+					"headers": {
+						"cache-control": "private, no-store",
+						"content-type": "application/json",
+						"vary": "user-agent, accept",
+						"x-waniwani-agent-page": "hit"
+					},
+					"body": "{\"answer\":\"42\"}"
+				},
+				"pageRequest": {
+					"url": "https://pages.test/serve/tok/pages/www.example.com/ask",
+					"method": "POST",
+					"headers": {
+						"accept": "text/html",
+						"content-type": "application/json",
+						"x-waniwani-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"x-waniwani-relay": "0.7.0"
+					},
+					"body": "{\"q\":\"price?\"}"
+				}
+			}
+		},
+		{
+			"name": "ask post with trailing slash",
+			"request": {
+				"method": "POST",
+				"url": "https://www.example.com/ask/",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				},
+				"body": "{\"q\":\"x\"}"
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{}"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case44",
+			"expected": {
+				"answer": {
+					"status": 200,
+					"headers": {
+						"cache-control": "private, no-store",
+						"content-type": "application/json",
+						"vary": "user-agent, accept",
+						"x-waniwani-agent-page": "hit"
+					},
+					"body": "{}"
+				},
+				"pageRequest": {
+					"url": "https://pages.test/serve/tok/pages/www.example.com/ask",
+					"method": "POST",
+					"headers": {
+						"accept": "text/html",
+						"content-type": "application/json",
+						"x-waniwani-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"x-waniwani-relay": "0.7.0"
+					},
+					"body": "{\"q\":\"x\"}"
+				}
+			}
+		},
+		{
+			"name": "ask post rate limited",
+			"request": {
+				"method": "POST",
+				"url": "https://www.example.com/ask",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				},
+				"body": "{\"q\":\"x\"}"
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 429,
+				"headers": {
+					"content-type": "application/json",
+					"retry-after": "30"
+				},
+				"body": "{\"error\":\"slow down\"}"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case45",
+			"expected": {
+				"answer": {
+					"status": 429,
+					"headers": {
+						"cache-control": "private, no-store",
+						"content-type": "application/json",
+						"retry-after": "30",
+						"vary": "user-agent, accept",
+						"x-waniwani-agent-page": "hit"
+					},
+					"body": "{\"error\":\"slow down\"}"
+				},
+				"pageRequest": {
+					"url": "https://pages.test/serve/tok/pages/www.example.com/ask",
+					"method": "POST",
+					"headers": {
+						"accept": "text/html",
+						"content-type": "application/json",
+						"x-waniwani-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"x-waniwani-relay": "0.7.0"
+					},
+					"body": "{\"q\":\"x\"}"
+				}
+			}
+		},
+		{
+			"name": "ask post rate limited without body",
+			"request": {
+				"method": "POST",
+				"url": "https://www.example.com/ask",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				},
+				"body": "{\"q\":\"x\"}"
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 429,
+				"headers": {
+					"retry-after": "5"
+				}
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case46",
+			"expected": {
+				"answer": {
+					"status": 429,
+					"headers": {
+						"cache-control": "private, no-store",
+						"retry-after": "5",
+						"vary": "user-agent, accept",
+						"x-waniwani-agent-page": "hit"
+					},
+					"body": null
+				},
+				"pageRequest": {
+					"url": "https://pages.test/serve/tok/pages/www.example.com/ask",
+					"method": "POST",
+					"headers": {
+						"accept": "text/html",
+						"content-type": "application/json",
+						"x-waniwani-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"x-waniwani-relay": "0.7.0"
+					},
+					"body": "{\"q\":\"x\"}"
+				}
+			}
+		},
+		{
+			"name": "ask post empty body",
+			"request": {
+				"method": "POST",
+				"url": "https://www.example.com/ask",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				},
+				"body": ""
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{}"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case47",
+			"expected": {
+				"answer": null,
+				"pageRequest": null
+			}
+		},
+		{
+			"name": "ask post body at the cap",
+			"request": {
+				"method": "POST",
+				"url": "https://www.example.com/ask",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				},
+				"body": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{}"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case48",
+			"expected": {
+				"answer": {
+					"status": 200,
+					"headers": {
+						"cache-control": "private, no-store",
+						"content-type": "application/json",
+						"vary": "user-agent, accept",
+						"x-waniwani-agent-page": "hit"
+					},
+					"body": "{}"
+				},
+				"pageRequest": {
+					"url": "https://pages.test/serve/tok/pages/www.example.com/ask",
+					"method": "POST",
+					"headers": {
+						"accept": "text/html",
+						"content-type": "application/json",
+						"x-waniwani-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"x-waniwani-relay": "0.7.0"
+					},
+					"body": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+				}
+			}
+		},
+		{
+			"name": "ask post body over the cap",
+			"request": {
+				"method": "POST",
+				"url": "https://www.example.com/ask",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				},
+				"body": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{}"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case49",
+			"expected": {
+				"answer": null,
+				"pageRequest": null
+			}
+		},
+		{
+			"name": "ask post with a large content length",
+			"request": {
+				"method": "POST",
+				"url": "https://www.example.com/ask",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"content-length": "20000"
+				},
+				"body": "{}"
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{}"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case50",
+			"expected": {
+				"answer": null,
+				"pageRequest": null
+			}
+		},
+		{
+			"name": "ask get",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/ask",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "text/markdown; charset=utf-8"
+				},
+				"body": "# Ask"
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case51",
+			"expected": {
+				"answer": {
+					"status": 200,
+					"headers": {
+						"cache-control": "private, no-store",
+						"content-type": "text/markdown; charset=utf-8",
+						"vary": "user-agent, accept",
+						"x-waniwani-agent-page": "hit"
+					},
+					"body": "# Ask"
+				},
+				"pageRequest": {
+					"url": "https://pages.test/serve/tok/pages/www.example.com/ask",
+					"method": "GET",
+					"headers": {
+						"accept": "text/html",
+						"x-waniwani-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"x-waniwani-relay": "0.7.0"
+					},
+					"body": null
+				}
+			}
+		},
+		{
+			"name": "ask post 429 on a page path is null",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				}
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":50},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 429,
+				"headers": {
+					"retry-after": "5"
+				}
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case52",
+			"expected": {
+				"answer": null,
+				"pageRequest": {
+					"url": "https://pages.test/serve/tok/pages/www.example.com/pricing",
+					"method": "GET",
+					"headers": {
+						"accept": "text/html",
+						"x-waniwani-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"x-waniwani-relay": "0.7.0"
+					},
+					"body": null
+				}
+			}
+		},
+		{
+			"name": "ask post slower than headers but within ask deadline",
+			"request": {
+				"method": "POST",
+				"url": "https://www.example.com/ask",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot"
+				},
+				"body": "{}"
+			},
+			"siteRules": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{\"success\":true,\"data\":{\"version\":1,\"pagesUrl\":\"https://pages.test/serve/tok/pages\",\"userAgentTokens\":[\"chatgpt-user\",\"claude-user\"],\"deadlines\":{\"headersMs\":50,\"bodyMs\":200,\"askMs\":600},\"maxBodyBytes\":64,\"sites\":[{\"hostname\":\"www.example.com\",\"blockedUserAgentTokens\":[\"gptbot\"],\"agentPages\":{\"enabled\":true,\"paths\":[\"/\",\"/pricing\",\"/products/*\",\"/ask\",\"/openapi.json\"]}}]}}"
+			},
+			"pageService": {
+				"status": 200,
+				"headers": {
+					"content-type": "application/json"
+				},
+				"body": "{}",
+				"headerDelayMs": 150
+			},
+			"apiUrl": "https://api.test",
+			"ingestToken": "case53",
+			"expected": {
+				"answer": {
+					"status": 200,
+					"headers": {
+						"cache-control": "private, no-store",
+						"content-type": "application/json",
+						"vary": "user-agent, accept",
+						"x-waniwani-agent-page": "hit"
+					},
+					"body": "{}"
+				},
+				"pageRequest": {
+					"url": "https://pages.test/serve/tok/pages/www.example.com/ask",
+					"method": "POST",
+					"headers": {
+						"accept": "text/html",
+						"content-type": "application/json",
+						"x-waniwani-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"x-waniwani-relay": "0.7.0"
+					},
+					"body": "{}"
+				}
+			}
+		}
+	]
+}

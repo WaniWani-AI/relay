@@ -1,0 +1,323 @@
+{
+	"relayVersion": "0.7.0",
+	"cases": [
+		{
+			"remoteAddress": "192.0.2.10",
+			"headers": {},
+			"clientIpHeader": null,
+			"trustedProxies": [],
+			"expected": "192.0.2.10"
+		},
+		{
+			"remoteAddress": " 192.0.2.10 ",
+			"headers": {
+				"x-forwarded-for": "1.1.1.1"
+			},
+			"clientIpHeader": null,
+			"trustedProxies": [
+				"203.0.113.0/24",
+				"198.51.100.7",
+				"2001:db8:ffff::/48"
+			],
+			"expected": "192.0.2.10"
+		},
+		{
+			"remoteAddress": "2001:DB8::1",
+			"headers": {},
+			"clientIpHeader": null,
+			"trustedProxies": [],
+			"expected": "2001:db8::1"
+		},
+		{
+			"remoteAddress": "192.0.2.10",
+			"headers": {
+				"x-forwarded-for": "1.1.1.1"
+			},
+			"clientIpHeader": "X-Forwarded-For",
+			"trustedProxies": [
+				"203.0.113.0/24",
+				"198.51.100.7",
+				"2001:db8:ffff::/48"
+			],
+			"expected": "192.0.2.10"
+		},
+		{
+			"remoteAddress": "203.0.113.5",
+			"headers": {
+				"x-forwarded-for": "1.1.1.1"
+			},
+			"clientIpHeader": "X-Forwarded-For",
+			"trustedProxies": [
+				"203.0.113.0/24",
+				"198.51.100.7",
+				"2001:db8:ffff::/48"
+			],
+			"expected": "1.1.1.1"
+		},
+		{
+			"remoteAddress": "203.0.113.5",
+			"headers": {
+				"x-forwarded-for": "9.9.9.9, 1.1.1.1"
+			},
+			"clientIpHeader": "x-forwarded-for",
+			"trustedProxies": [
+				"203.0.113.0/24",
+				"198.51.100.7",
+				"2001:db8:ffff::/48"
+			],
+			"expected": "1.1.1.1"
+		},
+		{
+			"remoteAddress": "203.0.113.5",
+			"headers": {
+				"x-forwarded-for": "9.9.9.9, 1.1.1.1, 198.51.100.7"
+			},
+			"clientIpHeader": "x-forwarded-for",
+			"trustedProxies": [
+				"203.0.113.0/24",
+				"198.51.100.7",
+				"2001:db8:ffff::/48"
+			],
+			"expected": "1.1.1.1"
+		},
+		{
+			"remoteAddress": "203.0.113.5",
+			"headers": {
+				"x-forwarded-for": "203.0.113.9, 198.51.100.7"
+			},
+			"clientIpHeader": "x-forwarded-for",
+			"trustedProxies": [
+				"203.0.113.0/24",
+				"198.51.100.7",
+				"2001:db8:ffff::/48"
+			],
+			"expected": "203.0.113.9"
+		},
+		{
+			"remoteAddress": "203.0.113.5",
+			"headers": {
+				"x-forwarded-for": "unknown, 1.1.1.1"
+			},
+			"clientIpHeader": "x-forwarded-for",
+			"trustedProxies": [
+				"203.0.113.0/24",
+				"198.51.100.7",
+				"2001:db8:ffff::/48"
+			],
+			"expected": "1.1.1.1"
+		},
+		{
+			"remoteAddress": "203.0.113.5",
+			"headers": {
+				"x-forwarded-for": "1.1.1.1, unknown"
+			},
+			"clientIpHeader": "x-forwarded-for",
+			"trustedProxies": [
+				"203.0.113.0/24",
+				"198.51.100.7",
+				"2001:db8:ffff::/48"
+			],
+			"expected": "203.0.113.5"
+		},
+		{
+			"remoteAddress": "203.0.113.5",
+			"headers": {
+				"x-forwarded-for": ""
+			},
+			"clientIpHeader": "x-forwarded-for",
+			"trustedProxies": [
+				"203.0.113.0/24",
+				"198.51.100.7",
+				"2001:db8:ffff::/48"
+			],
+			"expected": "203.0.113.5"
+		},
+		{
+			"remoteAddress": "203.0.113.5",
+			"headers": {},
+			"clientIpHeader": "x-forwarded-for",
+			"trustedProxies": [
+				"203.0.113.0/24",
+				"198.51.100.7",
+				"2001:db8:ffff::/48"
+			],
+			"expected": "203.0.113.5"
+		},
+		{
+			"remoteAddress": "203.0.113.5",
+			"headers": {
+				"x-ogo-client-ip": " 1.1.1.1 "
+			},
+			"clientIpHeader": "X-OGO-Client-IP",
+			"trustedProxies": [
+				"203.0.113.0/24",
+				"198.51.100.7",
+				"2001:db8:ffff::/48"
+			],
+			"expected": "1.1.1.1"
+		},
+		{
+			"remoteAddress": "203.0.113.5",
+			"headers": {
+				"x-forwarded-for": "1.1.1.1:5555"
+			},
+			"clientIpHeader": "x-forwarded-for",
+			"trustedProxies": [
+				"203.0.113.0/24",
+				"198.51.100.7",
+				"2001:db8:ffff::/48"
+			],
+			"expected": "1.1.1.1"
+		},
+		{
+			"remoteAddress": "203.0.113.5",
+			"headers": {
+				"x-forwarded-for": "[2001:DB8::5]:443"
+			},
+			"clientIpHeader": "x-forwarded-for",
+			"trustedProxies": [
+				"203.0.113.0/24",
+				"198.51.100.7",
+				"2001:db8:ffff::/48"
+			],
+			"expected": "2001:db8::5"
+		},
+		{
+			"remoteAddress": "203.0.113.5",
+			"headers": {
+				"x-forwarded-for": "2001:db8::5, 2001:db8:ffff::1"
+			},
+			"clientIpHeader": "x-forwarded-for",
+			"trustedProxies": [
+				"203.0.113.0/24",
+				"198.51.100.7",
+				"2001:db8:ffff::/48"
+			],
+			"expected": "2001:db8::5"
+		},
+		{
+			"remoteAddress": "2001:db8:ffff::9",
+			"headers": {
+				"x-forwarded-for": "8.8.8.8"
+			},
+			"clientIpHeader": "x-forwarded-for",
+			"trustedProxies": [
+				"203.0.113.0/24",
+				"198.51.100.7",
+				"2001:db8:ffff::/48"
+			],
+			"expected": "8.8.8.8"
+		},
+		{
+			"remoteAddress": "::ffff:203.0.113.5",
+			"headers": {
+				"x-forwarded-for": "8.8.8.8"
+			},
+			"clientIpHeader": "x-forwarded-for",
+			"trustedProxies": [
+				"203.0.113.0/24",
+				"198.51.100.7",
+				"2001:db8:ffff::/48"
+			],
+			"expected": "8.8.8.8"
+		},
+		{
+			"remoteAddress": "203.0.113.5",
+			"headers": {
+				"x-forwarded-for": "::ffff:8.8.8.8"
+			},
+			"clientIpHeader": "x-forwarded-for",
+			"trustedProxies": [
+				"203.0.113.0/24",
+				"198.51.100.7",
+				"2001:db8:ffff::/48"
+			],
+			"expected": "::ffff:8.8.8.8"
+		},
+		{
+			"remoteAddress": "203.0.113.5",
+			"headers": {
+				"x-forwarded-for": "8.8.8.8,,1.1.1.1"
+			},
+			"clientIpHeader": "x-forwarded-for",
+			"trustedProxies": [
+				"203.0.113.0/24",
+				"198.51.100.7",
+				"2001:db8:ffff::/48"
+			],
+			"expected": "1.1.1.1"
+		},
+		{
+			"remoteAddress": "203.0.113.5",
+			"headers": {
+				"x-forwarded-for": "8.8.8.8"
+			},
+			"clientIpHeader": "x-forwarded-for",
+			"trustedProxies": [],
+			"expected": "203.0.113.5"
+		},
+		{
+			"remoteAddress": "not-an-ip",
+			"headers": {},
+			"clientIpHeader": null,
+			"trustedProxies": [],
+			"expected": null
+		},
+		{
+			"remoteAddress": "",
+			"headers": {},
+			"clientIpHeader": null,
+			"trustedProxies": [],
+			"expected": null
+		},
+		{
+			"remoteAddress": "198.51.100.7",
+			"headers": {
+				"x-forwarded-for": "8.8.4.4"
+			},
+			"clientIpHeader": "x-forwarded-for",
+			"trustedProxies": [
+				"203.0.113.0/24",
+				"198.51.100.7",
+				"2001:db8:ffff::/48"
+			],
+			"expected": "8.8.4.4"
+		},
+		{
+			"remoteAddress": "198.51.100.8",
+			"headers": {
+				"x-forwarded-for": "8.8.4.4"
+			},
+			"clientIpHeader": "x-forwarded-for",
+			"trustedProxies": [
+				"203.0.113.0/24",
+				"198.51.100.7",
+				"2001:db8:ffff::/48"
+			],
+			"expected": "198.51.100.8"
+		},
+		{
+			"remoteAddress": "203.0.113.5",
+			"headers": {
+				"x-forwarded-for": "8.8.4.4"
+			},
+			"clientIpHeader": "x-forwarded-for",
+			"trustedProxies": [
+				"0.0.0.0/0"
+			],
+			"expected": "8.8.4.4"
+		},
+		{
+			"remoteAddress": "203.0.113.5",
+			"headers": {
+				"x-forwarded-for": "1.1.1.1 , 2.2.2.2"
+			},
+			"clientIpHeader": "x-forwarded-for",
+			"trustedProxies": [
+				"203.0.113.0/24",
+				"2.2.2.2/32"
+			],
+			"expected": "1.1.1.1"
+		}
+	]
+}

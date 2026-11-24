@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>Waniwani.Relay.AspNetCore</RootNamespace>
+    <Description>The Waniwani relay for ASP.NET Core. Middleware that records AI agent visits and serves Waniwani agent pages.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Waniwani.Relay\Waniwani.Relay.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,21 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Version Condition="'$(Version)' == ''">0.0.0-dev</Version>
+    <Authors>Waniwani</Authors>
+    <Company>Waniwani</Company>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/WaniWani-AI/relay</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/WaniWani-AI/relay</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>ai-agents;bots;crawlers;middleware;iis;aspnet;analytics;waniwani</PackageTags>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(IsPackable)' != 'false'">
+    <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="\" />
+    <None Include="$(MSBuildThisFileDirectory)..\LICENSE" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>
