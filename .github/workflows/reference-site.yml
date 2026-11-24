@@ -1,6 +1,8 @@
 name: Reference site
 
 on:
+  push:
+    branches: [milan/aspnet-relay]
   schedule:
     - cron: "0 4 * * *"
   workflow_dispatch:
