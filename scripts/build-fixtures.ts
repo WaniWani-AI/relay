@@ -1417,8 +1417,78 @@ function recordScenarios(): RecordScenario[] {
 		},
 		ip: "198.51.100.23",
 	};
+	const person = {
+		...base,
+		headers: {
+			"user-agent": BROWSERS[0] ?? "",
+			referer: "https://chatgpt.com/c/6744?model=x",
+			accept: "text/html",
+			"accept-language": "fr",
+			cookie: "session=secret",
+		},
+	};
+	const referredBy = (referer: string) => ({
+		...person,
+		headers: { ...person.headers, referer },
+	});
 	return [
 		{ name: "full record", request: base, key },
+		{ name: "ai referral", request: person, key },
+		{
+			name: "ai referral from the chatgpt android app",
+			request: referredBy("android-app://com.openai.chatgpt/"),
+			key,
+		},
+		{
+			name: "ai referral from a subdomain in upper case",
+			request: referredBy("https://WWW.Perplexity.AI/search?q=pricing"),
+			key,
+		},
+		{
+			name: "ai referral with credentials and port",
+			request: referredBy("https://user:pass@claude.ai:8443/chat/1"),
+			key,
+		},
+		{
+			name: "ai referral omit referer",
+			request: person,
+			key,
+			omit: ["referer"],
+		},
+		{
+			name: "ai referral omit user agent",
+			request: person,
+			key,
+			omit: ["userAgent"],
+		},
+		{
+			name: "ai referral without a user agent",
+			request: {
+				...person,
+				headers: { referer: "https://gemini.google.com/" },
+			},
+			key,
+		},
+		{
+			name: "lookalike referer host",
+			request: referredBy("https://notchatgpt.com/"),
+			key,
+		},
+		{
+			name: "referer host that starts with an assistant host",
+			request: referredBy("https://chatgpt.com.example.net/"),
+			key,
+		},
+		{
+			name: "ai assistant host with another scheme",
+			request: referredBy("ftp://chatgpt.com/"),
+			key,
+		},
+		{
+			name: "ai referer that is not a url",
+			request: referredBy("chatgpt.com"),
+			key,
+		},
 		{ name: "no key", request: base },
 		{ name: "malformed key", request: base, key: "wwt_bad" },
 		{ name: "no ip", request: { ...base, ip: undefined }, key },

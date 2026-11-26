@@ -491,4 +491,26 @@ namespace Waniwani.Relay
             return true;
         }
     }
+    internal static class AiAssistantReferer
+    {
+        private static readonly string[] Hosts =
+        {
+            "chatgpt.com", "chat.openai.com", "com.openai.chatgpt", "claude.ai", "perplexity.ai", "gemini.google.com", "copilot.microsoft.com", "meta.ai",
+        };
+
+        private static readonly string[] Schemes = { "http", "https", "android-app" };
+
+        /// <summary>The scheme and host of a <c>referer</c> whose host is an AI assistant, for example <c>https://chatgpt.com/</c>, or null.</summary>
+        public static string? Of(string? referer)
+        {
+            if (referer == null || !Uri.TryCreate(Text.TrimJs(referer), UriKind.Absolute, out var url))
+            {
+                return null;
+            }
+            var scheme = Text.ToLowerJs(url.Scheme);
+            var host = Text.ToLowerJs(url.Host);
+            var known = Hosts.Any(assistant => host == assistant || host.EndsWith("." + assistant, StringComparison.Ordinal));
+            return known && Schemes.Contains(scheme) ? scheme + "://" + host + "/" : null;
+        }
+    }
 }

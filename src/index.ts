@@ -14,7 +14,7 @@ import {
 import { readCappedHeaders } from "./headers";
 import { type PostPolicy, postEvent } from "./ingest";
 import { readKey } from "./key";
-import { decide } from "./logic";
+import { aiAssistantReferer, decide } from "./logic";
 import { deriveMatchKey } from "./match-key";
 import type { Platform } from "./platform";
 import { refreshRules } from "./refresh";
@@ -79,6 +79,8 @@ export type AgentVisitRecord = {
 	sourceEventId: string;
 	relayVersion: string;
 	platform?: Platform;
+	/** `"aiReferral"` when a person followed a link in an AI assistant. Left out for an agent. */
+	visitor?: "aiReferral";
 	/** The relay functions this process called, so WaniWani can show which setup steps the code has. */
 	uses: RelayFunction[];
 };
@@ -114,6 +116,39 @@ function matchesAgent(
 	}
 }
 
+/**
+ * Tells whether a request, or the `cf.request` of a Lambda@Edge event, comes from a person who followed a link in an AI assistant: the `Referer` host is an AI assistant, for example `chatgpt.com` or the ChatGPT app, and the request does not come from an AI agent. Reads headers only and never waits on the network.
+ */
+export function isAiReferral(
+	request: Request | CloudFrontRequest,
+	options: IsAgentOptions = {},
+): boolean {
+	startRulesRefresh(options);
+	try {
+		const { headers, ip } = toRelayRequest(request);
+		return (
+			aiReferralOrigin(
+				readCappedHeaders(headers),
+				ip,
+				options.rules === "bundled",
+			) !== null
+		);
+	} catch {
+		return false;
+	}
+}
+
+function aiReferralOrigin(
+	headers: Record<string, string>,
+	ip: string | null,
+	useBundled: boolean,
+): string | null {
+	const referer = aiAssistantReferer(headers.referer);
+	return referer !== null && !decide({ headers, ip, useBundled })
+		? referer
+		: null;
+}
+
 function startRulesRefresh(options: IsAgentOptions): void {
 	try {
 		if (options.rules === "bundled") {
@@ -129,6 +164,7 @@ function startRulesRefresh(options: IsAgentOptions): void {
 
 /**
  * Posts one event for this request to WaniWani after the response.
+ * For a request that `isAiReferral` matches, the event holds only the time, method, host, path without the query, user agent and the scheme and host of the `Referer`, and nothing when `referer` is in `omit`.
  * Sends nothing when no key is set. Never throws, never rejects and never touches the request.
  * The promise settles when the post is done, so Lambda@Edge, which has no `waitUntil`, awaits it.
  */
@@ -158,11 +194,17 @@ export function recordAgentVisit(
 			return Promise.resolve();
 		}
 		const capped = readCappedHeaders(requestHeaders);
+		const referral = aiReferralOrigin(capped, ip, options.rules === "bundled");
+		if (referral !== null && omitted.has("referer")) {
+			return Promise.resolve();
+		}
 
 		const headers: Record<string, string> = {};
-		for (const [name, value] of Object.entries(capped)) {
-			if (!omitted.has(name)) {
-				headers[name] = value;
+		if (referral === null) {
+			for (const [name, value] of Object.entries(capped)) {
+				if (!omitted.has(name)) {
+					headers[name] = value;
+				}
 			}
 		}
 		const url = new URL(requestUrl);
@@ -170,7 +212,7 @@ export function recordAgentVisit(
 			occurredAt: new Date().toISOString(),
 			method,
 			host: url.hostname,
-			path: url.pathname + url.search,
+			path: referral === null ? url.pathname + url.search : url.pathname,
 			headers,
 			sourceEventId: crypto.randomUUID(),
 			relayVersion: RELAY_VERSION,
@@ -179,7 +221,10 @@ export function recordAgentVisit(
 		if (capped["user-agent"] !== undefined && !omitted.has("user-agent")) {
 			record.userAgent = capped["user-agent"];
 		}
-		if (capped.referer !== undefined && !omitted.has("referer")) {
+		if (referral !== null) {
+			record.referer = referral;
+			record.visitor = "aiReferral";
+		} else if (capped.referer !== undefined && !omitted.has("referer")) {
 			record.referer = capped.referer;
 		}
 		if (platform !== undefined) {
@@ -195,7 +240,7 @@ export function recordAgentVisit(
 			// Lets a serveAgentPage or handleViewerRequest call that follows on the same request join `used`.
 			await Promise.resolve();
 			record.uses = [...used];
-			if (ip !== null && !omitted.has("matchkey")) {
+			if (referral === null && ip !== null && !omitted.has("matchkey")) {
 				record.matchKey = await deriveMatchKey(key.orgKey, ip).catch(
 					() => undefined,
 				);

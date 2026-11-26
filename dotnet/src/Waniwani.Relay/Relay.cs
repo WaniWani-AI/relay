@@ -261,13 +261,39 @@ namespace Waniwani.Relay
         {
             try
             {
-                var rules = string.Equals(_options.Rules, "bundled", StringComparison.OrdinalIgnoreCase) ? Bundled : Volatile.Read(ref _remote) ?? Bundled;
-                return rules.Decide(CappedHeaders.Read(request.Headers), ClientIpOf(request));
+                return CurrentRules().Decide(CappedHeaders.Read(request.Headers), ClientIpOf(request));
             }
             catch
             {
                 return false;
             }
+        }
+
+        private AgentRules CurrentRules() =>
+            string.Equals(_options.Rules, "bundled", StringComparison.OrdinalIgnoreCase) ? Bundled : Volatile.Read(ref _remote) ?? Bundled;
+
+        /// <summary>True when the request comes from a person who followed a link in an AI assistant: the <c>referer</c> host is an AI assistant, for example <c>chatgpt.com</c> or the ChatGPT app, and the request does not come from an AI agent. Reads headers only and never waits on the network.</summary>
+        public bool IsAiReferral(RelayRequest request)
+        {
+            if (!_options.Enabled)
+            {
+                return false;
+            }
+            StartRulesRefresh();
+            try
+            {
+                return AiReferralOrigin(CappedHeaders.Read(request.Headers), ClientIpOf(request)) != null;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private string? AiReferralOrigin(IReadOnlyDictionary<string, string> capped, string? ip)
+        {
+            var referer = AiAssistantReferer.Of(capped.TryGetValue("referer", out var value) ? value : null);
+            return referer != null && !CurrentRules().Decide(capped, ip) ? referer : null;
         }
 
         private void StartRulesRefresh()
@@ -344,24 +370,33 @@ namespace Waniwani.Relay
                     return;
                 }
                 var capped = CappedHeaders.Read(request.Headers);
-                var headers = new Dictionary<string, string>(StringComparer.Ordinal);
-                foreach (var pair in capped)
+                var ip = ClientIpOf(request);
+                var referral = AiReferralOrigin(capped, ip);
+                if (referral != null && _omit.Contains("referer"))
                 {
-                    if (!_omit.Contains(pair.Key))
+                    return;
+                }
+                var headers = new Dictionary<string, string>(StringComparer.Ordinal);
+                if (referral == null)
+                {
+                    foreach (var pair in capped)
                     {
-                        headers[pair.Key] = pair.Value;
+                        if (!_omit.Contains(pair.Key))
+                        {
+                            headers[pair.Key] = pair.Value;
+                        }
                     }
                 }
                 var userAgent = capped.TryGetValue("user-agent", out var ua) && !_omit.Contains("user-agent") ? ua : null;
-                var referer = capped.TryGetValue("referer", out var r) && !_omit.Contains("referer") ? r : null;
-                var ip = ClientIpOf(request);
-                var matchKey = ip != null && !_omit.Contains("matchkey") ? MatchKey.Derive(_key.OrgKey, ip) : null;
+                var referer = referral ?? (capped.TryGetValue("referer", out var r) && !_omit.Contains("referer") ? r : null);
+                var matchKey = referral == null && ip != null && !_omit.Contains("matchkey") ? MatchKey.Derive(_key.OrgKey, ip) : null;
+                var visitor = referral == null ? null : "aiReferral";
                 var occurredAt = DateTime.UtcNow.ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'", CultureInfo.InvariantCulture);
                 var sourceEventId = Guid.NewGuid().ToString();
                 var method = request.Method.ToUpperInvariant();
-                var path = (request.Path.Length == 0 ? "/" : request.Path) + (request.Query.Length > 0 ? "?" + request.Query : string.Empty);
+                var path = (request.Path.Length == 0 ? "/" : request.Path) + (referral == null && request.Query.Length > 0 ? "?" + request.Query : string.Empty);
                 var url = _apiUrl + "/api/v2/agent-traffic/ingest/middleware/" + _key.IngestToken;
-                _ingest.Enqueue(new PendingRecord(url, () => RecordJson.Write(occurredAt, method, host, path, headers, sourceEventId, RelayVersion, Used(), userAgent, referer, _platform, matchKey)));
+                _ingest.Enqueue(new PendingRecord(url, () => RecordJson.Write(occurredAt, method, host, path, headers, sourceEventId, RelayVersion, Used(), userAgent, referer, _platform, matchKey, visitor)));
             }
             catch
             {

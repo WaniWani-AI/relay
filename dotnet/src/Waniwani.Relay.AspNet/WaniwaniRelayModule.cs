@@ -146,7 +146,7 @@ namespace Waniwani.Relay.AspNet
                 {
                     ReadBody = (maxBytes, deadline) => ReadBodyAsync(request, maxBytes, deadline),
                 };
-                if (relay.IsAgent(relayRequest))
+                if (relay.IsAgent(relayRequest) || relay.IsAiReferral(relayRequest))
                 {
                     relay.RecordAgentVisit(relayRequest);
                 }
