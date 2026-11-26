@@ -211,7 +211,8 @@ namespace Waniwani.Relay
             string? userAgent,
             string? referer,
             string? platform,
-            string? matchKey)
+            string? matchKey,
+            string? visitor)
         {
             var writer = new JsonWriter();
             writer.StartObject()
@@ -245,6 +246,10 @@ namespace Waniwani.Relay
             if (matchKey != null)
             {
                 writer.String("matchKey", matchKey);
+            }
+            if (visitor != null)
+            {
+                writer.String("visitor", visitor);
             }
             return writer.EndObject().ToString();
         }

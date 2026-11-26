@@ -1,6 +1,6 @@
 # Waniwani relay for .NET
 
-The relay records AI agent visits to your website and sends them to Waniwani. It can also give AI agents the Waniwani agent page of a URL. Requests from persons go to your site as usual. The relay adds less than 50 µs to them and never waits on the network for them.
+The relay records AI agent visits to your website and sends them to Waniwani. It can also give AI agents the Waniwani agent page of a URL. Requests from persons go to your site as usual. When a person comes from a link in an AI assistant, such as ChatGPT, the relay sends only the time, the page path, the user agent and the host of the assistant, so Waniwani can count the people that AI assistants send to your site. The relay adds less than 50 µs to them and never waits on the network for them.
 
 This is a port of the TypeScript relay `@waniwani/relay`. A package version is the TypeScript version whose fixtures it passes. The packages are open source under Apache 2.0, so your security team can read all the code.
 

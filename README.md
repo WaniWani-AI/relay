@@ -1,6 +1,6 @@
 # @waniwani/relay
 
-`@waniwani/relay` records the visits of AI agents to your website and sends them to [Waniwani](https://waniwani.ai). It runs in the middleware of your site, the code that sees each request before your pages do. For each request from an AI agent, it posts one small event to Waniwani after the response has gone out. It never changes the request or the response, and a person who visits your site sends nothing.
+`@waniwani/relay` records the visits of AI agents to your website and sends them to [Waniwani](https://waniwani.ai). It runs in the middleware of your site, the code that sees each request before your pages do. For each request from an AI agent, it posts one small event to Waniwani after the response has gone out. It never changes the request or the response. A person who visits your site sends nothing, except a person who comes from a link in an AI assistant such as ChatGPT. For that visit the relay sends only the time, the page path, the user agent and the host of the assistant, so Waniwani can count the people that AI assistants send to your site.
 
 ## Install
 
@@ -30,6 +30,17 @@ Tells whether the request comes from an AI agent. It reads the headers and the c
 - The client IP sits inside an IP range that an AI vendor publishes for its bots, for example the lists of OpenAI, Anthropic, Perplexity, Mistral, Apple, Common Crawl and DuckDuckGo (DuckAssistBot).
 - The request has a `DPoP` header, or its `Authorization` header uses the `DPoP` scheme.
 
+### `isAiReferral(request)`
+
+```ts
+function isAiReferral(
+  request: Request | CloudFrontRequest,
+  options?: Pick<RelayOptions, "region" | "apiUrl" | "waitUntil" | "rules">,
+): boolean;
+```
+
+Tells whether a person comes to the request from a link in an AI assistant. It returns `true` when the host of the `Referer` header is one of these hosts, or a subdomain of one, and `isAgent` does not match the request: `chatgpt.com`, `chat.openai.com`, `com.openai.chatgpt` (the ChatGPT Android app), `claude.ai`, `perplexity.ai`, `gemini.google.com`, `copilot.microsoft.com` and `meta.ai`. The `Referer` must be an `http`, `https` or `android-app` URL. Like `isAgent`, it reads the headers and the client IP only, never waits on the network and never throws.
+
 ### `recordAgentVisit(request, options?)`
 
 ```ts
@@ -39,7 +50,7 @@ function recordAgentVisit(
 ): Promise<void>;
 ```
 
-Posts one event for the request to Waniwani after the response ([`AgentVisitRecord`](#agentvisitrecord)). Needs a secret key setup, otherwise sends nothing. The function never throws, and the promise never rejects.
+Posts one event for the request to Waniwani after the response ([`AgentVisitRecord`](#agentvisitrecord)). For a request that `isAiReferral` matches, the event is smaller ([AI referral record](#ai-referral-record)). Needs a secret key setup, otherwise sends nothing. The function never throws, and the promise never rejects.
 
 #### `RelayOptions`
 
@@ -69,6 +80,7 @@ For each matched request, `recordAgentVisit` posts one JSON record of type `Agen
 | `relayVersion` | The version of this library |
 | `platform` | `vercel`, `cloudflare` or `cloudfront`, when the library knows the platform it runs on |
 | `uses` | The relay functions this process called so far: `recordAgentVisit`, `serveAgentPage` and `handleViewerRequest`. Waniwani reads it to tell whether the code has the calls that agent pages and blocking need |
+| `visitor` | `"aiReferral"` for a person who comes from a link in an AI assistant. Not there for an agent. |
 
 The `headers` field can hold only these request headers:
 
@@ -79,6 +91,20 @@ The `headers` field can hold only these request headers:
 | `dpop` | The value as it came |
 | `sec-ch-ua`, `sec-ch-ua-platform`, `sec-ch-ua-mobile` | The value as it came |
 | `authorization` | The secret never leaves. Only the scheme word goes out, for example `Bearer`. It goes out only when a credential follows it and the word is one of `Basic`, `Bearer`, `Digest`, `DPoP`, `HOBA`, `Mutual`, `Negotiate`, `NTLM`, `OAuth`, `PrivateToken`, `SCRAM-SHA-1`, `SCRAM-SHA-256`, `vapid` or `AWS4-HMAC-SHA256`. For any other value, such as a raw API key, the event has no `authorization` header. |
+
+#### AI referral record
+
+For a request that `isAiReferral` matches, the record has only `occurredAt`, `method`, `host`, `sourceEventId`, `relayVersion`, `platform`, `uses` and these fields:
+
+| Field | Value |
+| --- | --- |
+| `path` | The path without its query string |
+| `userAgent` | A copy of the header, unless `omit` names it |
+| `referer` | The scheme and host of the `Referer` header only, for example `https://chatgpt.com/` |
+| `headers` | `{}` |
+| `visitor` | `"aiReferral"` |
+
+It has no `matchKey`. When `omit` names `referer`, the relay sends nothing for such a request.
 
 #### Platform differences
 
@@ -128,18 +154,18 @@ The relay asks Waniwani for the page with the query string of the request, so `/
 On Vercel, in `middleware.ts`:
 
 ```ts
-import { isAgent, recordAgentVisit, serveAgentPage } from "@waniwani/relay";
+import { isAgent, isAiReferral, recordAgentVisit, serveAgentPage } from "@waniwani/relay";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
-  if (isAgent(request)) {
+  if (isAgent(request) || isAiReferral(request)) {
     recordAgentVisit(request);
   }
   return (await serveAgentPage(request)) ?? NextResponse.next();
 }
 ```
 
-`serveAgentPage` is outside the `isAgent` check, so a client that is not on the AI bot list and asks for Markdown gets the Markdown page. `recordAgentVisit` stays inside it, so a person's visit sends nothing.
+`serveAgentPage` is outside the `isAgent` check, so a client that is not on the AI bot list and asks for Markdown gets the Markdown page. `recordAgentVisit` stays inside it, so a person's visit sends nothing, except a visit from a link in an AI assistant.
 
 In a Cloudflare Worker, pass the key and fall back to your origin:
 
@@ -181,7 +207,8 @@ Viewer-request handler:
 
 ```ts
 const request = event.Records[0].cf.request;
-const visit = isAgent(request) ? recordAgentVisit(request, { key }) : null;
+const visit =
+  isAgent(request) || isAiReferral(request) ? recordAgentVisit(request, { key }) : null;
 const answer = await handleViewerRequest(request, { key });
 await visit;
 return answer ?? request;

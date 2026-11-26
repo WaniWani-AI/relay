@@ -63,6 +63,15 @@ The relay reads and sends only these 13 request headers: `user-agent`, `referer`
 
 For `authorization`, keep only the scheme name, and only when a credential follows it. The known schemes are `Basic`, `Bearer`, `Digest`, `DPoP`, `HOBA`, `Mutual`, `Negotiate`, `NTLM`, `OAuth`, `PrivateToken`, `SCRAM-SHA-1`, `SCRAM-SHA-256`, `vapid` and `AWS4-HMAC-SHA256`. Compare them without case, and send the spelling in this list. Drop any other value. Cases: `fixtures/headers.json`.
 
+## AI referrals
+
+A request is an AI referral when it is not from an agent (see [Detection](#detection)) and the host of its `referer` header is an AI assistant. Cases: `fixtures/record.json`, the cases with `referer` hosts below.
+
+1. Trim the `referer` value and parse it as an absolute URL. If it is not a URL, it is not an AI referral.
+2. The scheme must be `http`, `https` or `android-app`.
+3. The lowercase host, without user, password and port, must be one of `chatgpt.com`, `chat.openai.com`, `com.openai.chatgpt`, `claude.ai`, `perplexity.ai`, `gemini.google.com`, `copilot.microsoft.com` and `meta.ai`, or end with `.` and one of them.
+4. The referer origin is `<scheme>://<host>/`, for example `https://chatgpt.com/` or `android-app://com.openai.chatgpt/`.
+
 ## Client IP
 
 On a fetch platform, the relay reads `cf-connecting-ip`, then the first `x-forwarded-for` entry, then `x-real-ip`. The platform writes these headers, so the client cannot set them.
@@ -102,6 +111,7 @@ The lowercase hex of HMAC-SHA256. The HMAC key is the UTF-8 bytes of the org key
 - `relayVersion` is the TypeScript release whose fixtures the port passes.
 - `uses` lists the relay functions that the process called.
 - The `omit` option removes headers, and the fields `userAgent`, `referer` and `matchKey`. Compare the names without case. `userAgent` also removes the `user-agent` header.
+- For an AI referral, `headers` is `{}`, `path` has no query, `referer` is the referer origin, `visitor` is `"aiReferral"`, and there is no `matchKey`. The `omit` option still removes `userAgent`. When `omit` names `referer`, send no record. Leave out `visitor` for an agent.
 
 Cases: `fixtures/record.json`. They leave out `occurredAt`, `sourceEventId`, `uses` and `platform`, because these change for each run or each port.
 
