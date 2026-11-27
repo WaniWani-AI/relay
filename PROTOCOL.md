@@ -75,7 +75,7 @@ A request is an AI referral when it is not from an agent (see [Detection](#detec
 When the `referer` gives no referer origin, read the query:
 
 1. Take the value of the first `utm_source` parameter. Decode `+` as a space and percent escapes as UTF-8, as `URLSearchParams` does.
-2. Trim it and make it lowercase. It must be one of the hosts in step 3 above, with no subdomain, or one of these names: `chatgpt` and `openai` (`chatgpt.com`), `claude` (`claude.ai`), `perplexity` (`perplexity.ai`), `gemini` (`gemini.google.com`), `copilot` (`copilot.microsoft.com`).
+2. Trim it and make it lowercase. It must be one of the hosts in step 3 above, with no subdomain, or one of these names: `chatgpt` and `openai` (`chatgpt.com`), `claude` (`claude.ai`), `perplexity` (`perplexity.ai`), `gemini` and `geminiforbusiness` (`gemini.google.com`), `l.metamuse.ai` (`meta.ai`, the Muse mobile apps), `copilot` (`copilot.microsoft.com`).
 3. The referer origin is `https://<host>/`, for example `https://chatgpt.com/` for `utm_source=chatgpt.com`.
 
 ## Client IP

@@ -1495,6 +1495,15 @@ function recordScenarios(): RecordScenario[] {
 			key,
 		},
 		{
+			name: "ai referral from the utm_source of the muse mobile apps",
+			request: {
+				...person,
+				url: "https://www.example.com/?utm_source=l.metamuse.ai",
+				headers: { "user-agent": BROWSERS[0] ?? "" },
+			},
+			key,
+		},
+		{
 			name: "ai referer wins over utm_source",
 			request: {
 				...referredBy("https://claude.ai/chat/1"),

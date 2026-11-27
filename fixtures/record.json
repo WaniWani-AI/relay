@@ -320,6 +320,32 @@
 			}
 		},
 		{
+			"name": "ai referral from the utm_source of the muse mobile apps",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/?utm_source=l.metamuse.ai",
+				"headers": {
+					"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+				},
+				"ip": "198.51.100.23"
+			},
+			"key": "wwt_rec.n2qibGz_0noxBqbFYI_P3xY0WiWLqVmTyKMczeYJ9oA",
+			"apiUrl": "https://api.test",
+			"expected": {
+				"url": "https://api.test/api/v2/agent-traffic/ingest/middleware/rec",
+				"record": {
+					"method": "GET",
+					"host": "www.example.com",
+					"path": "/",
+					"headers": {},
+					"relayVersion": "0.7.2",
+					"userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+					"referer": "https://meta.ai/",
+					"visitor": "aiReferral"
+				}
+			}
+		},
+		{
 			"name": "ai referer wins over utm_source",
 			"request": {
 				"method": "GET",

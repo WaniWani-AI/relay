@@ -524,6 +524,8 @@ namespace Waniwani.Relay
                 ["claude"] = "claude.ai",
                 ["perplexity"] = "perplexity.ai",
                 ["gemini"] = "gemini.google.com",
+                ["geminiforbusiness"] = "gemini.google.com",
+                ["l.metamuse.ai"] = "meta.ai",
                 ["copilot"] = "copilot.microsoft.com",
             };
             foreach (var host in Hosts)

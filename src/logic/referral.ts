@@ -37,6 +37,8 @@ const UTM_SOURCE_HOSTS: Record<string, string> = {
 	claude: "claude.ai",
 	perplexity: "perplexity.ai",
 	gemini: "gemini.google.com",
+	geminiforbusiness: "gemini.google.com",
+	"l.metamuse.ai": "meta.ai",
 	copilot: "copilot.microsoft.com",
 	...Object.fromEntries(AI_ASSISTANT_HOSTS.map((host) => [host, host])),
 };
