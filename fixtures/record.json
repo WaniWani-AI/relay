@@ -233,6 +233,226 @@
 			}
 		},
 		{
+			"name": "ai referral from utm_source without a referer",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing?utm_source=chatgpt.com&x=1",
+				"headers": {
+					"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+					"accept": "text/html"
+				},
+				"ip": "198.51.100.23"
+			},
+			"key": "wwt_rec.n2qibGz_0noxBqbFYI_P3xY0WiWLqVmTyKMczeYJ9oA",
+			"apiUrl": "https://api.test",
+			"expected": {
+				"url": "https://api.test/api/v2/agent-traffic/ingest/middleware/rec",
+				"record": {
+					"method": "GET",
+					"host": "www.example.com",
+					"path": "/pricing",
+					"headers": {},
+					"relayVersion": "0.7.2",
+					"userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+					"referer": "https://chatgpt.com/",
+					"visitor": "aiReferral"
+				}
+			}
+		},
+		{
+			"name": "ai referral from utm_source with a search engine referer",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing?utm_source=perplexity",
+				"headers": {
+					"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+					"referer": "https://www.google.com/",
+					"accept": "text/html",
+					"accept-language": "fr",
+					"cookie": "session=secret"
+				},
+				"ip": "198.51.100.23"
+			},
+			"key": "wwt_rec.n2qibGz_0noxBqbFYI_P3xY0WiWLqVmTyKMczeYJ9oA",
+			"apiUrl": "https://api.test",
+			"expected": {
+				"url": "https://api.test/api/v2/agent-traffic/ingest/middleware/rec",
+				"record": {
+					"method": "GET",
+					"host": "www.example.com",
+					"path": "/pricing",
+					"headers": {},
+					"relayVersion": "0.7.2",
+					"userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+					"referer": "https://perplexity.ai/",
+					"visitor": "aiReferral"
+				}
+			}
+		},
+		{
+			"name": "ai referral from an encoded utm_source in upper case",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/?utm_source=+ChatGPT%2ECom+",
+				"headers": {
+					"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+					"referer": "https://www.google.com/",
+					"accept": "text/html",
+					"accept-language": "fr",
+					"cookie": "session=secret"
+				},
+				"ip": "198.51.100.23"
+			},
+			"key": "wwt_rec.n2qibGz_0noxBqbFYI_P3xY0WiWLqVmTyKMczeYJ9oA",
+			"apiUrl": "https://api.test",
+			"expected": {
+				"url": "https://api.test/api/v2/agent-traffic/ingest/middleware/rec",
+				"record": {
+					"method": "GET",
+					"host": "www.example.com",
+					"path": "/",
+					"headers": {},
+					"relayVersion": "0.7.2",
+					"userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+					"referer": "https://chatgpt.com/",
+					"visitor": "aiReferral"
+				}
+			}
+		},
+		{
+			"name": "ai referer wins over utm_source",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/?utm_source=chatgpt.com",
+				"headers": {
+					"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+					"referer": "https://claude.ai/chat/1",
+					"accept": "text/html",
+					"accept-language": "fr",
+					"cookie": "session=secret"
+				},
+				"ip": "198.51.100.23"
+			},
+			"key": "wwt_rec.n2qibGz_0noxBqbFYI_P3xY0WiWLqVmTyKMczeYJ9oA",
+			"apiUrl": "https://api.test",
+			"expected": {
+				"url": "https://api.test/api/v2/agent-traffic/ingest/middleware/rec",
+				"record": {
+					"method": "GET",
+					"host": "www.example.com",
+					"path": "/",
+					"headers": {},
+					"relayVersion": "0.7.2",
+					"userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+					"referer": "https://claude.ai/",
+					"visitor": "aiReferral"
+				}
+			}
+		},
+		{
+			"name": "first utm_source decides",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/?utm_source=newsletter&utm_source=chatgpt.com",
+				"headers": {
+					"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+					"referer": "https://www.google.com/",
+					"accept": "text/html",
+					"accept-language": "fr",
+					"cookie": "session=secret"
+				},
+				"ip": "198.51.100.23"
+			},
+			"key": "wwt_rec.n2qibGz_0noxBqbFYI_P3xY0WiWLqVmTyKMczeYJ9oA",
+			"apiUrl": "https://api.test",
+			"expected": {
+				"url": "https://api.test/api/v2/agent-traffic/ingest/middleware/rec",
+				"record": {
+					"method": "GET",
+					"host": "www.example.com",
+					"path": "/?utm_source=newsletter&utm_source=chatgpt.com",
+					"headers": {
+						"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+						"referer": "https://www.google.com/",
+						"accept": "text/html",
+						"accept-language": "fr"
+					},
+					"relayVersion": "0.7.2",
+					"userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+					"referer": "https://www.google.com/",
+					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
+				}
+			}
+		},
+		{
+			"name": "utm_source that names no ai assistant",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/?utm_source=chatgpt.com.example.net",
+				"headers": {
+					"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+					"referer": "https://www.google.com/",
+					"accept": "text/html",
+					"accept-language": "fr",
+					"cookie": "session=secret"
+				},
+				"ip": "198.51.100.23"
+			},
+			"key": "wwt_rec.n2qibGz_0noxBqbFYI_P3xY0WiWLqVmTyKMczeYJ9oA",
+			"apiUrl": "https://api.test",
+			"expected": {
+				"url": "https://api.test/api/v2/agent-traffic/ingest/middleware/rec",
+				"record": {
+					"method": "GET",
+					"host": "www.example.com",
+					"path": "/?utm_source=chatgpt.com.example.net",
+					"headers": {
+						"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+						"referer": "https://www.google.com/",
+						"accept": "text/html",
+						"accept-language": "fr"
+					},
+					"relayVersion": "0.7.2",
+					"userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+					"referer": "https://www.google.com/",
+					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
+				}
+			}
+		},
+		{
+			"name": "agent with an ai utm_source",
+			"request": {
+				"method": "GET",
+				"url": "https://www.example.com/pricing?utm_source=chatgpt.com",
+				"headers": {
+					"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"referer": "https://chatgpt.com/",
+					"accept": "text/html",
+					"cookie": "session=secret"
+				},
+				"ip": "198.51.100.23"
+			},
+			"key": "wwt_rec.n2qibGz_0noxBqbFYI_P3xY0WiWLqVmTyKMczeYJ9oA",
+			"apiUrl": "https://api.test",
+			"expected": {
+				"url": "https://api.test/api/v2/agent-traffic/ingest/middleware/rec",
+				"record": {
+					"method": "GET",
+					"host": "www.example.com",
+					"path": "/pricing?utm_source=chatgpt.com",
+					"headers": {
+						"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+						"referer": "https://chatgpt.com/",
+						"accept": "text/html"
+					},
+					"relayVersion": "0.7.2",
+					"userAgent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+					"referer": "https://chatgpt.com/",
+					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
+				}
+			}
+		},
+		{
 			"name": "lookalike referer host",
 			"request": {
 				"method": "GET",

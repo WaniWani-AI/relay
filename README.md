@@ -39,7 +39,7 @@ function isAiReferral(
 ): boolean;
 ```
 
-Tells whether a person comes to the request from a link in an AI assistant. It returns `true` when the host of the `Referer` header is one of these hosts, or a subdomain of one, and `isAgent` does not match the request: `chatgpt.com`, `chat.openai.com`, `com.openai.chatgpt` (the ChatGPT Android app), `claude.ai`, `perplexity.ai`, `gemini.google.com`, `copilot.microsoft.com` and `meta.ai`. The `Referer` must be an `http`, `https` or `android-app` URL. Like `isAgent`, it reads the headers and the client IP only, never waits on the network and never throws.
+Tells whether a person comes to the request from a link in an AI assistant. It returns `true` when the host of the `Referer` header is one of these hosts, or a subdomain of one, and `isAgent` does not match the request: `chatgpt.com`, `chat.openai.com`, `com.openai.chatgpt` (the ChatGPT Android app), `claude.ai`, `perplexity.ai`, `gemini.google.com`, `copilot.microsoft.com` and `meta.ai`. The `Referer` must be an `http`, `https` or `android-app` URL. It also returns `true` when the `utm_source` query parameter names one of these assistants, for example `utm_source=chatgpt.com`, which ChatGPT adds to its links. Like `isAgent`, it reads the headers, the URL and the client IP only, never waits on the network and never throws.
 
 ### `recordAgentVisit(request, options?)`
 
@@ -100,7 +100,7 @@ For a request that `isAiReferral` matches, the record has only `occurredAt`, `me
 | --- | --- |
 | `path` | The path without its query string |
 | `userAgent` | A copy of the header, unless `omit` names it |
-| `referer` | The scheme and host of the `Referer` header only, for example `https://chatgpt.com/` |
+| `referer` | The scheme and host of the `Referer` header only, for example `https://chatgpt.com/`. When only `utm_source` names the assistant, `https://` and the assistant host. |
 | `headers` | `{}` |
 | `visitor` | `"aiReferral"` |
 

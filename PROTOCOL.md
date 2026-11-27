@@ -65,12 +65,18 @@ For `authorization`, keep only the scheme name, and only when a credential follo
 
 ## AI referrals
 
-A request is an AI referral when it is not from an agent (see [Detection](#detection)) and the host of its `referer` header is an AI assistant. Cases: `fixtures/record.json`, the cases with `referer` hosts below.
+A request is an AI referral when it is not from an agent (see [Detection](#detection)) and the host of its `referer` header is an AI assistant, or its `utm_source` query parameter names one. Cases: `fixtures/record.json`, the cases with `referer` hosts or `utm_source` below.
 
 1. Trim the `referer` value and parse it as an absolute URL. If it is not a URL, it is not an AI referral.
 2. The scheme must be `http`, `https` or `android-app`.
 3. The lowercase host, without user, password and port, must be one of `chatgpt.com`, `chat.openai.com`, `com.openai.chatgpt`, `claude.ai`, `perplexity.ai`, `gemini.google.com`, `copilot.microsoft.com` and `meta.ai`, or end with `.` and one of them.
 4. The referer origin is `<scheme>://<host>/`, for example `https://chatgpt.com/` or `android-app://com.openai.chatgpt/`.
+
+When the `referer` gives no referer origin, read the query:
+
+1. Take the value of the first `utm_source` parameter. Decode `+` as a space and percent escapes as UTF-8, as `URLSearchParams` does.
+2. Trim it and make it lowercase. It must be one of the hosts in step 3 above, with no subdomain, or one of these names: `chatgpt` and `openai` (`chatgpt.com`), `claude` (`claude.ai`), `perplexity` (`perplexity.ai`), `gemini` (`gemini.google.com`), `copilot` (`copilot.microsoft.com`).
+3. The referer origin is `https://<host>/`, for example `https://chatgpt.com/` for `utm_source=chatgpt.com`.
 
 ## Client IP
 

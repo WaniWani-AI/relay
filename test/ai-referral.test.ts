@@ -85,4 +85,73 @@ describe("isAiReferral", () => {
 		};
 		expect(isAiReferral(request, { rules: "bundled" })).toBe(true);
 	});
+
+	const visitUrl = (query: string, headers: Record<string, string> = {}) =>
+		isAiReferral(
+			new Request(`https://www.example.com/pricing${query}`, {
+				headers: { "user-agent": BROWSER, ...headers },
+			}),
+			{ rules: "bundled" },
+		);
+
+	it.each([
+		"?utm_source=chatgpt.com",
+		"?x=1&utm_source=chatgpt.com",
+		"?utm_source=ChatGPT",
+		"?utm_source=openai",
+		"?utm_source=perplexity",
+		"?utm_source=perplexity.ai",
+		"?utm_source=claude.ai",
+		"?utm_source=gemini",
+		"?utm_source=copilot",
+		"?utm_source=chatgpt%2Ecom",
+		"?utm_source=+chatgpt.com+",
+	])("matches a person without a referer sent with %s", (query) => {
+		expect(visitUrl(query)).toBe(true);
+	});
+
+	it.each([
+		"",
+		"?utm_source=",
+		"?utm_source=google",
+		"?utm_source=chatgpt.com.example.net",
+		"?utm_source=notchatgpt.com",
+		"?utm_source=toString",
+		"?utm_source=__proto__",
+		"?utm_medium=chatgpt.com",
+		"?utm_source=newsletter&utm_source=chatgpt.com",
+	])("does not match the query %j", (query) => {
+		expect(visitUrl(query)).toBe(false);
+	});
+
+	it("matches an AI utm_source behind a search engine referer", () => {
+		expect(
+			visitUrl("?utm_source=chatgpt.com", {
+				referer: "https://www.google.com/",
+			}),
+		).toBe(true);
+	});
+
+	it("does not match an agent that follows a link with an AI utm_source", () => {
+		expect(
+			visitUrl("?utm_source=chatgpt.com", {
+				"user-agent":
+					"Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+			}),
+		).toBe(false);
+	});
+
+	it("reads the utm_source of a CloudFront request", () => {
+		const request: CloudFrontRequest = {
+			clientIp: "198.51.100.23",
+			method: "GET",
+			uri: "/pricing",
+			querystring: "utm_source=chatgpt.com",
+			headers: {
+				host: [{ value: "www.example.com" }],
+				"user-agent": [{ value: BROWSER }],
+			},
+		};
+		expect(isAiReferral(request, { rules: "bundled" })).toBe(true);
+	});
 });

@@ -512,5 +512,58 @@ namespace Waniwani.Relay
             var known = Hosts.Any(assistant => host == assistant || host.EndsWith("." + assistant, StringComparison.Ordinal));
             return known && Schemes.Contains(scheme) ? scheme + "://" + host + "/" : null;
         }
+
+        private static readonly Dictionary<string, string> UtmSourceHosts = UtmSourceHostsOf();
+
+        private static Dictionary<string, string> UtmSourceHostsOf()
+        {
+            var hosts = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["chatgpt"] = "chatgpt.com",
+                ["openai"] = "chatgpt.com",
+                ["claude"] = "claude.ai",
+                ["perplexity"] = "perplexity.ai",
+                ["gemini"] = "gemini.google.com",
+                ["copilot"] = "copilot.microsoft.com",
+            };
+            foreach (var host in Hosts)
+            {
+                hosts[host] = host;
+            }
+            return hosts;
+        }
+
+        /// <summary><c>https://</c> and the host of the AI assistant that the first <c>utm_source</c> parameter of a query names, for example <c>https://chatgpt.com/</c> for <c>utm_source=chatgpt.com</c>, or null.</summary>
+        public static string? OfQuery(string query)
+        {
+            var value = FirstParameter(query, "utm_source");
+            return value != null && UtmSourceHosts.TryGetValue(Text.ToLowerJs(Text.TrimJs(value)), out var host) ? "https://" + host + "/" : null;
+        }
+
+        private static string? FirstParameter(string query, string name)
+        {
+            foreach (var pair in query.Split('&'))
+            {
+                var equals = pair.IndexOf('=');
+                var key = equals < 0 ? pair : pair.Substring(0, equals);
+                if (FormDecode(key) == name)
+                {
+                    return equals < 0 ? string.Empty : FormDecode(pair.Substring(equals + 1));
+                }
+            }
+            return null;
+        }
+
+        private static string FormDecode(string text)
+        {
+            try
+            {
+                return Uri.UnescapeDataString(text.Replace('+', ' '));
+            }
+            catch
+            {
+                return text;
+            }
+        }
     }
 }
