@@ -1,5 +1,5 @@
 {
-	"relayVersion": "0.7.2",
+	"relayVersion": "0.7.3",
 	"cases": [
 		{
 			"name": "full record",
@@ -27,7 +27,7 @@
 						"referer": "https://chatgpt.com/",
 						"accept": "text/html"
 					},
-					"relayVersion": "0.7.2",
+					"relayVersion": "0.7.3",
 					"userAgent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
 					"referer": "https://chatgpt.com/",
 					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
@@ -57,7 +57,7 @@
 					"host": "www.example.com",
 					"path": "/pricing",
 					"headers": {},
-					"relayVersion": "0.7.2",
+					"relayVersion": "0.7.3",
 					"userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
 					"referer": "https://chatgpt.com/",
 					"visitor": "aiReferral"
@@ -87,7 +87,7 @@
 					"host": "www.example.com",
 					"path": "/pricing",
 					"headers": {},
-					"relayVersion": "0.7.2",
+					"relayVersion": "0.7.3",
 					"userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
 					"referer": "android-app://com.openai.chatgpt/",
 					"visitor": "aiReferral"
@@ -117,7 +117,7 @@
 					"host": "www.example.com",
 					"path": "/pricing",
 					"headers": {},
-					"relayVersion": "0.7.2",
+					"relayVersion": "0.7.3",
 					"userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
 					"referer": "https://www.perplexity.ai/",
 					"visitor": "aiReferral"
@@ -147,7 +147,7 @@
 					"host": "www.example.com",
 					"path": "/pricing",
 					"headers": {},
-					"relayVersion": "0.7.2",
+					"relayVersion": "0.7.3",
 					"userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
 					"referer": "https://claude.ai/",
 					"visitor": "aiReferral"
@@ -201,7 +201,7 @@
 					"host": "www.example.com",
 					"path": "/pricing",
 					"headers": {},
-					"relayVersion": "0.7.2",
+					"relayVersion": "0.7.3",
 					"referer": "https://chatgpt.com/",
 					"visitor": "aiReferral"
 				}
@@ -226,7 +226,7 @@
 					"host": "www.example.com",
 					"path": "/pricing",
 					"headers": {},
-					"relayVersion": "0.7.2",
+					"relayVersion": "0.7.3",
 					"referer": "https://gemini.google.com/",
 					"visitor": "aiReferral"
 				}
@@ -252,7 +252,7 @@
 					"host": "www.example.com",
 					"path": "/pricing",
 					"headers": {},
-					"relayVersion": "0.7.2",
+					"relayVersion": "0.7.3",
 					"userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
 					"referer": "https://chatgpt.com/",
 					"visitor": "aiReferral"
@@ -282,7 +282,7 @@
 					"host": "www.example.com",
 					"path": "/pricing",
 					"headers": {},
-					"relayVersion": "0.7.2",
+					"relayVersion": "0.7.3",
 					"userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
 					"referer": "https://perplexity.ai/",
 					"visitor": "aiReferral"
@@ -312,7 +312,7 @@
 					"host": "www.example.com",
 					"path": "/",
 					"headers": {},
-					"relayVersion": "0.7.2",
+					"relayVersion": "0.7.3",
 					"userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
 					"referer": "https://chatgpt.com/",
 					"visitor": "aiReferral"
@@ -338,7 +338,7 @@
 					"host": "www.example.com",
 					"path": "/",
 					"headers": {},
-					"relayVersion": "0.7.2",
+					"relayVersion": "0.7.3",
 					"userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
 					"referer": "https://meta.ai/",
 					"visitor": "aiReferral"
@@ -368,7 +368,7 @@
 					"host": "www.example.com",
 					"path": "/",
 					"headers": {},
-					"relayVersion": "0.7.2",
+					"relayVersion": "0.7.3",
 					"userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
 					"referer": "https://claude.ai/",
 					"visitor": "aiReferral"
@@ -403,7 +403,7 @@
 						"accept": "text/html",
 						"accept-language": "fr"
 					},
-					"relayVersion": "0.7.2",
+					"relayVersion": "0.7.3",
 					"userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
 					"referer": "https://www.google.com/",
 					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
@@ -438,7 +438,7 @@
 						"accept": "text/html",
 						"accept-language": "fr"
 					},
-					"relayVersion": "0.7.2",
+					"relayVersion": "0.7.3",
 					"userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
 					"referer": "https://www.google.com/",
 					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
@@ -471,7 +471,7 @@
 						"referer": "https://chatgpt.com/",
 						"accept": "text/html"
 					},
-					"relayVersion": "0.7.2",
+					"relayVersion": "0.7.3",
 					"userAgent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
 					"referer": "https://chatgpt.com/",
 					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
@@ -506,7 +506,7 @@
 						"accept": "text/html",
 						"accept-language": "fr"
 					},
-					"relayVersion": "0.7.2",
+					"relayVersion": "0.7.3",
 					"userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
 					"referer": "https://notchatgpt.com/",
 					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
@@ -541,7 +541,7 @@
 						"accept": "text/html",
 						"accept-language": "fr"
 					},
-					"relayVersion": "0.7.2",
+					"relayVersion": "0.7.3",
 					"userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
 					"referer": "https://chatgpt.com.example.net/",
 					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
@@ -576,7 +576,7 @@
 						"accept": "text/html",
 						"accept-language": "fr"
 					},
-					"relayVersion": "0.7.2",
+					"relayVersion": "0.7.3",
 					"userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
 					"referer": "ftp://chatgpt.com/",
 					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
@@ -611,7 +611,7 @@
 						"accept": "text/html",
 						"accept-language": "fr"
 					},
-					"relayVersion": "0.7.2",
+					"relayVersion": "0.7.3",
 					"userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
 					"referer": "chatgpt.com",
 					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
@@ -676,7 +676,7 @@
 						"referer": "https://chatgpt.com/",
 						"accept": "text/html"
 					},
-					"relayVersion": "0.7.2",
+					"relayVersion": "0.7.3",
 					"userAgent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
 					"referer": "https://chatgpt.com/"
 				}
@@ -708,7 +708,7 @@
 						"referer": "https://chatgpt.com/",
 						"accept": "text/html"
 					},
-					"relayVersion": "0.7.2",
+					"relayVersion": "0.7.3",
 					"userAgent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
 					"referer": "https://chatgpt.com/",
 					"matchKey": "9ecf1896147d53b3350d8c6d0859e7a2cc4815e7f0483465827d83d2cd5c7385"
@@ -743,7 +743,7 @@
 						"accept": "text/html",
 						"authorization": "Bearer"
 					},
-					"relayVersion": "0.7.2",
+					"relayVersion": "0.7.3",
 					"userAgent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
 					"referer": "https://chatgpt.com/",
 					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
@@ -777,7 +777,7 @@
 						"referer": "https://chatgpt.com/",
 						"accept": "text/html"
 					},
-					"relayVersion": "0.7.2",
+					"relayVersion": "0.7.3",
 					"userAgent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
 					"referer": "https://chatgpt.com/",
 					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
@@ -813,7 +813,7 @@
 						"referer": "https://chatgpt.com/",
 						"accept": "text/html"
 					},
-					"relayVersion": "0.7.2",
+					"relayVersion": "0.7.3",
 					"userAgent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
 					"referer": "https://chatgpt.com/"
 				}
@@ -847,7 +847,7 @@
 						"referer": "https://chatgpt.com/",
 						"accept": "text/html"
 					},
-					"relayVersion": "0.7.2",
+					"relayVersion": "0.7.3",
 					"referer": "https://chatgpt.com/",
 					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
 				}
@@ -881,7 +881,7 @@
 						"referer": "https://chatgpt.com/",
 						"accept": "text/html"
 					},
-					"relayVersion": "0.7.2",
+					"relayVersion": "0.7.3",
 					"referer": "https://chatgpt.com/",
 					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
 				}
@@ -915,7 +915,7 @@
 						"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
 						"accept": "text/html"
 					},
-					"relayVersion": "0.7.2",
+					"relayVersion": "0.7.3",
 					"userAgent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
 					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
 				}
@@ -949,7 +949,7 @@
 						"user-agent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
 						"referer": "https://chatgpt.com/"
 					},
-					"relayVersion": "0.7.2",
+					"relayVersion": "0.7.3",
 					"userAgent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
 					"referer": "https://chatgpt.com/",
 					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
@@ -982,7 +982,7 @@
 						"referer": "https://chatgpt.com/",
 						"accept": "text/html"
 					},
-					"relayVersion": "0.7.2",
+					"relayVersion": "0.7.3",
 					"userAgent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
 					"referer": "https://chatgpt.com/",
 					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
@@ -1015,7 +1015,7 @@
 						"referer": "https://chatgpt.com/",
 						"accept": "text/html"
 					},
-					"relayVersion": "0.7.2",
+					"relayVersion": "0.7.3",
 					"userAgent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
 					"referer": "https://chatgpt.com/",
 					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
@@ -1048,7 +1048,7 @@
 						"referer": "https://chatgpt.com/",
 						"accept": "text/html"
 					},
-					"relayVersion": "0.7.2",
+					"relayVersion": "0.7.3",
 					"userAgent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
 					"referer": "https://chatgpt.com/",
 					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
@@ -1081,7 +1081,7 @@
 						"referer": "https://chatgpt.com/",
 						"accept": "text/html"
 					},
-					"relayVersion": "0.7.2",
+					"relayVersion": "0.7.3",
 					"userAgent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
 					"referer": "https://chatgpt.com/",
 					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
@@ -1109,7 +1109,7 @@
 					"headers": {
 						"accept": "*/*"
 					},
-					"relayVersion": "0.7.2",
+					"relayVersion": "0.7.3",
 					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
 				}
 			}
@@ -1160,7 +1160,7 @@
 						"sec-ch-ua-mobile": "?0",
 						"authorization": "DPoP"
 					},
-					"relayVersion": "0.7.2",
+					"relayVersion": "0.7.3",
 					"userAgent": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
 					"referer": "r",
 					"matchKey": "147f4028ec9108121e7db81ee465716c78ba887214ff89ee891e5cfe7e405c49"
