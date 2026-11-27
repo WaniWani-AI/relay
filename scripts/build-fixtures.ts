@@ -1470,6 +1470,72 @@ function recordScenarios(): RecordScenario[] {
 			key,
 		},
 		{
+			name: "ai referral from utm_source without a referer",
+			request: {
+				...person,
+				url: "https://www.example.com/pricing?utm_source=chatgpt.com&x=1",
+				headers: { "user-agent": BROWSERS[0] ?? "", accept: "text/html" },
+			},
+			key,
+		},
+		{
+			name: "ai referral from utm_source with a search engine referer",
+			request: {
+				...referredBy("https://www.google.com/"),
+				url: "https://www.example.com/pricing?utm_source=perplexity",
+			},
+			key,
+		},
+		{
+			name: "ai referral from an encoded utm_source in upper case",
+			request: {
+				...referredBy("https://www.google.com/"),
+				url: "https://www.example.com/?utm_source=+ChatGPT%2ECom+",
+			},
+			key,
+		},
+		{
+			name: "ai referral from the utm_source of the muse mobile apps",
+			request: {
+				...person,
+				url: "https://www.example.com/?utm_source=l.metamuse.ai",
+				headers: { "user-agent": BROWSERS[0] ?? "" },
+			},
+			key,
+		},
+		{
+			name: "ai referer wins over utm_source",
+			request: {
+				...referredBy("https://claude.ai/chat/1"),
+				url: "https://www.example.com/?utm_source=chatgpt.com",
+			},
+			key,
+		},
+		{
+			name: "first utm_source decides",
+			request: {
+				...referredBy("https://www.google.com/"),
+				url: "https://www.example.com/?utm_source=newsletter&utm_source=chatgpt.com",
+			},
+			key,
+		},
+		{
+			name: "utm_source that names no ai assistant",
+			request: {
+				...referredBy("https://www.google.com/"),
+				url: "https://www.example.com/?utm_source=chatgpt.com.example.net",
+			},
+			key,
+		},
+		{
+			name: "agent with an ai utm_source",
+			request: {
+				...base,
+				url: "https://www.example.com/pricing?utm_source=chatgpt.com",
+			},
+			key,
+		},
+		{
 			name: "lookalike referer host",
 			request: referredBy("https://notchatgpt.com/"),
 			key,

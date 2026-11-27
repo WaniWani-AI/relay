@@ -1,2 +1,2 @@
 export { type DecideInput, decide } from "./decide";
-export { aiAssistantReferer } from "./referral";
+export { aiAssistantReferer, aiAssistantUtmSource } from "./referral";

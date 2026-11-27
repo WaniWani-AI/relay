@@ -14,7 +14,7 @@ import {
 import { readCappedHeaders } from "./headers";
 import { type PostPolicy, postEvent } from "./ingest";
 import { readKey } from "./key";
-import { aiAssistantReferer, decide } from "./logic";
+import { aiAssistantReferer, aiAssistantUtmSource, decide } from "./logic";
 import { deriveMatchKey } from "./match-key";
 import type { Platform } from "./platform";
 import { refreshRules } from "./refresh";
@@ -117,7 +117,7 @@ function matchesAgent(
 }
 
 /**
- * Tells whether a request, or the `cf.request` of a Lambda@Edge event, comes from a person who followed a link in an AI assistant: the `Referer` host is an AI assistant, for example `chatgpt.com` or the ChatGPT app, and the request does not come from an AI agent. Reads headers only and never waits on the network.
+ * Tells whether a request, or the `cf.request` of a Lambda@Edge event, comes from a person who followed a link in an AI assistant: the `Referer` host is an AI assistant, for example `chatgpt.com` or the ChatGPT app, or the `utm_source` query parameter names one, for example `utm_source=chatgpt.com`, and the request does not come from an AI agent. Reads the headers and the URL only and never waits on the network.
  */
 export function isAiReferral(
 	request: Request | CloudFrontRequest,
@@ -125,10 +125,11 @@ export function isAiReferral(
 ): boolean {
 	startRulesRefresh(options);
 	try {
-		const { headers, ip } = toRelayRequest(request);
+		const { url, headers, ip } = toRelayRequest(request);
 		return (
 			aiReferralOrigin(
 				readCappedHeaders(headers),
+				url,
 				ip,
 				options.rules === "bundled",
 			) !== null
@@ -140,13 +141,27 @@ export function isAiReferral(
 
 function aiReferralOrigin(
 	headers: Record<string, string>,
+	url: string | null,
 	ip: string | null,
 	useBundled: boolean,
 ): string | null {
-	const referer = aiAssistantReferer(headers.referer);
+	const referer =
+		aiAssistantReferer(headers.referer) ??
+		aiAssistantUtmSource(utmSourceOf(url));
 	return referer !== null && !decide({ headers, ip, useBundled })
 		? referer
 		: null;
+}
+
+function utmSourceOf(url: string | null): string | null {
+	if (url === null) {
+		return null;
+	}
+	try {
+		return new URL(url).searchParams.get("utm_source");
+	} catch {
+		return null;
+	}
 }
 
 function startRulesRefresh(options: IsAgentOptions): void {
@@ -164,7 +179,7 @@ function startRulesRefresh(options: IsAgentOptions): void {
 
 /**
  * Posts one event for this request to WaniWani after the response.
- * For a request that `isAiReferral` matches, the event holds only the time, method, host, path without the query, user agent and the scheme and host of the `Referer`, and nothing when `referer` is in `omit`.
+ * For a request that `isAiReferral` matches, the event holds only the time, method, host, path without the query, user agent and the scheme and host of the `Referer`, or of the assistant that `utm_source` names, and nothing when `referer` is in `omit`.
  * Sends nothing when no key is set. Never throws, never rejects and never touches the request.
  * The promise settles when the post is done, so Lambda@Edge, which has no `waitUntil`, awaits it.
  */
@@ -194,7 +209,12 @@ export function recordAgentVisit(
 			return Promise.resolve();
 		}
 		const capped = readCappedHeaders(requestHeaders);
-		const referral = aiReferralOrigin(capped, ip, options.rules === "bundled");
+		const referral = aiReferralOrigin(
+			capped,
+			requestUrl,
+			ip,
+			options.rules === "bundled",
+		);
 		if (referral !== null && omitted.has("referer")) {
 			return Promise.resolve();
 		}

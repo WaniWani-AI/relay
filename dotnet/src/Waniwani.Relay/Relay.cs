@@ -272,7 +272,7 @@ namespace Waniwani.Relay
         private AgentRules CurrentRules() =>
             string.Equals(_options.Rules, "bundled", StringComparison.OrdinalIgnoreCase) ? Bundled : Volatile.Read(ref _remote) ?? Bundled;
 
-        /// <summary>True when the request comes from a person who followed a link in an AI assistant: the <c>referer</c> host is an AI assistant, for example <c>chatgpt.com</c> or the ChatGPT app, and the request does not come from an AI agent. Reads headers only and never waits on the network.</summary>
+        /// <summary>True when the request comes from a person who followed a link in an AI assistant: the <c>referer</c> host is an AI assistant, for example <c>chatgpt.com</c> or the ChatGPT app, or the <c>utm_source</c> query parameter names one, for example <c>utm_source=chatgpt.com</c>, and the request does not come from an AI agent. Reads the headers and the query only and never waits on the network.</summary>
         public bool IsAiReferral(RelayRequest request)
         {
             if (!_options.Enabled)
@@ -282,7 +282,7 @@ namespace Waniwani.Relay
             StartRulesRefresh();
             try
             {
-                return AiReferralOrigin(CappedHeaders.Read(request.Headers), ClientIpOf(request)) != null;
+                return AiReferralOrigin(CappedHeaders.Read(request.Headers), request.Query, ClientIpOf(request)) != null;
             }
             catch
             {
@@ -290,9 +290,9 @@ namespace Waniwani.Relay
             }
         }
 
-        private string? AiReferralOrigin(IReadOnlyDictionary<string, string> capped, string? ip)
+        private string? AiReferralOrigin(IReadOnlyDictionary<string, string> capped, string query, string? ip)
         {
-            var referer = AiAssistantReferer.Of(capped.TryGetValue("referer", out var value) ? value : null);
+            var referer = AiAssistantReferer.Of(capped.TryGetValue("referer", out var value) ? value : null) ?? AiAssistantReferer.OfQuery(query);
             return referer != null && !CurrentRules().Decide(capped, ip) ? referer : null;
         }
 
@@ -371,7 +371,7 @@ namespace Waniwani.Relay
                 }
                 var capped = CappedHeaders.Read(request.Headers);
                 var ip = ClientIpOf(request);
-                var referral = AiReferralOrigin(capped, ip);
+                var referral = AiReferralOrigin(capped, request.Query, ip);
                 if (referral != null && _omit.Contains("referer"))
                 {
                     return;
